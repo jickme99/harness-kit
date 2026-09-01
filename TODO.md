@@ -23,13 +23,17 @@
   survives real cross-tool testing — Cursor, maybe ChatGPT. When it is authored, it is
   authored FRESH corp-side: patterns cross, files never, either direction — and patterns
   cross only after they have survived a second harness.
-- **Found at extraction, fix upstream first: bare `gh pr merge` bypasses the merge-green
-  guard.** The guard's regex requires text after `merge`, so `gh pr merge` with no
-  selector — which gh resolves from the current branch and merges — passes in silence.
-  Recorded as a strict xfail in `tests/test_guard_contracts.py` (the origin's
-  known-failure mechanism: the entry goes red the day the guard is fixed). The fix
-  belongs in the ORIGIN's `scripts/merge_green_check.py` first, then flows here — the
-  kit copies faithfully; it does not fork the guards.
+- **RESOLVED 2026-09-01 — bare selector-less merge bypassing the merge-green guard.**
+  Found by this kit's contract suite at extraction; fixed upstream the same day (origin
+  engine PR #47: every merge occurrence in a call checked, the bare current-branch form
+  refuses with an ask-for-a-selector remedy, `--repo=owner/repo` read, unreadable
+  payloads/rows DENY) and the kit's `reference/guards/merge_green_check.py` is refreshed
+  from that merged copy. The strict xfail is flipped into a live passing contract in
+  `tests/test_guard_contracts.py` — the record deleted, the fix kept red-able.
+- **Deliberate env-seam divergence in the refreshed merge guard:** the kit copy reads the
+  gh-account pin from `HARNESS_GH_ACCOUNT` where the origin spells it `VT_GH_ACCOUNT` —
+  same seam, kit-neutral name, noted in the file itself. Keep the divergence when future
+  refreshes flow through; everything else stays byte-faithful plus the kit header.
 - **Second extraction finding, same guard, same class: `merge_green_check.py` reasons
   about the command as TEXT.** Its trigger regex matches the merge-command string
   anywhere in the whole command — including inside a quoted commit message or here-doc

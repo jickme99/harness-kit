@@ -216,11 +216,12 @@ def test_malformed_json_is_silent_and_exits_zero(script):
     assert out.strip() == ""
 
 
-@pytest.mark.parametrize("script", ("az_guard.py", "git_scope_guard.py"))
+@pytest.mark.parametrize("script", reg.HOOK_SCRIPTS)
 def test_tool_input_that_is_not_an_object_is_denied(script):
     """`{"tool_input": ["az group list"]}` once raised AttributeError and exited 1 — and
     the harness treats a failed hook as no decision, i.e. an ALLOW. The guards now refuse
-    a payload shaped in a way they cannot read, at exit 0."""
+    a payload shaped in a way they cannot read, at exit 0. All three guards carry the
+    same payload hardening since the origin's PR #47 refresh of the merge guard."""
     code, out, _err = _invoke(script, json.dumps({"tool_name": "Bash",
                                                   "tool_input": ["az group list"]}))
     assert code == 0
@@ -249,9 +250,15 @@ def test_compliant_commands_pass_in_silence(script, command):
     ("az_guard.py", "az account show --subscription X && az group list"),
     ("git_scope_guard.py", "git reset --hard origin/main"),
     ("git_scope_guard.py", "git -C . clean -fd"),
-    # merge with no parseable PR selector: denied BEFORE any gh call, so this stays
+    # merges with no parseable PR selector: denied BEFORE any gh call, so these stay
     # network-free. The green-path behaviour needs live PR state and belongs in a project
-    # suite with a fixture gh — see the registry's UNCOVERED note.
+    # suite with a fixture gh — see the registry's UNCOVERED note. The BARE form was a
+    # recorded fail-open found by this suite at kit extraction (2026-09-01): the old
+    # trigger regex required text after the merge word, so the current-branch form — which
+    # gh resolves and merges — passed in silence. Fixed upstream (origin PR #47) the same
+    # day; the kit copy is refreshed from it, and this line is the strict-xfail flipped
+    # into the live contract that keeps it fixed.
+    ("merge_green_check.py", "gh pr merge"),
     ("merge_green_check.py", "gh pr merge --squash"),
 ])
 def test_offending_commands_are_denied_with_json_at_exit_zero(script, command):
@@ -260,20 +267,6 @@ def test_offending_commands_are_denied_with_json_at_exit_zero(script, command):
     assert _is_deny(out), f"{script} did not deny {command!r}; stdout: {out!r}"
     reason = json.loads(out)["hookSpecificOutput"]["permissionDecisionReason"]
     assert reason.strip(), "a refusal with no reason is a wall, not a guard"
-
-
-@pytest.mark.xfail(
-    strict=True,
-    reason="RECORDED FAIL-OPEN, found by this suite at kit extraction (2026-09-01): the "
-           "merge guard's regex requires text AFTER `gh pr merge`, so a BARE `gh pr "
-           "merge` — which gh resolves from the current branch and merges — matches "
-           "nothing and passes in silence. The fix belongs in the guard, upstream first "
-           "(see TODO.md); strict xfail means this entry goes RED the day someone fixes "
-           "it, so the record is deleted rather than left to rot green.")
-def test_a_bare_merge_with_no_selector_is_denied():
-    code, out, _err = _invoke("merge_green_check.py", _payload("gh pr merge"))
-    assert code == 0
-    assert _is_deny(out)
 
 
 @pytest.mark.parametrize("script", ("az_guard.py", "git_scope_guard.py"))

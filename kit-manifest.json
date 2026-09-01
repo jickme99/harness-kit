@@ -3,7 +3,7 @@
     ".gitignore": "edc0f305a8e021cd0c100a30cd2e601c77b965a68d5614105ffbf24a5a461fc3",
     "README.md": "532816da252ba4cdbf9ad37b6a8828cca9ac09f0ae66300e37041635ffc63cc7",
     "STANDUP.md": "71be1e0af9f1238f0020e1a57f33a8909c78870492f923ae6978f62918634951",
-    "TODO.md": "e619f91d86f428647223081b7450a67b17ce5da3af0ef8ba15e0f1f786d74676",
+    "TODO.md": "bb74739dcfc77dcefa0a8d10b1b6a3db2490a5e37097e6cf4f79c2e5c9cb6305",
     "adapters/claude.md": "46ce20fb1b5df95c8c8cadf19d9ef22b70c0d2dbe5aa0b27cc55f3e7e9fad1b6",
     "adapters/codex.md": "3e3439919637a00a7f5e2c5132e29e6f295e714b09274475daaa4a0164f8396e",
     "adapters/cursor.md": "e336c18261e856dce54b84fe0e648b1885b9c618b3837f7a0cd18a782ad9a887",
@@ -21,7 +21,7 @@
     "reference/guards/az_guard.py": "9bfe605143422f93f3b00d803e92ac831e6b547829362de52f13a00f612e0e9e",
     "reference/guards/git_scope_guard.py": "90fbbf4f421e5338fcf6572cbc3b46546b69ade68d30f52b68ede94161937d06",
     "reference/guards/harness_probes.py": "74714c5dd305298fdc05333dc8dfde1f00745d34a72692ee1390370f388c2fc4",
-    "reference/guards/merge_green_check.py": "8cf649919c67136793b134ee6a4d8d4ff24dc46a8c1baac8d8e09a9a38f942a6",
+    "reference/guards/merge_green_check.py": "3073e21a1c96825ac1bcb6a2620ba0cca2fff96ecaa85f59ba1680bbbf2e638e",
     "reference/tools/kit_manifest.py": "e3d6865878d111a8035eece786eca98b01868c5d34e1f378653b335958e2c8ef",
     "reference/tools/review_rates.py": "79000830139783bd933fa00e7d012e6ed17c818a4b65110ffdafe7d75500db6c",
     "reference/tools/review_stamp.py": "058c00df1302800f84014b046d8f8281c67e685297605d4fcc1d7f8cb5ed7578",
@@ -42,7 +42,7 @@
     "templates/wiki/status.md": "28ad39351429c9ba7a28552a4b4230f3734a385b7ad58d5206235e51c0129550",
     "tests/README.md": "94e97d8a0171f70f584da4a272794fc20eb1d6b1e2a9ff443adc77c7a02df82b",
     "tests/guard_registry.py": "46cf08b7c7a58de643ed69ba99f31499605ab018be767f3b63e70db520d9030e",
-    "tests/test_guard_contracts.py": "de5d5f08b4353f2b49fb5fc2b25837b748f7cf9d8bb77675577cb6f4987d7eb8"
+    "tests/test_guard_contracts.py": "083927132b9471fd6248f08e522b2e1d5a763fe3c05a4c72fbed89bbcaaa38e2"
   },
   "kit_version": "2026.09"
 }
