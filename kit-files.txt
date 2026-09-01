@@ -1,0 +1,55 @@
+# harness-kit 2026.09 — the kit's membership. THIS LIST IS A DECISION, NOT A GLOB:
+# what belongs to the kit is chosen here, one path per line, so the manifest can never
+# silently adopt whatever happens to be sitting in the directory. kit-manifest.json is
+# the generated fingerprint of exactly these files and is deliberately not listed
+# (it is the output, not a member). Regenerate after any change:
+#   python reference/tools/kit_manifest.py generate --list kit-files.txt --root . --version 2026.09 --out kit-manifest.json
+
+README.md
+STANDUP.md
+TODO.md
+kit-files.txt
+.gitignore
+
+spec/operating-model.md
+spec/guards.md
+spec/review.md
+spec/wiki-protocol.md
+spec/firewall.md
+spec/versioning.md
+spec/graduation.md
+
+reference/guards/az_guard.py
+reference/guards/git_scope_guard.py
+reference/guards/merge_green_check.py
+reference/guards/harness_probes.py
+reference/tools/kit_manifest.py
+reference/tools/review_stamp.py
+reference/tools/review_rates.py
+reference/ci/docs-gate.yml
+reference/ci/firewall-push.yml
+reference/claude/README.md
+reference/claude/settings.json
+reference/claude/role-template.md
+reference/claude/harness-auditor.md
+reference/claude/version-steward.md
+reference/cursor/project-rules.mdc
+reference/cursor/outside-the-lane.mdc
+reference/cursor/BUGBOT.md
+
+adapters/claude.md
+adapters/cursor.md
+adapters/codex.md
+
+templates/HARNESS.project.md
+templates/CLAUDE.project.md
+templates/pr-template.md
+templates/wiki/index.md
+templates/wiki/status.md
+templates/wiki/decisions.md
+templates/wiki/log.md
+templates/wiki/feedback.md
+
+tests/README.md
+tests/guard_registry.py
+tests/test_guard_contracts.py

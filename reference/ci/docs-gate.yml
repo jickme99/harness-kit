@@ -1,0 +1,372 @@
+# harness-kit 2026.09 — reference CI pattern, copied faithfully from the origin project.
+# GENERALIZATION NOTE (the only edit is this header): everything repo-specific below is an
+# EXAMPLE to re-point at your project's own files —
+#   * .github/docs-contract.yml       — YOUR manifest of path-patterns -> required docs
+#   * reviews/ledger.jsonl            — YOUR review ledger (schema: spec/review.md)
+#   * scripts/review_stamp.py         — shipped in this kit: reference/tools/review_stamp.py
+#   * scripts/firewall_scan.py        — NOT shipped in this kit, on purpose: the scanner is
+#     project-authored per spec/firewall.md (the kit carries the PATTERN — committed generic
+#     layer + secret-delivered denylist layer — never a denylist or any origin specifics).
+# The MECHANICS are the extracted value: fail-closed on unparseable input, exemptions read
+# only OUTSIDE HTML comments, three-dot merge-base diffs, -U0, --no-renames, no ${{ }}
+# interpolation of untrusted text into scripts.
+#
+name: docs-gate
+
+# Four mechanical, deterministic PR gates that share one trigger and one manifest
+# (.github/docs-contract.yml):
+#
+#   gate            — the docs contract: changed code paths must move their documentation.
+#   model-policy    — .claude/agents/*.md and docs/MODELS.md must state the SAME model for
+#                     every role. Which model does which work is a written policy; a role
+#                     file and the policy page that disagree mean nobody knows what ran.
+#   review-ledger   — a PR touching the manifest's `code_paths` must ADD its own line to
+#                     reviews/ledger.jsonl (the panel's findings + the stamped tier
+#                     configuration), or say in the PR body why no panel ran.
+#   firewall        — this repo has a PUBLIC trajectory. The PR's ADDED lines are scanned
+#                     against credential SHAPES (committed, .github/firewall-patterns.yml)
+#                     and sensitive TERMS (the FIREWALL_DENYLIST secret). A hit blocks,
+#                     naming the pattern id, file and line NUMBER — never the match.
+#                     Exceptions are reviewed, never self-served: narrow the pattern, or
+#                     fingerprint one exact string in .github/firewall-allowlist.yml.
+#
+# All four fail CLOSED (an unparseable input is a failure, never a pass) and name the exact
+# missing thing. Two take the same PR-body escape hatch: `docs-exempt: <reason>` for the
+# docs contract, `review-exempt: <reason>` for the ledger. The model-policy check has NO
+# escape hatch on purpose — its subject is two files disagreeing, and there is no reason to
+# merge that. The firewall takes no PR-body waiver either, for a stronger reason: an escape
+# hatch a blocked change can write for itself is not a firewall. It has two REVIEWED
+# exception paths instead — narrow the pattern (.github/firewall-patterns.yml, or the
+# private denylist behind the secret), or exempt one exact string by its sha256 fingerprint
+# in .github/firewall-allowlist.yml — and neither is exercisable from inside the blocked PR.
+#
+# The mechanical docs gate — Layer 3 of the documentation doctrine: "forgetting cannot
+# pass the gate." A deterministic check driven by .github/docs-contract.yml (path
+# patterns -> required docs): for every manifest rule that matches this PR's changed
+# paths, at least one of the rule's required docs must also have changed, or the check
+# fails naming the exact missing file.
+#
+# Escape hatch: a PR body line `docs-exempt: <non-empty reason>` (outside any HTML
+# comment — the PR template's commented-out placeholder never counts) converts the
+# failure into a neutral notice annotation. `edited` is in the trigger list precisely
+# so adding that line re-runs the gate without needing a new commit.
+#
+# Deterministic by design: same diff + same body = same result. No LLM, no network
+# beyond checkout and one gh api call for the PR body (fetched fresh so a body edit
+# is honored on re-run, and passed via a file — never interpolated into shell).
+#
+# What this gate deliberately cannot judge: HANDOFF.md currency (operator-visible
+# changes are not a path predicate) and prose-docs truthfulness — the docs-drift
+# review lens owns those. See the manifest header.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+  pull-requests: read   # gh api read of the PR body only
+
+concurrency:
+  group: docs-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: docs gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Full history so the merge-base diff below is computable regardless of
+          # how far the PR branch has diverged.
+          fetch-depth: 0
+
+      - name: Changed paths
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        # Three-dot: diff against the merge-base, i.e. exactly the file list the PR's
+        # Files tab shows — base-branch drift never leaks into the changed set.
+        run: |
+          git diff --name-only "${BASE_SHA}...${HEAD_SHA}" > "${RUNNER_TEMP}/changed_paths.txt"
+          echo "Changed paths in this PR:"
+          cat "${RUNNER_TEMP}/changed_paths.txt"
+
+      - name: PR body
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+        # Fetched fresh (not read from the event payload) so the exemption line is
+        # seen however the run was triggered; written to a file so untrusted body
+        # text never touches shell interpolation.
+        run: |
+          gh api "repos/${REPO}/pulls/${PR_NUM}" --jq '.body // ""' > "${RUNNER_TEMP}/pr_body.txt"
+
+      - name: Evaluate docs contract
+        env:
+          CHANGED_FILE: ${{ runner.temp }}/changed_paths.txt
+          BODY_FILE: ${{ runner.temp }}/pr_body.txt
+        run: |
+          python3 - <<'PY'
+          import fnmatch, os, re, sys
+
+          try:
+              import yaml  # preinstalled on GitHub-hosted runner images
+          except ImportError:
+              print("::error::PyYAML is unavailable on this runner; the docs gate cannot "
+                    "read .github/docs-contract.yml. Fix the runner image assumption "
+                    "before trusting any green run.")
+              sys.exit(2)
+
+          with open(".github/docs-contract.yml", encoding="utf-8") as f:
+              manifest = yaml.safe_load(f)
+          rules = (manifest or {}).get("rules") or []
+          if not rules:
+              print("::error file=.github/docs-contract.yml::no rules found; "
+                    "refusing to pass an empty gate")
+              sys.exit(2)
+
+          with open(os.environ["CHANGED_FILE"], encoding="utf-8") as f:
+              changed = [line.strip() for line in f if line.strip()]
+
+          body = ""
+          if os.path.exists(os.environ.get("BODY_FILE", "")):
+              with open(os.environ["BODY_FILE"], encoding="utf-8") as f:
+                  body = f.read()
+
+          # The exemption must sit OUTSIDE any HTML comment: the PR template ships a
+          # commented-out `<!-- docs-exempt: <reason> -->` placeholder that must never
+          # count. Strip comments first, then match a whole line. An UNTERMINATED
+          # `<!--` swallows everything to end-of-body (HTML semantics — the GitHub UI
+          # renders none of it), so it is stripped too: text invisible to a reviewer
+          # must never authorize a green check.
+          visible = re.sub(r"<!--.*?(?:-->|\Z)", "", body, flags=re.S)
+          m = re.search(r"^[ \t]*docs-exempt:[ \t]*(\S.*?)[ \t]*$", visible, flags=re.M)
+          exempt = m.group(1) if m else None
+
+          def matches(path, patterns):
+              return any(fnmatch.fnmatch(path, pat) for pat in patterns)
+
+          failures = []
+          for rule in rules:
+              name = rule.get("name", "<unnamed>")
+              pats = rule.get("paths") or []
+              reqs = rule.get("requires") or []
+              hits = sorted({p for p in changed if matches(p, pats)})
+              if not hits:
+                  continue
+              if any(matches(p, reqs) for p in changed):
+                  continue
+              failures.append((name, hits, reqs))
+
+          if not failures:
+              print(f"docs-gate: {len(changed)} changed path(s); "
+                    "every matching rule's required doc moved with it.")
+              sys.exit(0)
+
+          if exempt:
+              for name, hits, reqs in failures:
+                  print(f"::notice title=docs-gate exemption::rule '{name}' wanted "
+                        f"{' or '.join(reqs)} for {', '.join(hits)} — waived by PR "
+                        f"body 'docs-exempt: {exempt}'")
+              print(f"docs-gate: {len(failures)} rule(s) waived — reason: {exempt}")
+              sys.exit(0)
+
+          for name, hits, reqs in failures:
+              print(f"::error title=docs-gate::rule '{name}': this PR changes "
+                    f"{', '.join(hits)} but MISSING required doc change: "
+                    f"{' or '.join(reqs)}. Update the doc in this PR, or add a line "
+                    f"'docs-exempt: <reason>' to the PR body (outside HTML comments).")
+          sys.exit(1)
+          PY
+
+  model-policy:
+    name: model policy consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7        # no history needed: this reads the tree, not a diff
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Role files and docs/MODELS.md agree
+        # The checker is the repo's own stamper (scripts/review_stamp.py --check) rather
+        # than a copy of its parser inlined here: the same code that writes a ledger line's
+        # configuration decides whether that configuration is stateable. Two parsers would
+        # drift, and the one that drifts is always the one nobody runs locally.
+        #
+        # Every problem it prints becomes its own annotation, so the Files tab names the
+        # role, the file's value and the table's value without opening the log.
+        run: |
+          if out=$(python3 scripts/review_stamp.py --check 2>&1); then
+            echo "$out"
+          else
+            while IFS= read -r line; do
+              [ -n "$line" ] && echo "::error title=model-policy::$line"
+            done <<< "$out"
+            exit 1
+          fi
+
+  review-ledger:
+    name: review ledger
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0                 # merge-base diff, same reason as the docs gate
+
+      - name: Changed paths and added ledger lines
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        # ADDED lines only (`+`, minus the `+++` header): a PR that merely touches the
+        # ledger file — reformatting it, or rebasing over someone else's line — has not
+        # recorded a review of its own. -U0 keeps context lines out of the `+` set.
+        run: |
+          git diff --name-only "${BASE_SHA}...${HEAD_SHA}" > "${RUNNER_TEMP}/changed_paths.txt"
+          git diff -U0 "${BASE_SHA}...${HEAD_SHA}" -- reviews/ledger.jsonl \
+            | grep '^+' | grep -v '^+++' | sed 's/^+//' > "${RUNNER_TEMP}/ledger_added.txt" || true
+          echo "Changed paths in this PR:"
+          cat "${RUNNER_TEMP}/changed_paths.txt"
+          echo "Ledger lines added by this PR: $(wc -l < "${RUNNER_TEMP}/ledger_added.txt")"
+
+      - name: PR body
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+        run: |
+          gh api "repos/${REPO}/pulls/${PR_NUM}" --jq '.body // ""' > "${RUNNER_TEMP}/pr_body.txt"
+
+      - name: Require a review line for a code PR
+        env:
+          CHANGED_FILE: ${{ runner.temp }}/changed_paths.txt
+          ADDED_FILE: ${{ runner.temp }}/ledger_added.txt
+          BODY_FILE: ${{ runner.temp }}/pr_body.txt
+          PR_NUM: ${{ github.event.pull_request.number }}
+        run: |
+          python3 - <<'PY'
+          import fnmatch, json, os, re, sys
+
+          try:
+              import yaml  # preinstalled on GitHub-hosted runner images
+          except ImportError:
+              print("::error::PyYAML is unavailable on this runner; the review-ledger gate "
+                    "cannot read .github/docs-contract.yml. Fix the runner image "
+                    "assumption before trusting any green run.")
+              sys.exit(2)
+
+          with open(".github/docs-contract.yml", encoding="utf-8") as f:
+              manifest = yaml.safe_load(f)
+          code_paths = (manifest or {}).get("code_paths") or []
+          if not code_paths:
+              print("::error file=.github/docs-contract.yml::no code_paths found; refusing "
+                    "to pass a gate that would treat every PR as documentation-only")
+              sys.exit(2)
+
+          with open(os.environ["CHANGED_FILE"], encoding="utf-8") as f:
+              changed = [line.strip() for line in f if line.strip()]
+
+          # Every ADDED ledger line must be readable, exemption or not: the exemption says
+          # no panel ran, never that a broken record is acceptable.
+          added = []
+          with open(os.environ["ADDED_FILE"], encoding="utf-8") as f:
+              for n, raw in enumerate(f, start=1):
+                  if not raw.strip():
+                      continue
+                  try:
+                      added.append(json.loads(raw))
+                  except json.JSONDecodeError as e:
+                      print(f"::error file=reviews/ledger.jsonl::added line {n} is not "
+                            f"valid JSON ({e}). One object per line, no trailing commas.")
+                      sys.exit(1)
+
+          body = ""
+          if os.path.exists(os.environ.get("BODY_FILE", "")):
+              with open(os.environ["BODY_FILE"], encoding="utf-8") as f:
+                  body = f.read()
+          # Same shape as docs-exempt, same reasoning: text inside (or after an
+          # unterminated) HTML comment is invisible to a reviewer and must never
+          # authorize a green check.
+          visible = re.sub(r"<!--.*?(?:-->|\Z)", "", body, flags=re.S)
+          m = re.search(r"^[ \t]*review-exempt:[ \t]*(\S.*?)[ \t]*$", visible, flags=re.M)
+          exempt = m.group(1) if m else None
+
+          pr = int(os.environ["PR_NUM"])
+          hits = sorted({p for p in changed
+                         if any(fnmatch.fnmatch(p, pat) for pat in code_paths)})
+          if not hits:
+              print(f"review-ledger: {len(changed)} changed path(s), none of them code — "
+                    "no review line required.")
+              sys.exit(0)
+
+          mine = [o for o in added if o.get("type") == "review" and o.get("pr") == pr]
+          if mine:
+              print(f"review-ledger: this PR adds {len(mine)} review line(s) for PR #{pr}.")
+              sys.exit(0)
+
+          if exempt:
+              print(f"::notice title=review-ledger exemption::code paths changed "
+                    f"({', '.join(hits[:5])}{'...' if len(hits) > 5 else ''}) with no "
+                    f"review line — waived by PR body 'review-exempt: {exempt}'")
+              sys.exit(0)
+
+          others = sorted({o.get("pr") for o in added if o.get("type") == "review"})
+          note = (f" (the added review line(s) name PR {others}, not #{pr})"
+                  if others else "")
+          print(f"::error title=review-ledger::this PR changes code "
+                f"({', '.join(hits[:5])}{'...' if len(hits) > 5 else ''}) but adds NO "
+                f"reviews/ledger.jsonl line with \"pr\": {pr}{note}. Run the panel, then "
+                f"append one line stamped by `python scripts/review_stamp.py` (see "
+                f"reviews/README.md) — or, if no panel ran because the change is "
+                f"mechanical, add a line 'review-exempt: <reason>' to the PR body "
+                f"(outside HTML comments).")
+          sys.exit(1)
+          PY
+
+  firewall:
+    name: firewall
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0                 # merge-base diff, same reason as the docs gate
+
+      - name: Added lines
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        # Three-dot and -U0: exactly this PR's own additions, no context lines, no
+        # base-branch drift. The firewall polices what ENTERS — a term already on the base
+        # branch is a remediation job, not a gate failure, and re-adding its line is the
+        # one thing that would (correctly) surface it here.
+        #
+        # --no-renames is LOAD-BEARING, not tidiness. With rename detection on, a
+        # byte-identical rename INTO a sensitive filename is emitted as `similarity index
+        # 100% / rename from / rename to` with no `+++` line and no hunk at all: the scanner
+        # saw zero paths and zero added lines and reported clean. --no-renames expands every
+        # rename into a delete plus a full add, so both the new path and all of its content
+        # are scanned as the additions they are. (scripts/firewall_scan.py also mines
+        # `rename to` headers directly, as a second lock on the same door — but this flag is
+        # the fix; do not drop it.)
+        run: |
+          git diff -U0 --no-renames "${BASE_SHA}...${HEAD_SHA}" > "${RUNNER_TEMP}/pr.diff"
+          echo "Diff bytes: $(wc -c < "${RUNNER_TEMP}/pr.diff")"
+
+      - name: Scan added lines
+        env:
+          # The sensitive-term layer. ABSENT OR EMPTY = the gate FAILS CLOSED naming the
+          # setup step: a firewall running on half its patterns does not fail, it passes.
+          # Note the fork consequence and accept it deliberately — a pull_request run from
+          # a fork gets no secrets, so this gate goes red there. That is the right posture:
+          # the scan a fork PR most needs is the one it cannot be trusted to run.
+          FIREWALL_DENYLIST: ${{ secrets.FIREWALL_DENYLIST }}
+        # The scanner is the repo's own script (tested in tests/test_firewall.py against
+        # fixture diffs, including the positive controls that prove a hit blocks and that
+        # the matched text appears nowhere in the output) rather than a copy of its logic
+        # inlined here — the model-policy job's reasoning, for the same reason: two parsers
+        # drift, and the one that drifts is the one nobody runs locally.
+        run: python3 scripts/firewall_scan.py --diff-file "${RUNNER_TEMP}/pr.diff"

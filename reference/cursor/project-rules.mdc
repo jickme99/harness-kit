@@ -1,0 +1,67 @@
+---
+description: "harness-kit 2026.09 — the always-on pointer rule pattern: where the governing documents live, what this lane may write, how its branches are named, and what done means. Pointers only. Generalized from the origin project; EXAMPLE table rows name the origin's documents — replace with yours."
+alwaysApply: true
+---
+
+# The Cursor lane
+
+You are one writer among several in a repository that is driven mostly by dispatched agents.
+This file exists so that you can find the rules — **it does not contain them.** Everything
+below is a pointer with a one-line statement of what the pointed-at document governs. If a
+rule appears to be written out here, it is a summary that has drifted and the source wins.
+
+<!-- WHY POINTERS AND NOT RULES: a rule restated in a second file is a rule that will drift,
+     and the copy that drifts is the one nobody runs locally. The .mdc file's job is to make
+     the real documents findable from inside this tool, nothing more. NOTE the file
+     extension: a plain .md file in .cursor/rules/ is SILENTLY IGNORED — it has no
+     frontmatter to carry description/globs/alwaysApply, so the rules system skips it. An
+     adapter written as .md would look installed, be committed, be reviewed, and never
+     load. -->
+
+## The governing documents (EXAMPLE rows — point at YOUR project's files)
+
+| Read this | It governs |
+|---|---|
+| `CLAUDE.md` / the constitution (repo root) | The house rules, and what each kind of change must carry in the same commit. |
+| the brain repo's operating-model page, its "Cursor lane" section | This lane: its fences, its branch prefix, its definition of done, and the one-writer rule. **The authority on the two sections below.** |
+| the docs-contract manifest (e.g. `.github/docs-contract.yml`) | The manifest behind the docs CI gate: which code paths require which documentation to change in the same pull request. It is data, and readable — when the gate fails, that file names what is missing. |
+| `.claude/agents/*.md` | The roster. Each role file's `fence:` frontmatter is the machine-readable list of paths that role owns — how you find out whether a path you want already has a writer. |
+
+**Do not assume `AGENTS.md` is the constitution.** Cursor reads `AGENTS.md` natively, which
+is exactly what makes it a trap when that file has a different job (in the origin project it
+is the install runbook). Point this lane at the file that actually governs conduct, and say
+here which one that is.
+
+## Fences
+
+- **Default: the fast-visual-loop surfaces** (templates, styling, chart/layout surfaces) —
+  where feedback is immediate, failure is visible, and being wrong is cheap and loud. The
+  exact path list lives in the operating-model page; read it rather than inferring the
+  boundary from this sentence.
+- **The brain repo is READ-ONLY from this lane.** Read it freely; never write it. A second
+  writer there makes its log unreliable as a record of what happened.
+- **One writer per path, and the rule is tool-agnostic.** Two writers in one file is the
+  same collision whether the second one is an agent or a person with an editor — and worse
+  here, because nothing outside this editor can see your uncommitted work.
+- **Outside the fence: stop and say so.** Do not improvise a widening; a narrow fence is
+  the master's error to fix, not yours to work around.
+
+## Branches
+
+- **`cursor/<task>`.** The prefix is load-bearing, not cosmetic: it is how the master
+  session and the harness auditor see that this lane is holding a fence. A branch named
+  anything else is invisible work.
+- Never commit on `main`, never push to `main`, never merge your own pull request.
+  **Merge is the owner's gate** and is also the undo point.
+
+## Done
+
+1. **A local Bugbot review of the diff, before push.** Shift-left, and the test of it is
+   honest: *if the remote pass finds much, the local pass was skipped.* Review policy is
+   `.cursor/BUGBOT.md`.
+2. **The full suite passes with the project's own interpreter, pinned explicitly** — never
+   a bare `python`; a bare `python` can be a different interpreter with different packages,
+   and has produced both false greens and false reds.
+3. **Whatever the same-change table and the docs-contract manifest require has moved in the
+   same commit.**
+4. **The pull request is opened, and left for the owner.**

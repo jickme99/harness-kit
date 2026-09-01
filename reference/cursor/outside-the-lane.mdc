@@ -1,0 +1,32 @@
+---
+description: "harness-kit 2026.09 — tripwire rule pattern: guards, workflows, the shared kernel, the test suite, and the agent/adapter configuration are outside this lane's default fence. Stop and ask. The globs are the origin project's shape — EXAMPLE; set your own."
+globs: .github/**,scripts/**,tests/**,.claude/**,.cursor/**,Dockerfile,pyproject.toml,CLAUDE.md,AGENTS.md
+alwaysApply: false
+---
+
+# Stop — this is outside the lane's default fence
+
+A file matching this rule is in context. These paths are guards, CI workflows, the shared
+kernel, the test suite, dependency pins, or the agent and adapter configuration itself.
+None of them are fast-loop work.
+
+**What to do:** say which file you need and why, and stop. The change is dispatched as its
+own job with its own review — that is the operating model's stop-and-ask rule, and a worker
+that stops rather than reading its fence generously is behaving correctly, not
+obstructively. A fence that is too narrow is the master's error to widen, on the record.
+
+**Why this lane deliberately does not hold these paths:** the riskiest surfaces are the
+ones where a fast iteration loop is not the bottleneck and where being wrong is expensive
+**and quiet**. That is the opposite of a chart that looks wrong the moment you load it.
+
+Two specifics worth knowing before you ask, because they change what the answer will be:
+
+- **A guard is a script with a test carrying both controls** — the case it must block, and
+  the cases it must not. Editing one without both is how a guard becomes decoration, or
+  becomes a false denial that blocks routine work. See the kit's `spec/guards.md`.
+- **A test that covers a surface this lane owns is still a question, not an assumption.**
+  Ask; do not decide it here.
+
+**This tripwire is a reminder, not enforcement.** It attaches when a matching file is in
+context, which is not the same as every time one is written. The boundary that actually
+holds is the always-on pointer rule and the fences it points at.

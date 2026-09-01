@@ -1,0 +1,262 @@
+# harness-kit 2026.09 — reference CI pattern, copied faithfully from the origin project.
+# GENERALIZATION NOTE (the only edit is this header): scripts/firewall_scan.py is
+# project-authored, NOT shipped in this kit (spec/firewall.md carries the pattern and why);
+# FIREWALL_DENYLIST is YOUR Actions secret, synced from your private denylist file. The
+# extracted value is the RANGE HANDLING: every unusable range (all-zeros BEFORE,
+# unreachable commits, no merge base) is a loud refusal, never a silent empty scan —
+# an unscanned push reported as clean is the one outcome this gate exists to prevent.
+#
+name: firewall (push)
+
+# The firewall, on the one event the pull-request gates cannot see.
+#
+# THE GAP THIS CLOSES. `.github/workflows/docs-gate.yml` triggers on `pull_request` ONLY, and
+# it is where the firewall lives — the gate that scans a change's ADDED lines and touched
+# PATHS against the committed credential shapes (.github/firewall-patterns.yml) and the
+# private sensitive-term layer (the FIREWALL_DENYLIST secret). `ci.yml` does run on pushes to
+# `main`, but CI scans for BUGS, not for leaks. So a commit that reaches `main` without going
+# through a pull request passed through no firewall at all, in a repo on a PUBLIC trajectory.
+#
+# Nothing structural prevented that. The repository's ruleset is inert — GitHub does not
+# enforce rulesets on a private repo without a Team plan, and the API says so out loud
+# ("Upgrade to GitHub Pro"; `gh api repos/<owner>/<repo>/rulesets` answers 403) — and there is
+# no classic branch protection. The gap was theoretical only because the two principals who
+# write here both use pull requests. It stops being theoretical the day a third writer with
+# push access arrives, which is a thing being actively evaluated. A control whose only
+# enforcement is the habits of its current users is a habit, not a control.
+#
+# WHY A SEPARATE WORKFLOW rather than adding `push:` to docs-gate.yml. Three of that file's
+# four jobs are built ON the pull-request payload and cannot simply be re-pointed:
+#
+#   * They diff `github.event.pull_request.base.sha ... .head.sha`. Neither field EXISTS on a
+#     push event: both interpolate to the empty string, and `git diff "..."` on empty operands
+#     does not announce itself as a mistake. Every one of those expressions would have to
+#     become a conditional.
+#   * `docs gate` and `review ledger` read the PR BODY for their `docs-exempt:` /
+#     `review-exempt:` escape hatches, and the ledger gate additionally matches this PR's
+#     NUMBER. A push has no body and no number, so both would have to be skipped — and a
+#     permanently-skipped job sitting inside a shared workflow is a standing invitation to
+#     "just make it run", which is how a gate acquires a meaning nobody chose.
+#   * docs-gate's `concurrency` group keys on the PR number, which is empty on push: every
+#     push to main would share one group and cancel its predecessor.
+#
+# So the alternative was four jobs' worth of event branching inside a file whose whole virtue
+# is that each gate reads straight through. The standing instruction was not to weaken the
+# pull-request path, and the strongest available form of that is not to touch it: docs-gate.yml
+# is unchanged, byte for byte, by the change that added this file.
+#
+# THE COST, PRICED. The scan invocation now appears in two workflow files, and duplicated YAML
+# drifts — the same argument this repo makes for never inlining a second copy of a parser. Two
+# things hold it: the LOGIC is not duplicated (both callers run the same
+# `scripts/firewall_scan.py`, so only the range computation differs, which is the part that
+# legitimately differs), and `tests/test_firewall_push.py` asserts the flags over EVERY
+# workflow that invokes the scanner rather than over one file by name — so a third caller, or
+# a flag dropped from either of these two, fails the suite rather than production.
+#
+# WHAT DELIBERATELY DOES NOT RUN HERE, stated because a silent omission reads as an oversight:
+#
+#   * `docs gate` — its subject IS decidable from a push range, but its escape hatch is not.
+#     `docs-exempt:` lives in a pull request body, and a push has none, so a docs failure on
+#     `main` would be unclearable: red until some unrelated pull request happened to touch the
+#     named doc. A red nobody can clear is a red everybody learns to ignore, and that costs
+#     more than the gate is worth. The docs contract polices a PROCESS whose unit is the pull
+#     request; it belongs where the process is.
+#   * `review ledger` — the same, only harder. It does not merely read the body; it requires a
+#     ledger line carrying THIS pull request's number. On a push there is no number, so the
+#     check has no question to ask.
+#   * `model policy consistency` — reads the tree, not a diff, so it COULD run on push. It is
+#     not duplicated here because it already runs there: `ci.yml` triggers on pushes to `main`,
+#     and `tests/test_model_policy.py` makes (its own docstring) "the same assertion the
+#     `model-policy` CI job makes". A second copy would be a second thing to keep in step for
+#     no additional coverage.
+#   * The firewall ports cleanly for exactly the reason it is the strictest of the four: it
+#     takes NO escape hatch. Its question — "does this diff ADD something that must never enter
+#     this repo?" — is answerable from any range, and its answer needs nothing from a pull
+#     request. The gate that cannot be waived is the gate that travels.
+#
+# WHAT THIS GATE ON THIS EVENT CANNOT DO, and the difference matters. On a pull request the
+# firewall PREVENTS: it goes red before the content is on `main`. Here it can only ALARM — by
+# the time this runs, the push has landed. That is still the right instrument (a leak detected
+# within a minute is a rotate-and-purge; a leak nobody detects is a publication), but it is not
+# prevention, and the way to get prevention back is branch protection on `main`, which needs a
+# paid plan or a public repo. Read this job's red as "act now", never as "it was stopped".
+#
+# ALSO NOT SEEN: content ADDED and then REMOVED within one pushed range. The range is diffed
+# endpoint to endpoint, so a secret introduced in one commit and deleted in the next is
+# invisible here — exactly as it is invisible to the pull-request path's three-dot diff. Both
+# police what the TREE gains; neither polices git HISTORY, which keeps the object either way
+# and publishes it the day the repo flips. Same scope statement as the scanner's own docstring
+# makes about base64 and homoglyphs: this raises the floor against accident, and a deliberate
+# smuggler is the review panel's problem and the human merge gate's.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read          # least privilege: no PR body to fetch here, so no pull-requests scope
+
+concurrency:
+  # NOT `cancel-in-progress`, and the difference from docs-gate.yml is deliberate. There, a
+  # newer run on a pull request answers the SAME question about a newer head, so superseding
+  # the older one loses nothing. Here every push carries a DIFFERENT range, and cancelling an
+  # in-flight run discards the only scan that range will ever get. Serial queueing is the
+  # correct behaviour for a gate whose subject changes with every event.
+  group: firewall-push-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  firewall:
+    name: firewall (push to main)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Full history: the range's BEFORE end is an arbitrary earlier commit on the branch,
+          # and a shallow checkout would not contain it.
+          fetch-depth: 0
+
+      - name: Resolve the pushed range
+        env:
+          # Every value arrives through the environment, never through `${{ }}` interpolated
+          # into the script body. Two reasons, and the second is the load-bearing one here:
+          # untrusted text must not touch shell interpolation (the repo's standing rule), AND
+          # a body with no `${{ }}` in it is ORDINARY BASH — which is what lets
+          # tests/test_firewall_push.py extract this exact script and run it against real
+          # temporary repositories, instead of asserting things about YAML text.
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.event.after }}
+          FORCED: ${{ github.event.forced }}
+          DIFF_FILE: ${{ runner.temp }}/push.diff
+        run: |
+          set -euo pipefail
+
+          ZERO='0000000000000000000000000000000000000000'
+
+          # A ref DELETION: `after` is all zeros. There is no tree at the other end and
+          # nothing ENTERED the repository, so the honest answer is an empty diff rather than
+          # a refusal — but it is written explicitly, and the scan step still runs on it, so
+          # "scanned nothing because there was nothing" and "scanned nothing because the gate
+          # was skipped" never look alike in the log.
+          if [ -z "${AFTER}" ] || [ "${AFTER}" = "${ZERO}" ]; then
+            echo "::notice title=firewall::this push DELETES the ref; no content entered the"\
+                 "repository, so there is nothing to scan."
+            : > "${DIFF_FILE}"
+            exit 0
+          fi
+
+          # `before` is ALL ZEROS on the first push to a ref, and after a force-push over a
+          # ref that had been deleted. A diff against all-zeros is not a diff, and there is no
+          # safe substitute: diffing the whole tree would report every pre-existing line as an
+          # addition (the firewall polices ENTRY, not history) and would then block forever on
+          # anything already committed. So the gate refuses, loudly, with the manual command
+          # attached — because an unscanned push reported as clean is the one outcome this
+          # gate exists to make impossible.
+          if [ -z "${BEFORE}" ] || [ "${BEFORE}" = "${ZERO}" ]; then
+            echo "::error title=firewall::the push event reports no usable BEFORE commit (all"\
+                 "zeros — the ref was just created, or force-pushed over a deleted ref), so"\
+                 "this gate has no range to scan. It REFUSES to report an unscanned push as a"\
+                 "clean one. Scan by hand against the last commit known to have been scanned:"\
+                 "git diff -U0 --no-renames <last-scanned-sha>...${AFTER} > push.diff, then"\
+                 "FIREWALL_DENYLIST=\"\$(cat denylist.txt)\" python3 scripts/firewall_scan.py"\
+                 "--diff-file push.diff"
+            exit 2
+          fi
+
+          # `actions/checkout` fetches REFS, not orphans, so a force-push can leave `before`
+          # unreachable and therefore absent from this clone. One targeted fetch is worth
+          # trying (GitHub serves reachable SHAs); if the object is still not here, the range
+          # is unusable and this exits the same way as the all-zeros case. It does NOT fall
+          # back to a narrower range: a partial scan reported as a complete one is precisely
+          # the fail-open shape.
+          if ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            git fetch --no-tags --quiet origin "${BEFORE}" 2>/dev/null || true
+          fi
+          if ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            echo "::error title=firewall::the BEFORE commit of this push is not present in"\
+                 "this checkout and could not be fetched (it is unreachable — the usual cause"\
+                 "is a force-push that orphaned it). The range cannot be computed and the"\
+                 "gate refuses to guess a narrower one. Scan the affected commits by hand."
+            exit 2
+          fi
+          if ! git cat-file -e "${AFTER}^{commit}" 2>/dev/null; then
+            echo "::error title=firewall::the AFTER commit of this push is not present in this"\
+                 "checkout. The gate cannot scan a range it cannot resolve."
+            exit 2
+          fi
+
+          # A force-push is reported, not refused. The range's endpoints are still diffable,
+          # but commits that were REMOVED from the branch are not in it — and they may be
+          # exactly why someone force-pushed. Say so where an operator will read it.
+          if [ "${FORCED:-}" = "true" ]; then
+            echo "::warning title=firewall::this was a FORCE push. The endpoint range below is"\
+                 "scanned, but commits dropped from the branch are not in it — and the objects"\
+                 "they added remain in the repository. Review what was rewritten."
+          fi
+
+          # THREE-dot, matching the pull-request path, and the choice is load-bearing in
+          # exactly one case. For an ordinary fast-forward push BEFORE is an ancestor of AFTER,
+          # the merge base IS BEFORE, and two-dot and three-dot are the same diff — including
+          # for a MANY-COMMIT push and for a MERGE commit, which need no special case because
+          # the aggregate of the range is one diff.
+          #
+          # They diverge only when BEFORE is NOT an ancestor of AFTER, i.e. a force-push that
+          # rewrote the branch. There, three-dot diffs from the common ancestor and therefore
+          # reports a SUPERSET of what two-dot reports: content present in both the old and
+          # new tips is invisible to two-dot (it is not "new" relative to the old tip) but is
+          # scanned by three-dot. Over-reporting is the failure this gate is allowed to have —
+          # the scanner says as much about its own path parsing — and under-reporting is the
+          # one it is not. So the more conservative operator wins, and it has the side benefit
+          # that both paths now answer the same question the same way.
+          #
+          # (Iterating commit-by-commit is the other tempting alternative and is worse: it
+          # double-reports content that moved through several commits, and it disagrees with
+          # the pull-request path's verdict on the same content, which is how a gate earns a
+          # reputation for crying wolf.)
+          #
+          # A three-dot range needs a merge base, so its absence is checked HERE rather than
+          # left to git's own error: two histories with no common ancestor means `main` was
+          # replaced wholesale, which is a thing a human needs to be told in those words.
+          if ! git merge-base "${BEFORE}" "${AFTER}" >/dev/null 2>&1; then
+            echo "::error title=firewall::the BEFORE and AFTER commits of this push share NO"\
+                 "common ancestor — the branch's history was replaced wholesale, not advanced."\
+                 "There is no range that means 'what this push added', so the gate refuses"\
+                 "rather than inventing one. Review the new history by hand before trusting"\
+                 "any later green run."
+            exit 2
+          fi
+
+          # -U0 and --no-renames for the same reasons docs-gate.yml states at length: no
+          # context lines in the `+` set, and rename detection OFF so a byte-identical rename
+          # INTO a sensitive filename is expanded into a delete plus a full add and actually
+          # gets scanned.
+          if ! git diff -U0 --no-renames "${BEFORE}...${AFTER}" > "${DIFF_FILE}"; then
+            echo "::error title=firewall::git diff failed on the pushed range. The gate"\
+                 "refuses to treat an uncomputable range as an empty one."
+            exit 2
+          fi
+
+          # The COUNT is deliberately two-dot: "how many commits did this push carry" is a
+          # different question from "what does the tree gain", and the answer is a log line,
+          # not the scan range.
+          echo "Range: ${BEFORE}...${AFTER}"
+          echo "Commits in range: $(git rev-list --count "${BEFORE}..${AFTER}" || echo '?')"
+          echo "Diff bytes: $(wc -c < "${DIFF_FILE}")"
+
+      - name: Scan added lines
+        env:
+          # The sensitive-term layer, and the reason this job is worth having at all. A
+          # repository secret with no environment scoping is available to a `push` run in its
+          # own repository — VERIFIED rather than assumed: the repo declares zero environments
+          # (`gh api .../environments` -> total_count 0) and the secret is listed at repository
+          # scope, and the run that proved this file works read it. ABSENT OR EMPTY = the gate
+          # FAILS CLOSED naming the setup step, which is `firewall_scan.py`'s own contract.
+          #
+          # The fork consequence docs-gate.yml notes does not arise here: `push` events only
+          # ever run in the repository that owns the secret.
+          FIREWALL_DENYLIST: ${{ secrets.FIREWALL_DENYLIST }}
+          DIFF_FILE: ${{ runner.temp }}/push.diff
+        # The same scanner the pull-request path runs, invoked the same way. Exit 0 clean,
+        # 1 blocked, 2 the gate could not run — and 2 reaches the job as a failure exactly like
+        # 1, so an unusable configuration is red rather than green on this path too.
+        run: python3 scripts/firewall_scan.py --diff-file "${DIFF_FILE}"
