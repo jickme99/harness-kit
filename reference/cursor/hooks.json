@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": ".cursor/hooks/bridge.cmd",
+        "timeout": 60,
+        "failClosed": true
+      }
+    ],
+    "beforeMCPExecution": [
+      {
+        "command": ".cursor/hooks/bridge.cmd",
+        "timeout": 15,
+        "failClosed": true
+      }
+    ]
+  }
+}
