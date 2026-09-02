@@ -43,9 +43,11 @@
   TEXT"), which its sibling guards solved with quote-aware parsing the merge guard never
   got. Fix upstream first, like the bare-merge fail-open above; the false-denial severity
   rule applies (commit messages are routine work).
-- **Cursor enforcement-hook support is unverified** (`adapters/cursor.md`): nobody has
-  established whether any Cursor mechanism can block a shell command pre-execution
-  against the guards' stdin contract. Verify and upgrade or close that row.
+- **RESOLVED 2026-09-02 — Cursor enforcement hooks verified on the origin**
+  (`adapters/cursor.md`): native Cursor Agent `beforeShellExecution` /
+  `beforeMCPExecution` via `reference/cursor/` bridge. Live unpinned `az` denied.
+  Remaining: stamp origin as consumer #1 (E5); kit-steward still waits on consumer #2.
+
 - **The Codex adapter is a hypothesis** (`adapters/codex.md`): rewrite it from evidence
   after the first real cold start on a non-Claude agent — which is also the kit's own
   validation experiment.

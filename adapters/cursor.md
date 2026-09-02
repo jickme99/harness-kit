@@ -1,11 +1,8 @@
 # Adapter: Cursor
 
-**Status: CONFIGURED FROM VENDOR DOCUMENTATION, partially exercised.** The origin project
-installed this adapter and validated the file formats against Cursor's own docs (three
-plan-breaking corrections came out of that check — below). What has NOT been verified is
-marked **unverified**, per row, in the coverage table. Vendor policy note: enabling
-Bugbot sends repository content to the vendor — Question 2 in `STANDUP.md` applies
-(personal repos: owner's call; corporate repos: recorded IT approval BEFORE enablement).
+**Status: VERIFIED 2026-09-01 on the origin, native Cursor Agent, Windows.** Rules files
+remain as below. Enforcement hooks are no longer unverified — see the section after
+Install.
 
 ## Install
 
@@ -38,25 +35,34 @@ Bugbot sends repository content to the vendor — Question 2 in `STANDUP.md` app
    local Bugbot review before push. The one-writer rule is tool-agnostic — the master
    treats the lane's held paths exactly like a worker's fence.
 
-## Enforcement hooks — what the reference files establish, and no more
+## Enforcement hooks — verified 2026-09-01 on the origin (native Cursor Agent, Windows)
 
-The origin's Cursor adapter contains **no enforcement hooks**: it is rules files (context
-injection), Bugbot policy prose, and lane doctrine. From the reference files alone we
-CANNOT establish that Cursor offers a pre-execution hook equivalent to Claude Code's
-PreToolUse, and this adapter **does not claim hook support** for the three guards.
-**Unverified:** whether any Cursor mechanism (hooks, extensions, or its agent runtime) can
-block a shell command pre-execution against the guards' stdin contract. Until someone
-verifies that and updates this table, the guards on Cursor are **standalone-checkable
-only**: run them as pre-flight checks (`spec/guards.md` §standalone fallback), and carry
-the rules as doctrine.
+Cursor **does** have pre-execution hooks: `.cursor/hooks.json` `beforeShellExecution` and
+`beforeMCPExecution`. They are **not** Claude Code's PreToolUse; `.claude/settings.json`
+does not fire in native Cursor Agent (live unpinned `az account show` ran until this
+adapter was wired).
+
+Install `reference/cursor/hooks.json` and `reference/cursor/bridge.cmd` into
+`.cursor/`, and `reference/cursor/hook_bridge.py` into `scripts/cursor_hook_bridge.py`
+next to the three guards. The `.cmd` wrapper is **load-bearing on Windows**:
+`python scripts/...` as the hook command uses conda's `python.cmd`, which drops piped
+stdin, and the hook then sees an empty payload. Call `python.exe`.
+
+The bridge always prints a Cursor `{permission: allow|deny}` object. Silence is invalid
+JSON; with `failClosed: true` that would block every command. Azure MCP is refused by
+server name (origin posture: unused; `az --subscription` is the path).
+
+Live on the origin HQ checkout: unpinned `az account show` refused; pinned
+`--subscription "Azure Sub.1"` allowed.
 
 ## Coverage
 
 | Guarantee | Mechanical | Standalone-checkable | Doctrine-only |
 |---|---|---|---|
-| az pins `--subscription` | **unverified** — no known pre-execution hook surface | yes — pipe payload to `az_guard.py` before running | **yes** (the pointer rule states the rule) |
-| Destructive git names its repo | **unverified** — same | yes — `git_scope_guard.py` | **yes** |
-| Merge only on green checks | **unverified** — same; the owner's Merge gate covers it in practice (the lane never merges) | yes — `merge_green_check.py` | **yes** |
+| az pins `--subscription` | **yes** — `beforeShellExecution` via the bridge (verified 2026-09-01) | yes — pipe payload to `az_guard.py` | residual: empty/unreadable stdin fail-opens (Windows pipe gap) |
+| Destructive git names its repo | **yes** — same | yes — `git_scope_guard.py` | same residual |
+| Merge only on green checks | **yes** — same; the owner's Merge gate covers the web UI | yes — `merge_green_check.py` | a merge clicked in GitHub never passes a local guard |
+| Azure MCP unused | **yes** — `beforeMCPExecution` denies by server name | n/a | origin posture |
 | CI gates (docs contract, ledger, firewall) | **yes** — server-side, tool-independent | n/a | — |
 | Fence awareness (rules in context) | partial — `.mdc` rules inject the fence text when matching files are in context; **a tripwire is a reminder, not enforcement**, and attachment-on-context is not attachment-on-write | no | **yes** |
 | Review policy (must-fix bar, fail-open-enumeration hunt) | no — `BUGBOT.md` is prose to a reader, not a filter | no | **yes** |

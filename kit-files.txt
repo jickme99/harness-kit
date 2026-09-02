@@ -36,6 +36,9 @@ reference/claude/version-steward.md
 reference/cursor/project-rules.mdc
 reference/cursor/outside-the-lane.mdc
 reference/cursor/BUGBOT.md
+reference/cursor/hooks.json
+reference/cursor/bridge.cmd
+reference/cursor/hook_bridge.py
 
 adapters/claude.md
 adapters/cursor.md
