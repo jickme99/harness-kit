@@ -38,6 +38,72 @@ nobody takes it. Reference role file: `reference/claude/version-steward.md`.
    Merge gate — never pushed** — and a DECLINED upgrade is kit feedback, not a compliance
    failure.
 
+## Kit versions and the poll (MUST)
+
+The kit repo is the source of truth. Each stamp records where it started. The two are
+compared by **version**, not by hoping someone noticed a hash change.
+
+- **`kit_version`** lives in `kit-manifest.json` (generated; required). Scheme: calendar
+  line `YYYY.MM` plus a patch (`2026.09`, `2026.09.1`, …). Bump it on every merge a
+  consumer should notice. Git tags match the version string.
+- **`CHANGELOG.md`** is the poll surface: what changed, who it applies to, lane 1 vs
+  lane 3. `TODO.md` is the gap list — not a release log.
+- **Poll-from-project is the primary path.** Any project, any IDE, no write access to
+  consumers required. The kit master still decides what is *in* the kit; the project
+  master still decides what is *applied*. Kit-opens-upgrade-PRs (the steward at consumer
+  #2) is later automation, not a substitute for a project that can read the changelog.
+
+### Poll recipe (in the consuming project)
+
+A project with no `kit-manifest.json` cannot poll. Stamp first (`STANDUP.md` step 5).
+
+1. **Read local version:**
+   ```sh
+   python -c "import json; print(json.load(open('kit-manifest.json'))['kit_version'])"
+   ```
+2. **Fetch the kit changelog and current version** from the kit repo on GitHub (private:
+   use an authenticated `gh` or a local clone of harness-kit — raw URLs will 404). Read
+   `CHANGELOG.md` and `kit-manifest.json`'s `kit_version` on `main`.
+3. **Build the worklist (fail closed on version).** Order versions as
+   `YYYY.MM` = `YYYY.MM.0`, then patch. Include:
+   - every changelog `##` section with version **greater than** local `kit_version`, and
+   - the section whose version **equals** local `kit_version`, if one exists.
+
+   Same-version is included on purpose: this kit reused `2026.09` while hashes moved
+   (extraction, merge-green, Cursor hooks, Mode B). Treating "I am already on 2026.09" as
+   "I have everything under that heading" is fail-open enumeration. A same-version poll
+   that classifies clean is a no-op, not a skip of unread subsections. Sections **older**
+   than local are out of scope. **Applies to** is a hint, not a skip-allowlist: the five
+   keys in `CHANGELOG.md` (every stamp / Claude / Cursor / Codex / optional) plus any
+   conditional prose (`every stamp that installed merge_green_check.py`) are not a closed
+   set. A value you do not recognise, or a condition you have not checked, is **not** a
+   skip — skipping a lane-1 fix because the sentence did not match a worked example is
+   fail-open enumeration. A skip is a recorded decision (why, and who decided), never a
+   silent ignore.
+4. **Do not copy files yet.** For each relevant entry, propose a project PR:
+   - Run `classify` against the **project's** current stamp (project paths). Regenerate
+     only **unmodified**; surface **customized** as conflicts; never silently restore
+     **missing**. `missing` means "our stamp named this project path and the tree does
+     not have it."
+   - **Membership drift uses STANDUP as the map, then compares.** The kit repo's
+     `kit-files.txt` and a project's stamp are different shapes (`templates/HARNESS.project.md`
+     is not `HARNESS.md`). A raw path-set diff is a false "everything is new." Map each
+     kit path through STANDUP's install steps (and the adapter docs it points at) **before**
+     asking whether the project stamp names the destination. After mapping:
+     - kit path with a STANDUP destination the project stamp does not name → **new member**,
+       offered for install (never dropped because `classify` never saw the kit path);
+     - kit path with no STANDUP destination → **kit-repo-only**, not a project gap;
+     - project-stamp path with no kit counterpart after mapping → **project-only**, not
+       silently deleted.
+     Do not maintain a second mapping table here — a stale table would fail open the same
+     way. STANDUP (plus adapter install) is the map; if STANDUP grew a copy step, that is
+     a new member.
+5. **Never self-apply.** The project Merge gate is the activation. Declining an entry is
+   kit feedback: send it up; do not quietly drift.
+
+The kit's `classify` answers "may this upgrade rewrite this file in *this* tree?" The
+changelog answers "is there anything to consider?" Neither is sufficient alone.
+
 ## Mechanics (reference)
 
 Dependabot config (security immediate; grouped monthly minors; individual majors), repo
@@ -53,4 +119,6 @@ durable home, not a PR body.
 
 The lanes and the reader-assignment rule are doctrine plus ordinary CI/bot configuration —
 portable to any harness. What must survive re-implementation: the three-lane risk split,
-the fresh-install test on majors, the named-reader table, and the kit-as-dependency sweep.
+the fresh-install test on majors, the named-reader table, the kit-as-dependency sweep, a
+versioned stamp, and a pollable changelog that a project can read without write access to
+the kit.

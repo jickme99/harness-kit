@@ -11,11 +11,10 @@
   hooks-by-evidence threshold (`spec/graduation.md`) is met. The shape: after a push, a
   probe that verifies the expected workflows actually QUEUED, so "no runs" is
   distinguished from "green". Propose as a probe-pack addition.
-- **The kit-steward role activates at consumer #2.** One consumer = nothing to steward.
-  Until then the kit versions by hand (this repo's own `kit-manifest.json` +
-  `kit-files.txt`); the steward's pull-based design (reads consumers' standardized
-  harness-audit reports; drift is information; declined upgrades are kit feedback) is
-  specified in `spec/graduation.md` and `spec/versioning.md`.
+- **The kit-steward role activates at consumer #2.** One consumer = nothing to steward
+  from the kit side. Poll-from-project is live as of `2026.09.1` (`CHANGELOG.md` +
+  `spec/versioning.md`). Until consumer #2, kit-opens-upgrade-PRs stays future work;
+  declined upgrades remain kit feedback either way.
 - **Stamping the origin project as consumer #1 is a follow-up** — install
   `kit-files.txt`/`kit-manifest.json` into it so `classify` can tell kit files from
   tailoring there, making "the origin operates from the kit" literally true.
@@ -58,3 +57,8 @@
   notebook mailbox; delegated Merge is squash-merge when green, Publish never delegated.
   Parked (already listed above, not new): stamp origin as consumer #1; push-queued-runs
   probe; merge_green quote-aware parse; empty-stdin fail-open residual; Codex rewrite.
+
+- **RESOLVED 2026-09-03 — pollable kit versions (`2026.09.1`).** `CHANGELOG.md` is the
+  poll surface; `spec/versioning.md` has the recipe; `kit_version` bumps on every merge
+  a consumer should notice. Baseline `2026.09` (extraction through kit PR #2) is logged
+  after the fact because those merges did not bump the string.

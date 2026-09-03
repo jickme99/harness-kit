@@ -60,13 +60,16 @@ identical across shapes. Shape is a stand-up-time answer, not a fork of the kit.
    (fences are real paths — start narrow; widening is on the record). Install the two
    function-role patterns (`harness-auditor.md`, `version-steward.md`), replacing the
    origin's path and instrument names with the project's own.
-5. **Generate the kit manifest** — the project's stamp, and the hook for future upgrades:
+5. **Generate the kit manifest** — the project's stamp, and the hook for future upgrades.
+   Use the **current** `kit_version` from the kit repo's `kit-manifest.json` / `CHANGELOG.md`
+   (do not copy a stale example). As of this kit line:
    ```sh
-   python scripts/kit_manifest.py generate --list kit-files.txt --root . --version 2026.09 --out kit-manifest.json
+   python scripts/kit_manifest.py generate --list kit-files.txt --root . --version 2026.09.1 --out kit-manifest.json
    ```
    where `kit-files.txt` lists the kit-owned files you just installed (copy the kit's own
    list as a starting point and edit it to your layout — membership is a decision, not a
-   glob). Commit both files.
+   glob). Commit both files. A project without this stamp cannot poll for updates.
+   Later: `spec/versioning.md` (poll recipe).
 6. **(Two-repo shape only) Arm the firewall** per `spec/firewall.md`: author the scanner
    in the body repo, seed the denylist in the brain repo from your own hard constraints,
    sync the secret, record the hash.
