@@ -29,11 +29,42 @@ Install.
    the alternative: every-push triggering multiplied ~33 PRs into an estimated 80–100
    reviews and burned the credit allowance in two days. Fix findings **in the PR that
    raised them** — follow-up PRs pay for every finding twice and read to the reviewer as
-   nothing ever being fixed.
+   nothing ever being fixed. Autofix stays **OFF** (external reviewer is input, never
+   author). Remote skip is **not** "we ran a review": GitHub Bugbot skips the remote pass
+   only when local `/review-bugbot` stored a patch ID for the **same** diff. A generic
+   code-reviewer pass does not set that ID. Sequence for Cursor-as-master: finish the
+   branch → `/review-bugbot` on that exact diff → `gh pr create` with **no extra commits
+   in between**.
 5. **The lane** (if a human drives Cursor beside a dispatched-agent master): branch prefix
    `cursor/<task>`, the brain repo read-only, default fence on fast-visual-loop surfaces,
-   local Bugbot review before push. The one-writer rule is tool-agnostic — the master
-   treats the lane's held paths exactly like a worker's fence.
+   `/review-bugbot` on the exact diff before `gh pr create`. The one-writer rule is
+   tool-agnostic — the master treats the lane's held paths exactly like a worker's fence.
+   Workers and the lane **never merge**. When the owner has delegated routine Merge
+   (`spec/operating-model.md` invariant 3), the **standing master** squash-merges when
+   checks are success / skipped / neutral. Publish is never delegated.
+
+## Cursor-as-master — spawn, review seats, merge
+
+**Task spawn: pin a slug, never inherit.** When the master chat is a costly model, Cursor
+Task `inherit` makes every worker cost the same. Pin an explicit slug from the
+**consuming project's** vendor adapter table (its `docs/MODELS.md` or equivalent). Do not
+write those vendor names into `.claude/agents/*.md` `model:` fields — the model-policy CI
+still checks Claude tokens (`haiku` / `sonnet` / `opus`). Keep slugs in the project's
+adapter table; the kit does not ship a required starting-card for any vendor.
+
+**Code-cyber seat.** On Cursor-as-master, the panel's code-cyber seat is
+`/review-security`, at the same cadence as the panel. Do not also run a second prose
+cyber lens on that PR. Required outcome: **findings** · **clean** · **blocked**. Blocked
+is an owner ping; a silent empty report is not clean. This is a git-diff review, not
+cloud-estate coverage.
+
+**Done (Cursor-as-master), before `gh pr create`:**
+
+1. `/review-security` on the branch diff (the cyber seat — outcome named above).
+2. `/review-bugbot` on that **exact** diff (the patch ID that makes GitHub skip remote).
+3. `gh pr create` with no extra commits after step 2.
+4. If Merge is delegated: squash-merge when checks are success / skipped / neutral.
+   Workers still never merge. Publish stays the owner.
 
 ## Enforcement hooks — verified 2026-09-01 on the origin (native Cursor Agent, Windows)
 
@@ -61,9 +92,10 @@ Live on the origin HQ checkout: unpinned `az account show` refused; pinned
 |---|---|---|---|
 | az pins `--subscription` | **yes** — `beforeShellExecution` via the bridge (verified 2026-09-01) | yes — pipe payload to `az_guard.py` | residual: empty/unreadable stdin fail-opens (Windows pipe gap) |
 | Destructive git names its repo | **yes** — same | yes — `git_scope_guard.py` | same residual |
-| Merge only on green checks | **yes** — same; the owner's Merge gate covers the web UI | yes — `merge_green_check.py` | a merge clicked in GitHub never passes a local guard |
+| Merge only on green checks | **yes** — same; a delegated master squash-merge still goes through this guard; a merge clicked in GitHub never does | yes — `merge_green_check.py` | web-UI merge is outside the hook |
 | Azure MCP unused | **yes** — `beforeMCPExecution` denies by server name | n/a | origin posture |
 | CI gates (docs contract, ledger, firewall) | **yes** — server-side, tool-independent | n/a | — |
 | Fence awareness (rules in context) | partial — `.mdc` rules inject the fence text when matching files are in context; **a tripwire is a reminder, not enforcement**, and attachment-on-context is not attachment-on-write | no | **yes** |
-| Review policy (must-fix bar, fail-open-enumeration hunt) | no — `BUGBOT.md` is prose to a reader, not a filter | no | **yes** |
+| Review policy (must-fix bar, fail-open-enumeration hunt) | no — `BUGBOT.md` is prose to a reader, not a filter. Local `/review-bugbot` is what stores the patch ID GitHub uses to skip remote | no | **yes** |
+| Code-cyber seat (`/review-security`) | no — git-diff review, not a hook | the command's findings · clean · blocked | **yes** (do not also run a prose cyber lens) |
 | Wiki protocol / commit protocol / report contract | no | staleness + dispositions via `harness_probes.py` | **yes** |

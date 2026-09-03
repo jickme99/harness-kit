@@ -39,9 +39,9 @@ Two more promises the kit makes about the projects it stamps:
 
 - The guards are **mistake-preventers for an agent trying to comply, not sandboxes** —
   deliberate obfuscation defeats them, and each file names its residual holes.
-- Only the **Claude Code adapter is proven in production**. Cursor is configured from the
-  vendor's documented behavior and marked unverified where unverified; **Codex is
-  untested** and its adapter says so.
+- **Claude Code** is proven in production. **Cursor** enforcement hooks were verified
+  2026-09-01 on the origin (see `adapters/cursor.md`); remaining Cursor rows are doctrine
+  or residual. **Codex is untested** and its adapter says so.
 - Several guarantees are **doctrine-only on every harness** (the wiki protocol's
   auto-write, the commit protocol, the report contract). The coverage tables read the
   doctrine column as the list of promises you personally hold.

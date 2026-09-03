@@ -52,16 +52,20 @@ here which one that is.
   session and the harness auditor see that this lane is holding a fence. A branch named
   anything else is invisible work.
 - Never commit on `main`, never push to `main`, never merge your own pull request.
-  **Merge is the owner's gate** and is also the undo point.
+  **Workers and this lane never merge.** Merge is the owner's gate (and the undo point)
+  unless the owner has delegated routine Merge to the standing master, who squash-merges
+  when checks are success / skipped / neutral. Publish is never delegated.
 
 ## Done
 
-1. **A local Bugbot review of the diff, before push.** Shift-left, and the test of it is
-   honest: *if the remote pass finds much, the local pass was skipped.* Review policy is
-   `.cursor/BUGBOT.md`.
+1. **`/review-bugbot` on this exact diff, then `gh pr create` with no extra commits in
+   between.** GitHub Bugbot skips the remote pass only when that command stored a patch ID
+   for the **same** diff. A generic code-reviewer pass does not set that ID. Remote remains
+   once per PR; autofix stays OFF. Review policy is `.cursor/BUGBOT.md`.
 2. **The full suite passes with the project's own interpreter, pinned explicitly** — never
    a bare `python`; a bare `python` can be a different interpreter with different packages,
    and has produced both false greens and false reds.
 3. **Whatever the same-change table and the docs-contract manifest require has moved in the
    same commit.**
-4. **The pull request is opened, and left for the owner.**
+4. **The pull request is opened.** This lane does not merge it. If Merge is delegated, the
+   standing master squash-merges when green.

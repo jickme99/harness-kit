@@ -105,7 +105,8 @@ nothing if it runs, and confirm the refusal.
      restate. A rule written twice is a rule that will drift. -->
 
 - `wiki/{{operating-model page}}` — the agent operating model: one master, disposable
-  role-cast agents, worktree isolation, the two owner gates (Merge, Publish).
+  role-cast agents, worktree isolation, the two owner gates (Merge may be delegated to
+  the master when green; Publish is never delegated).
 - `wiki/{{review page}}` — the review-lens roster and loop caps.
 - `.claude/agents/*.md` — the role roster; each `fence:` frontmatter block is the
   machine-readable list of paths that role owns.

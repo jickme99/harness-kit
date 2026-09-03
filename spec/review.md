@@ -40,6 +40,12 @@ never the job that wrote it) · Determinism & provenance · Publishing & firewal
 never a separate process) · Docs-drift (diff vs the role's docs contract; a gap is
 must-fix at the severity of a failing test) · **Completeness**.
 
+On a harness that ships a dedicated security-review command (Cursor-as-master:
+`/review-security`), **that command occupies the cyber seat** at the same cadence as the
+panel. Do not also run a second prose cyber lens on that PR. Required outcome:
+**findings** · **clean** · **blocked**. Blocked is an owner ping; a silent empty report is
+not clean. Scope is the git diff under review, not cloud-estate coverage.
+
 The Completeness lens owns: *every set is a claim that the list is finished — name the
 value NOT in it and say what happens to it.* "Treated as fine" = fail-open enumeration =
 must-fix, repaired by INVERSION (enumerate terminal/known-safe, refuse the rest), never by
@@ -110,18 +116,23 @@ Input, never an author. The origin's measured hit rate for its external reviewer
 real defects of five, and in THREE of the four the correct fix was NOT the one the finding
 implied (a whitelist missing one value is fixed by inversion, not by adding the value).
 Good detection, poor repair: reproduce before fixing, write a test that fails against the
-pre-fix code, and keep autofix OFF. External findings join the PR's own review package —
-deduped against panel findings (two reviewers naming one defect is ONE finding; counting
-it twice inflates both catch rates with the same catch), bucketed by the lead on the same
-evidence standard, inside the same two-round cap. Fix findings IN the PR that raised
-them: separate follow-up PRs pay for every finding twice and read to the reviewer as
-nothing ever being fixed.
+pre-fix code, and keep autofix OFF. GitHub Bugbot skips the remote pass only when local
+`/review-bugbot` stored a patch ID for the **same** diff — a generic code-reviewer pass
+does not set that ID. Sequence: finish the branch → `/review-bugbot` on that exact diff →
+`gh pr create` with no extra commits in between. Remote remains once per PR. External
+findings join the PR's own review package — deduped against panel findings (two reviewers
+naming one defect is ONE finding; counting it twice inflates both catch rates with the
+same catch), bucketed by the lead on the same evidence standard, inside the same
+two-round cap. Fix findings IN the PR that raised them: separate follow-up PRs pay for
+every finding twice and read to the reviewer as nothing ever being fixed.
 
 ## What an implementing agent must achieve on another harness
 
 - Parallel fresh-context review with per-lens prompts — any harness that can run isolated
   agent calls can do this; what matters is the isolation (no writer reasoning in context)
-  and the roster of question-kinds.
+  and the roster of question-kinds. If the harness ships a dedicated security-review
+  command, that command **is** the cyber seat (findings · clean · blocked); do not double
+  it with a prose cyber lens.
 - The ledger is plain JSONL in the repo: fully portable. Keep the stamper's property —
   configuration read from files, refused on ambiguity — even if your "configuration" is
   just a model name per lens.
