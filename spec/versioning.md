@@ -81,18 +81,23 @@ A project with no `kit-manifest.json` cannot poll. Stamp first (`STANDUP.md` ste
    fail-open enumeration. A skip is a recorded decision (why, and who decided), never a
    silent ignore.
 4. **Do not copy files yet.** For each relevant entry, propose a project PR:
-   - Run `classify` against the **project's** current stamp. Regenerate only
-     **unmodified**; surface **customized** as conflicts; never silently restore
-     **missing**.
-   - Also diff the *kit's current* `kit-files.txt` (or the new manifest's `files` keys)
-     against the project's stamp membership. Paths the kit added since the stamp are
-     **new members**, not `missing`. `missing` means "our stamp named it and the tree
-     does not have it." New members are offered for install; they are never dropped
-     because `classify` never saw them. Path mapping follows STANDUP (kit
-     `templates/HARNESS.project.md` → project `HARNESS.md`, kit `reference/guards/` →
-     project `scripts/`, …).
-   `classify` against the project stamp, not the kit repo's file list — the two trees
-   are different shapes. Membership drift is a third list: kit-added / project-only.
+   - Run `classify` against the **project's** current stamp (project paths). Regenerate
+     only **unmodified**; surface **customized** as conflicts; never silently restore
+     **missing**. `missing` means "our stamp named this project path and the tree does
+     not have it."
+   - **Membership drift uses STANDUP as the map, then compares.** The kit repo's
+     `kit-files.txt` and a project's stamp are different shapes (`templates/HARNESS.project.md`
+     is not `HARNESS.md`). A raw path-set diff is a false "everything is new." Map each
+     kit path through STANDUP's install steps (and the adapter docs it points at) **before**
+     asking whether the project stamp names the destination. After mapping:
+     - kit path with a STANDUP destination the project stamp does not name → **new member**,
+       offered for install (never dropped because `classify` never saw the kit path);
+     - kit path with no STANDUP destination → **kit-repo-only**, not a project gap;
+     - project-stamp path with no kit counterpart after mapping → **project-only**, not
+       silently deleted.
+     Do not maintain a second mapping table here — a stale table would fail open the same
+     way. STANDUP (plus adapter install) is the map; if STANDUP grew a copy step, that is
+     a new member.
 5. **Never self-apply.** The project Merge gate is the activation. Declining an entry is
    kit feedback: send it up; do not quietly drift.
 

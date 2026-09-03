@@ -30,9 +30,9 @@ update is visible.
 - **What changed:**
   - `CHANGELOG.md` (this file) is a kit member.
   - `spec/versioning.md` — poll-from-project is the primary upgrade path; recipe included.
-    Applies-to skips default to **consider**; new kit members are a third list, not
-    `missing`; same-version changelog sections stay on the worklist (the `2026.09`
-    reuse).
+    Applies-to skips default to **consider**; new kit members are found by mapping
+    STANDUP install paths (not a raw `kit-files.txt` diff); same-version changelog
+    sections stay on the worklist (the `2026.09` reuse).
   - `STANDUP.md` / `README.md` — stamp the current version; pointer to the poll recipe.
   - `reference/tools/kit_manifest.py` — dropped the stale "dormant / no kit exists yet"
     claim. The tool is live.
