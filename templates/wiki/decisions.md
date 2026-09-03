@@ -29,4 +29,5 @@ manufactured a finding.
   the brain is {{repo}}, the body is {{repo}}"}}.
 - **Vendor question:** {{which adapters send repo content to third parties, and the
   recorded approval or the owner's call}}.
-- Stamped from harness-kit {{version}}; `kit-manifest.json` is the stamp.
+- Stamped from harness-kit {{version}}; `kit-manifest.json` is the stamp. Poll later
+  against the kit's `CHANGELOG.md` (`spec/versioning.md`); never self-apply.

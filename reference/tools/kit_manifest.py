@@ -1,16 +1,16 @@
 # harness-kit 2026.09 — reference tool, proven in the origin project's harness.
 """Fingerprint a kit's files, and later tell which of them a project still has untouched.
 
-**Dormant on purpose.** No kit exists yet — kit extraction is a later phase. This tool ships
-ready and tested so that when the kit lands, the question "which of these files may an
-upgrade safely rewrite?" has a mechanical answer from day one instead of being decided, file
-by file, by whoever runs the upgrade. That question is the whole reason a kit is hard: the
-files a project never touched can be regenerated freely, and the files it customised are the
-ones an upgrade must not quietly overwrite. Nothing tells the two apart after the fact except
-a fingerprint taken before.
+Live. Every kit release writes `kit-manifest.json` with a `kit_version` (see CHANGELOG.md).
+A stamped project carries a copy of that stamp; `classify` is how an upgrade tells which
+files it may regenerate. That question is the whole reason a kit is hard: the files a
+project never touched can be regenerated freely, and the files it customised are the ones
+an upgrade must not quietly overwrite. Nothing tells the two apart after the fact except
+a fingerprint taken before. Poll for *whether* to upgrade from CHANGELOG.md
+(`spec/versioning.md`); use this tool for *which files* in this tree.
 
     # in the kit's own checkout: fingerprint the files the kit ships
-    python scripts/kit_manifest.py generate --list kit-files.txt --root . --version 2026.09
+    python reference/tools/kit_manifest.py generate --list kit-files.txt --root . --version 2026.09.1 --out kit-manifest.json
 
     # in a project that installed the kit: which files are still the kit's?
     python scripts/kit_manifest.py classify --manifest kit-manifest.json --root .
