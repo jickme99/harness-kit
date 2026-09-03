@@ -1,7 +1,7 @@
 ---
 name: <role-name>
 description: <one paragraph — what to dispatch to this role, and the boundary of its work. Ends with "Runs in an isolated worktree on its own branch." for product roles.>
-model: <tier default — see spec/operating-model.md: standard for normal code work; movement is evidence-only>
+model: <haiku | sonnet | opus — Claude tokens the model-policy CI checks. Cursor Task slugs live in the project's vendor adapter table, never here. Movement is evidence-only; see spec/operating-model.md>
 fence:
   # harness-kit 2026.09 — role-file template, distilled from the origin project's roster.
   # The fence: block is the MACHINE-READABLE contract (one parser reads the whole roster;

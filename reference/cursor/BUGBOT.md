@@ -11,6 +11,12 @@ suggestion is exactly the kind of thing that gets trusted too far.
 
 It applies to the local pre-push review and to the pull-request review alike.
 
+**Local `/review-bugbot` is what makes GitHub skip the remote pass** — and only when it
+stored a patch ID for the **same** diff. A generic code-reviewer pass does not set that
+ID. Sequence: finish the branch → `/review-bugbot` on that exact diff → `gh pr create`
+with no extra commits in between. Remote Trigger Mode stays **once per PR**. Autofix stays
+**OFF** (this reviewer is input, never an author).
+
 ## What a must-fix is here
 
 Three categories, and only three:

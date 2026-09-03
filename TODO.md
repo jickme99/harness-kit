@@ -51,3 +51,10 @@
 - **The Codex adapter is a hypothesis** (`adapters/codex.md`): rewrite it from evidence
   after the first real cold start on a non-Claude agent — which is also the kit's own
   validation experiment.
+
+- **RESOLVED 2026-09-03 — consumer #1 Mode B harvest (accepted 1–5; nothing declined).**
+  Cursor Task pin-never-inherit; `/review-bugbot` before `gh pr create` (patch-ID skip);
+  code-cyber seat = `/review-security` (findings · clean · blocked); workshop invoke +
+  notebook mailbox; delegated Merge is squash-merge when green, Publish never delegated.
+  Parked (already listed above, not new): stamp origin as consumer #1; push-queued-runs
+  probe; merge_green quote-aware parse; empty-stdin fail-open residual; Codex rewrite.

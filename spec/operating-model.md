@@ -17,10 +17,11 @@ another harness must achieve.
    role, works in an isolated worktree, reports, and vanishes. The owner never talks to
    workers directly.
 3. **Two owner gates — Merge and Publish — and everything between them is autonomous.**
-   Merge: the owner accepts a finished change into the default branch. Publish: anything
-   public-facing stops for a human. The gates never loosen; narration between them loosens
-   as chains prove clean. (The owner may delegate routine Merge clicks explicitly; the
-   Publish gate is never delegated.)
+   Merge: the owner accepts a finished change into the default branch, **or** explicitly
+   delegates routine Merge to the standing master, who squash-merges when checks are
+   success / skipped / neutral. Publish: anything public-facing stops for a human. The
+   gates never loosen; narration between them loosens as chains prove clean. Workers
+   never merge. The Publish gate is never delegated.
 4. **Fences are real paths.** Each role file declares `owns` and `forbidden_notable` in
    machine-parseable frontmatter. Prose is for humans; the frontmatter IS the contract.
 5. **One writer per path — and the rule is tool-agnostic.** The master never runs two jobs
@@ -64,16 +65,35 @@ another harness must achieve.
   do not inherit the recommendation.
 - **The capped loop** encodes the endless-nit lesson: an uncapped review loop converges on
   taste, not correctness, and burns the whole schedule doing it.
+- **Spawn inherit** priced every worker at the master's cost the first time a costly
+  control-room model dispatched a Task without a pin.
+- **Workshop invoke and mailbox** were measured on Cursor-as-master: asking the owner to
+  paste a starting card was friction the spoken invoke already covered; the vendor cannot
+  post from one Agent chat into another, so the durable mailbox is a dated Inbox on the
+  notebook page, not a cross-chat write.
 
 ## Mechanics (how the reference implements it)
 
 - Role files live in the project's `.claude/agents/`; the master fills a per-job brief
   (goal, fence, done-looks-like, assumptions — the assumption sentence is the owner's
   ten-second catch-point) and spawns a subagent into the role in an isolated git worktree.
+- **Spawn: pin a slug, never inherit.** If the harness's spawn API can inherit the parent
+  chat's model, do not use it — a costly master then prices every worker the same. Pin a
+  slug from the consuming project's vendor adapter table. Do not write those vendor names
+  into Claude role-file `model:` fields (the model-policy CI still checks Claude tokens).
 - **The dispatch-or-workshop test:** count conversations, not tasks. Work the owner does
   not need to steer is a dispatch (background, master pings at the Merge gate); work that
   is a conversation gets its own workshop chat pinned to one deliverable, whose durability
   lives in files, not the chat.
+  - **Invoke:** the owner saying "this thread is a workshop" / "workshop on X" / `/workshop`
+    **is** the invoke. Do not ask them to paste a card.
+  - **The master chat does not convert itself into that workshop.** Open (or ask the owner
+    to open) a separate chat; the control room stays the control room.
+  - **Mailbox:** some harnesses cannot post from one agent chat into another (Cursor cannot).
+    The mailbox is a dated Inbox on the workshop's notebook page; the owner pastes a
+    one-line nudge. Shape: `- [YYYY-MM-DD] owner nudge: <one line>`.
+  - **Two chats on the same deliverable are forbidden** — the one-writer rule applied to
+    conversations.
 - Three agent classes: the control room (exactly one, standing) · workshops (few, durable,
   one deliverable each, may spawn their own ephemeral helpers) · ephemeral role agents
   (many, one job each).
@@ -89,8 +109,11 @@ another harness must achieve.
 - A way to cast a fresh agent into a role definition it did not write, with the role's
   fence stated in machine-readable form the agent can be checked against.
 - Physical isolation per worker (worktrees or equivalent) so two writers cannot collide.
-- The two gates as HUMAN actions your harness cannot perform: opening a PR is automation;
-  merging and publishing are clicks the owner makes.
+- Spawn pins a slug from the project's vendor adapter table and never inherits the parent
+  chat's model. Vendor names stay in that table, not in Claude role-file `model:` fields.
+- The two gates: opening a PR is automation. Publish is always a human click the owner
+  makes and is never delegated. Merge may be delegated to the standing master, who
+  squash-merges when checks are success / skipped / neutral; workers never merge.
 - The stop-and-ask path: a worker outside its fence must have a cheaper move than
   improvising — and the culture (briefs, reviews) must treat a stop as success.
 - The report and uncertainty contracts are doctrine on every harness: they are prose in
