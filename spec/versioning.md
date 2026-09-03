@@ -64,15 +64,27 @@ A project with no `kit-manifest.json` cannot poll. Stamp first (`STANDUP.md` ste
 2. **Fetch the kit changelog and current version** from the kit repo on GitHub (private:
    use an authenticated `gh` or a local clone of harness-kit — raw URLs will 404). Read
    `CHANGELOG.md` and `kit-manifest.json`'s `kit_version` on `main`.
-3. **List entries newer than local `kit_version`.** Skip entries whose **Applies to** key
-   is not this project (e.g. Cursor-only on a Claude-only stamp). That skip is a decision
-   to record, not a silent ignore.
-4. **Do not copy files yet.** For each relevant entry, propose a project PR: regenerate
-   only files the project's own stamp still classifies **unmodified**; surface
-   **customized** as conflicts; never silently restore **missing**. Path mapping follows
-   STANDUP (kit `templates/HARNESS.project.md` → project `HARNESS.md`, kit
-   `reference/guards/` → project `scripts/`, …). `classify` against the *project* stamp,
-   not the kit repo's file list — the two trees are different shapes.
+3. **List entries newer than local `kit_version`.** Default is **consider** (the entry
+   applies until proven otherwise). **Applies to** is a hint, not a skip-allowlist: the
+   five keys in `CHANGELOG.md` (every stamp / Claude / Cursor / Codex / optional) plus any
+   conditional prose (`every stamp that installed merge_green_check.py`) are not a closed
+   set. A value you do not recognise, or a condition you have not checked, is **not** a
+   skip — skipping a lane-1 fix because the sentence did not match a worked example is
+   fail-open enumeration. A skip is a recorded decision (why, and who decided), never a
+   silent ignore.
+4. **Do not copy files yet.** For each relevant entry, propose a project PR:
+   - Run `classify` against the **project's** current stamp. Regenerate only
+     **unmodified**; surface **customized** as conflicts; never silently restore
+     **missing**.
+   - Also diff the *kit's current* `kit-files.txt` (or the new manifest's `files` keys)
+     against the project's stamp membership. Paths the kit added since the stamp are
+     **new members**, not `missing`. `missing` means "our stamp named it and the tree
+     does not have it." New members are offered for install; they are never dropped
+     because `classify` never saw them. Path mapping follows STANDUP (kit
+     `templates/HARNESS.project.md` → project `HARNESS.md`, kit `reference/guards/` →
+     project `scripts/`, …).
+   `classify` against the project stamp, not the kit repo's file list — the two trees
+   are different shapes. Membership drift is a third list: kit-added / project-only.
 5. **Never self-apply.** The project Merge gate is the activation. Declining an entry is
    kit feedback: send it up; do not quietly drift.
 

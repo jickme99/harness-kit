@@ -10,7 +10,9 @@ moving under an unchanged version is a silent upgrade. Git tags match `kit_versi
 
 `TODO.md` is the gap list. This file is the release log. They are not interchangeable.
 
-Applies-to keys: **every stamp** · **Claude** · **Cursor** · **Codex** · **optional**.
+Applies-to keys (hints, not a skip-allowlist): **every stamp** · **Claude** · **Cursor** ·
+**Codex** · **optional**. Conditional prose is allowed. A poll that cannot prove an entry
+does not apply must **consider** it (`spec/versioning.md`).
 
 ---
 
@@ -27,6 +29,8 @@ update is visible.
 - **What changed:**
   - `CHANGELOG.md` (this file) is a kit member.
   - `spec/versioning.md` — poll-from-project is the primary upgrade path; recipe included.
+    Applies-to skips default to **consider**; new kit members are a third list, not
+    `missing`.
   - `STANDUP.md` / `README.md` — stamp the current version; pointer to the poll recipe.
   - `reference/tools/kit_manifest.py` — dropped the stale "dormant / no kit exists yet"
     claim. The tool is live.
