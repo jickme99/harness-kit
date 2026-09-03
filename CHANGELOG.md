@@ -23,14 +23,16 @@ update is visible.
 
 - **Lane:** 3 (new component — the poll surface itself). Doctrine + stamp metadata; no
   guard behavior change.
-- **Applies to:** every stamp. A project still labeled `2026.09` should read this entry
-  and the `2026.09` baseline below, then decide. Projects that never generated a stamp
-  cannot poll until they do (`STANDUP.md` step 5).
+- **Applies to:** every stamp. A project still labeled `2026.09` must read **this entry
+  and** the `2026.09` baseline (same-version sections stay on the poll worklist —
+  `spec/versioning.md`). Projects that never generated a stamp cannot poll until they
+  do (`STANDUP.md` step 5).
 - **What changed:**
   - `CHANGELOG.md` (this file) is a kit member.
   - `spec/versioning.md` — poll-from-project is the primary upgrade path; recipe included.
     Applies-to skips default to **consider**; new kit members are a third list, not
-    `missing`.
+    `missing`; same-version changelog sections stay on the worklist (the `2026.09`
+    reuse).
   - `STANDUP.md` / `README.md` — stamp the current version; pointer to the poll recipe.
   - `reference/tools/kit_manifest.py` — dropped the stale "dormant / no kit exists yet"
     claim. The tool is live.

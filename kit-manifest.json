@@ -1,7 +1,7 @@
 {
   "files": {
     ".gitignore": "edc0f305a8e021cd0c100a30cd2e601c77b965a68d5614105ffbf24a5a461fc3",
-    "CHANGELOG.md": "12f71b04316a92ac2a5b7dec193d857c3f214b7c553c8bbba1e903fe00458d24",
+    "CHANGELOG.md": "ff641c3a68969d75bc78427a7179758d8cdabd8c23a60b55dfe2ff7dbfef318a",
     "README.md": "57cdc7c2346635676731246df3ee27f72395f93873206fea3074b897c0a0ca7f",
     "STANDUP.md": "6f8e1113b771caddf3b9d643a06f8508438bf201a13f112ad1c7c197d45efe46",
     "TODO.md": "4348d73f8db6cb202948dca1ae490a3bf6a8b6283e0cdf0a2df4907efaa94b6b",
@@ -34,7 +34,7 @@
     "spec/guards.md": "ee326f7b628425be0a095d4bde436dccd1c7c2c2ca0d37072733b151556e6890",
     "spec/operating-model.md": "418842027f9845a2d39646e3132025a1e0186c340f71e067f8dcc9b5a65f100b",
     "spec/review.md": "4c5dbc3f85ac0635e51c145b365b3c7f87384283d7ac3baf395014090f45fc8c",
-    "spec/versioning.md": "50917b60c403321a549c135faa70d46014cf444fc37a9aeebbe258a4162a72a9",
+    "spec/versioning.md": "f7bf0bd228f06347bf44b9d431e8c3f83f5479141e48d179ca660af995416b17",
     "spec/wiki-protocol.md": "89939ba82a96ddcc29f42b6543485556de53d10954fa85581543f3b07c4f0eb8",
     "templates/CLAUDE.project.md": "d0664e97c48c2e63a838c0e7d53153ee5b49f1231c6b2525a8ddbfd5be4482d4",
     "templates/HARNESS.project.md": "965346d002de1522783ca0a1d3e46633dadbe9d44c27bdef4e98bec3bfdbf3bd",

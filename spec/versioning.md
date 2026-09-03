@@ -64,9 +64,17 @@ A project with no `kit-manifest.json` cannot poll. Stamp first (`STANDUP.md` ste
 2. **Fetch the kit changelog and current version** from the kit repo on GitHub (private:
    use an authenticated `gh` or a local clone of harness-kit — raw URLs will 404). Read
    `CHANGELOG.md` and `kit-manifest.json`'s `kit_version` on `main`.
-3. **List entries newer than local `kit_version`.** Default is **consider** (the entry
-   applies until proven otherwise). **Applies to** is a hint, not a skip-allowlist: the
-   five keys in `CHANGELOG.md` (every stamp / Claude / Cursor / Codex / optional) plus any
+3. **Build the worklist (fail closed on version).** Order versions as
+   `YYYY.MM` = `YYYY.MM.0`, then patch. Include:
+   - every changelog `##` section with version **greater than** local `kit_version`, and
+   - the section whose version **equals** local `kit_version`, if one exists.
+
+   Same-version is included on purpose: this kit reused `2026.09` while hashes moved
+   (extraction, merge-green, Cursor hooks, Mode B). Treating "I am already on 2026.09" as
+   "I have everything under that heading" is fail-open enumeration. A same-version poll
+   that classifies clean is a no-op, not a skip of unread subsections. Sections **older**
+   than local are out of scope. **Applies to** is a hint, not a skip-allowlist: the five
+   keys in `CHANGELOG.md` (every stamp / Claude / Cursor / Codex / optional) plus any
    conditional prose (`every stamp that installed merge_green_check.py`) are not a closed
    set. A value you do not recognise, or a condition you have not checked, is **not** a
    skip — skipping a lane-1 fix because the sentence did not match a worked example is
