@@ -1,9 +1,10 @@
-# harness-kit 2026.09.1 — the kit's membership. THIS LIST IS A DECISION, NOT A GLOB:
+# harness-kit 2026.09.2 — the kit's membership. THIS LIST IS A DECISION, NOT A GLOB:
 # what belongs to the kit is chosen here, one path per line, so the manifest can never
 # silently adopt whatever happens to be sitting in the directory. kit-manifest.json is
 # the generated fingerprint of exactly these files and is deliberately not listed
-# (it is the output, not a member). Regenerate after any change:
-#   python reference/tools/kit_manifest.py generate --list kit-files.txt --root . --version 2026.09.1 --out kit-manifest.json
+# (it is the output, not a member). inbox/ is an owner drop-box, gitignored, not a
+# member. Regenerate after any change:
+#   python reference/tools/kit_manifest.py generate --list kit-files.txt --root . --version 2026.09.2 --out kit-manifest.json
 
 README.md
 STANDUP.md
@@ -47,6 +48,7 @@ adapters/codex.md
 
 templates/HARNESS.project.md
 templates/CLAUDE.project.md
+templates/AGENTS.project.md
 templates/pr-template.md
 templates/wiki/index.md
 templates/wiki/status.md
@@ -57,3 +59,5 @@ templates/wiki/feedback.md
 tests/README.md
 tests/guard_registry.py
 tests/test_guard_contracts.py
+tests/test_cursor_bridge.py
+tests/test_guard_wiring_probe.py

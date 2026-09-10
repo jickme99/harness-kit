@@ -56,9 +56,17 @@
   code-cyber seat = `/review-security` (findings · clean · blocked); workshop invoke +
   notebook mailbox; delegated Merge is squash-merge when green, Publish never delegated.
   Parked (already listed above, not new): stamp origin as consumer #1; push-queued-runs
-  probe; merge_green quote-aware parse; empty-stdin fail-open residual; Codex rewrite.
+  probe; merge_green quote-aware parse; empty-stdin fail-open residual (named and
+  watched as of `2026.09.2`; still not fail-closed); Codex rewrite.
 
 - **RESOLVED 2026-09-03 — pollable kit versions (`2026.09.1`).** `CHANGELOG.md` is the
   poll surface; `spec/versioning.md` has the recipe; `kit_version` bumps on every merge
   a consumer should notice. Baseline `2026.09` (extraction through kit PR #2) is logged
   after the fact because those merges did not bump the string.
+
+- **RESOLVED 2026-09-10 — Wave A from the 2026-09-08 review (`2026.09.2`).** Cursor
+  install path matches `hooks.json` (`.cursor/hooks/`); `guard_wiring` is adapter-aware;
+  `templates/AGENTS.project.md` ships; empty-stdin fail-open is a watched residual, not
+  flipped to deny; adapter tables have REQUIRED / IF-AVAILABLE; `inbox/` gitignored.
+  Still parked: fail-closed empty stdin; stamp origin; Wave B (poll/harvest tools,
+  HANDOFF templates).

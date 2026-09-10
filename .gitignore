@@ -1,3 +1,5 @@
 .pytest_cache/
 __pycache__/
 *.pyc
+inbox/
+**/cursor-hook-debug.jsonl

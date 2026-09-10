@@ -11,10 +11,11 @@ agent. See `TODO.md`.)
 
 1. **Constitution:** Codex reads `AGENTS.md` natively. In a kit-stamped project the
    constitution is `HARNESS.md`, so `AGENTS.md` should be (or begin with) a pointer to it
-   — the same pattern as `CLAUDE.md` (`templates/CLAUDE.project.md`). **Caution from the
-   origin:** verify what an existing repo's `AGENTS.md` already is before repurposing it;
-   in the origin it was the install runbook, and pointing an agent at it as the
-   constitution would hand it the wrong document with confidence.
+   — install `templates/AGENTS.project.md` as `AGENTS.md` (the same pattern as
+   `CLAUDE.md` / `templates/CLAUDE.project.md`). **Caution from the origin:** verify what
+   an existing repo's `AGENTS.md` already is before repurposing it; in the origin it was
+   the install runbook, and pointing an agent at it as the constitution would hand it the
+   wrong document with confidence.
 2. **Guards:** assume NO pre-execution hook surface until verified. The guards work as
    pre-flight checks on any harness (`spec/guards.md`): pipe the candidate command in as
    the stdin JSON contract; any stdout is a refusal. The constitution text must carry the
@@ -30,13 +31,18 @@ agent. See `TODO.md`.)
 
 ## Coverage
 
-| Guarantee | Mechanical | Standalone-checkable | Doctrine-only |
-|---|---|---|---|
-| az pins `--subscription` | **untested** — assume no | yes — pipe payload to `az_guard.py` | **yes** |
-| Destructive git names its repo | **untested** — assume no | yes — `git_scope_guard.py` | **yes** |
-| Merge only on green checks | **untested** — assume no | yes — `merge_green_check.py` | **yes** |
-| CI gates | **yes** — server-side, tool-independent | n/a | — |
-| Everything else (fences, wiki, commit, report contracts) | no | probes where they run | **yes** |
+**REQUIRED** — stand-up is incomplete without this on Codex (today: contract tests plus
+the doctrine to actually run the pre-flight). **IF-AVAILABLE** — only when that surface
+is opted in (CI, vendor review). No project hook layer is expected; the wiring probe
+reporting Claude and Cursor configs absent is a fact, not a fail.
+
+| Guarantee | Gate | Mechanical | Standalone-checkable | Doctrine-only |
+|---|---|---|---|---|
+| az pins `--subscription` | REQUIRED | **untested** — assume no | yes — pipe payload to `az_guard.py` | **yes** |
+| Destructive git names its repo | REQUIRED | **untested** — assume no | yes — `git_scope_guard.py` | **yes** |
+| Merge only on green checks | REQUIRED | **untested** — assume no | yes — `merge_green_check.py` | **yes** |
+| CI gates | IF-AVAILABLE | **yes** — server-side, tool-independent | n/a | — |
+| Everything else (fences, wiki, commit, report contracts) | REQUIRED | no | probes where they run | **yes** |
 
 On this harness, until someone upgrades a row with evidence, you are personally holding
 every promise except the CI gates.

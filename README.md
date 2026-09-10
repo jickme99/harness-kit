@@ -21,7 +21,8 @@ enforcement on every model and IDE. It promises three layers per guarantee:
 turnkey.** On Claude Code, every mechanical guarantee is live out of the box. On anything
 else, the adapter's coverage table (`adapters/`) says exactly which guarantees are
 mechanical, which are standalone-checkable, and which you are personally holding as
-doctrine. Nothing here pretends a rule is enforced when it is only written down.
+doctrine — and which rows are REQUIRED for stand-up vs IF-AVAILABLE. Nothing here
+pretends a rule is enforced when it is only written down.
 
 Two more promises the kit makes about the projects it stamps:
 
@@ -60,13 +61,14 @@ Two more promises the kit makes about the projects it stamps:
 | `reference/tools/` | `kit_manifest.py` (upgrade classifier) · `review_stamp.py` (config stamper) · `review_rates.py` (catch/escape rollup). |
 | `reference/ci/` | The docs-gate (four fail-closed PR gates) and firewall-on-push workflow patterns, with EXAMPLE markers. |
 | `reference/claude/` | Hook wiring sample, role-file template, and the two function-role patterns (harness-auditor, version-steward). |
-| `reference/cursor/` | The `.mdc` pointer-rule pattern, the outside-the-lane tripwire, and the `BUGBOT.md` review-policy pattern. |
+| `reference/cursor/` | The `.mdc` pointer-rule pattern, the outside-the-lane tripwire, `BUGBOT.md`, and verified hooks (`hooks.json`, `bridge.cmd`, `hook_bridge.py`). |
 | `adapters/` | Per-tool install instructions + an honest coverage table each: `claude.md` · `cursor.md` · `codex.md`. |
-| `templates/` | What gets installed into a project: `HARNESS.project.md`, the `CLAUDE.project.md` pointer stub, the wiki skeleton, the PR template. |
+| `templates/` | What gets installed into a project: `HARNESS.project.md`, the `CLAUDE.project.md` and `AGENTS.project.md` pointer stubs, the wiki skeleton, the PR template. |
 | `tests/` | The portable guard contract tests (stdlib + pytest). Run `python -m pytest tests/` in this repo; copy into every stamp. |
 | `kit-files.txt` / `kit-manifest.json` | The kit's membership (a decision, not a glob) and its checksummed fingerprint (`kit_version`). |
 | `CHANGELOG.md` | The poll surface: what changed after a given `kit_version`, who it applies to, lane. |
 | `TODO.md` | Known gaps, honestly. Not a release log. |
+| `inbox/` | Owner drop-box for files handed to the kit master. Gitignored; not kit membership. |
 
 ## Origin
 
