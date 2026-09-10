@@ -1,14 +1,17 @@
 {
   "files": {
     ".gitignore": "915caec650a837c590b06cf198056dbe345b8ff12fc6b891baf04071334db262",
-    "CHANGELOG.md": "eb22de1dc22634d850eff2f4ef71413175a67f58a895ca0e7c83a2975a9306f2",
-    "README.md": "1bcb460d6182429ca5626cc9fbee615ea7fae4e5b6a2a457244d608cd2dc1402",
-    "STANDUP.md": "4d1f62b3b3def70c978ad58a229dfa069751ea444a06936143b788aa529bb6ce",
-    "TODO.md": "a5726aa6ecfda019fffa1cce3b9374aa9d222333f487a192f957890fa56b844b",
+    "AGENTS.md": "100bc519f1ddddb35e6b559bf3770a2f06267362df33989b0c8117ee72e8b6be",
+    "CHANGELOG.md": "b9b9aad5d8bbf8f51b5a94a40a20b5b15cafa970014607a2eb0516120d15ad25",
+    "CLAUDE.md": "d3cc5f5d8f0d1c772260745810f0b5cc5fe65a668d76af572ce371095c7ed9d6",
+    "README.md": "6163c46b670cfaaf3bbc8386f0ea65730b0b5f0511fd31d1328731a62aebde43",
+    "STANDUP.md": "4de40b430094831f29e72b4efa77577b625539acf3984b7bf768187f0bd256b9",
+    "START-HERE.md": "1ba43b721523e47cf37a93e16edb03bc40124fe6a6f05d0112dd8d9acb972656",
+    "TODO.md": "18cc8eac10d942de6af5d2060029dd0c89281d674ea0f3c2978a7ecc88050cb5",
     "adapters/claude.md": "60b4df90f84b6a588d860608d3340303301aca26acdb5893d3beed4ff2efa7c5",
     "adapters/codex.md": "c63f3433f1e2476e8bf1b475da05c7a17633188da739e7428088b1eaad1cd605",
     "adapters/cursor.md": "6a250a0d477ee27e36e3db503f31240b3e62a6cd50e9c08a3fa91b04c65aaffb",
-    "kit-files.txt": "b8a8702cfec50a2252a232028f381fb5a97d8173bb3867060b01f7d420627a5f",
+    "kit-files.txt": "6127f35056feeabd8e4d54e51d4909db4356d7216711e182c981a5856e926197",
     "reference/ci/docs-gate.yml": "c02f986af8042b2b76c0d9b0dad0ff1055045089798e8a6959166bc579e9b8d6",
     "reference/ci/firewall-push.yml": "fd63dcd2b4e90276b91ee7804ca106134fed86814d611caab16d3ac4ed043bdd",
     "reference/claude/README.md": "b92ca87d256e0391b0583caf6e44eda32367e02667e8cd2e1297b9880c28d1e1",
@@ -27,7 +30,7 @@
     "reference/guards/harness_probes.py": "b74442bf2303a9f350bb23ab48c844f2468569df0579df751087a848b95f6e16",
     "reference/guards/merge_green_check.py": "3073e21a1c96825ac1bcb6a2620ba0cca2fff96ecaa85f59ba1680bbbf2e638e",
     "reference/tools/kit_harvest.py": "e82054b5e838ff163d6c17004975cc89ccdfca469de201add0cdc5b06fc65a9c",
-    "reference/tools/kit_manifest.py": "af89a6f7189fb5a3aba30540009e37fcf19f1417db51a1b785faf6748c979efe",
+    "reference/tools/kit_manifest.py": "4e8252bbd08f82579e6f7371ce8162f15cac0123f0b8e6ef2b470f74297d6962",
     "reference/tools/kit_poll.py": "c1069c7eed9470a6797efd8698a61cce237bd1db8e29d5403a089825b5fe3d5a",
     "reference/tools/kit_stamp.py": "e7b50cfb0f72abd0b9cea384368c0592188164d7aac2cecff5866e28eb4852eb",
     "reference/tools/review_rates.py": "79000830139783bd933fa00e7d012e6ed17c818a4b65110ffdafe7d75500db6c",
@@ -56,8 +59,8 @@
     "tests/test_guard_contracts.py": "083927132b9471fd6248f08e522b2e1d5a763fe3c05a4c72fbed89bbcaaa38e2",
     "tests/test_guard_wiring_probe.py": "f309bcc4bd29291e5681166d4fe672463049d27f74ee5e2424bc2b20a18cb1ff",
     "tests/test_kit_manifest.py": "18d7cd2283f4727eb5d5e4cedf6f982d1ca0de055d222e437fb8c0d646c35c84",
-    "tests/test_kit_poll.py": "df8bbbf98847c003763c7609a7556dcffb3928e77d5d5f22ff9e2c37d96763bc",
+    "tests/test_kit_poll.py": "f65e2fc7b6c88bc68a4ab41f2fa3fbc5ca1d7be7050d7ce219ed84fb139c2981",
     "tests/test_kit_stamp_harvest.py": "85782b5042a5c5a7d8998e344b72670613789ad97fafd9279fc224b24ef92852"
   },
-  "kit_version": "2026.09.5"
+  "kit_version": "2026.09.6"
 }
