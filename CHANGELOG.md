@@ -16,6 +16,29 @@ does not apply must **consider** it (`spec/versioning.md`).
 
 ---
 
+## 2026.09.3 — 2026-09-10
+
+Poll is a tool. Succession is a file.
+
+- **Lane:** 3 (new component — poll CLI, HANDOFF/START-HERE, classify tests). Doctrine
+  for one-tool-per-working-copy. No guard behavior change.
+- **Applies to:** every stamp. A project without `kit-manifest.json` still cannot poll
+  until it stamps (`STANDUP.md` step 5).
+- **What changed:**
+  - `reference/tools/kit_poll.py` — worklist (same-version stays; unknown Applies-to is
+    consider, never skip), STANDUP-mapped membership, `classify` of the project stamp
+    against the project tree. Never copies files.
+    `python scripts/kit_poll.py --project . --kit <harness-kit clone>`.
+  - Tests for `kit_manifest.py` generate/classify (empty list, missing version, CRLF,
+    customized/missing buckets).
+  - `templates/START-HERE.project.md` → `START-HERE.md`; `templates/wiki/HANDOFF.md`
+    (last decision, next task, kit version, not in this repo). Close-out polls the kit
+    (`spec/wiki-protocol.md`).
+  - `spec/operating-model.md` invariant 10: one tool per working copy; user-level hooks
+    and `gh` are machine-global; tool-local memory is named.
+- **Does not change:** harvest CLI (still parked until a consumer is stamped); fail-closed
+  empty stdin; stamping origin as consumer #1.
+
 ## 2026.09.2 — 2026-09-10
 
 Cursor stand-up actually wires, and the gate is adapter-aware.

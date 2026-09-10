@@ -12,10 +12,11 @@ actually holds.
 
 Read in order:
 
-1. `HARNESS.md`
-2. `wiki/status.md` — where things stand
-3. `wiki/feedback.md` — owner preferences (prevents repeat mistakes)
-4. For {{strategy/content}} work: `wiki/{{strategy page}}` · for build work:
+1. `START-HERE.md` — last decision, next task, kit version, what is not in this repo
+2. `HARNESS.md`
+3. `wiki/HANDOFF.md` then `wiki/status.md` — where things stand
+4. `wiki/feedback.md` — owner preferences (prevents repeat mistakes)
+5. For {{strategy/content}} work: `wiki/{{strategy page}}` · for build work:
    `wiki/{{roadmap page}}` and the relevant plan page
 
 ## Claude-specific wiring (what this file exists for)

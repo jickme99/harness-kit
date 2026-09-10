@@ -44,12 +44,17 @@ identical across shapes. Shape is a stand-up-time answer, not a fork of the kit.
    - `templates/AGENTS.project.md` → `AGENTS.md` (Cursor and Codex read this natively;
      same pointer-stub pattern). If `AGENTS.md` already exists, read it first — do not
      overwrite an install runbook or other job with a pointer stub.
+   - `templates/START-HERE.project.md` → `START-HERE.md` (succession: last decision,
+     next task, kit version, what is not in this repo). Fill it; a cold start that
+     cannot answer those four is not stood up.
    - `reference/guards/*.py` → `scripts/` in the project. Set the marked install-time
      seams (the probe pack's second-repo path/slug and gh account; the merge guard's
      `HARNESS_GH_ACCOUNT` if the machine has multiple gh logins).
    - `reference/tools/kit_manifest.py` → `scripts/`.
-   - `tests/` (the guard contract tests) → the project's `tests/`, adjusting the guard
-     paths at the top of `tests/guard_registry.py` if your scripts live elsewhere.
+   - `reference/tools/kit_poll.py` → `scripts/`.
+   - `tests/` → `tests/` (the guard contract tests and the stamper/poll contracts).
+     Adjust `GUARDS_DIR` at the top of `tests/guard_registry.py` if your scripts live
+     elsewhere.
    - `templates/pr-template.md` → `.github/pull_request_template.md`, placeholders filled.
 2. **Install the guards' wiring for your tool** — per the adapter doc (`adapters/claude.md`,
    `adapters/cursor.md`, `adapters/codex.md`). For Claude Code that is
@@ -71,12 +76,13 @@ identical across shapes. Shape is a stand-up-time answer, not a fork of the kit.
    Use the **current** `kit_version` from the kit repo's `kit-manifest.json` / `CHANGELOG.md`
    (do not copy a stale example). As of this kit line:
    ```sh
-   python scripts/kit_manifest.py generate --list kit-files.txt --root . --version 2026.09.2 --out kit-manifest.json
+   python scripts/kit_manifest.py generate --list kit-files.txt --root . --version 2026.09.3 --out kit-manifest.json
    ```
    where `kit-files.txt` lists the kit-owned files you just installed (copy the kit's own
    list as a starting point and edit it to your layout — membership is a decision, not a
    glob). Commit both files. A project without this stamp cannot poll for updates.
-   Later: `spec/versioning.md` (poll recipe).
+   Later: `python scripts/kit_poll.py --project . --kit <harness-kit clone>`
+   (`spec/versioning.md`). Never self-apply.
 6. **(Two-repo shape only) Arm the firewall** per `spec/firewall.md`: author the scanner
    in the body repo, seed the denylist in the brain repo from your own hard constraints,
    sync the secret, record the hash.

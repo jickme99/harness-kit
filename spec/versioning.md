@@ -61,10 +61,19 @@ A project with no `kit-manifest.json` cannot poll. Stamp first (`STANDUP.md` ste
    ```sh
    python -c "import json; print(json.load(open('kit-manifest.json'))['kit_version'])"
    ```
-2. **Fetch the kit changelog and current version** from the kit repo on GitHub (private:
-   use an authenticated `gh` or a local clone of harness-kit — raw URLs will 404). Read
-   `CHANGELOG.md` and `kit-manifest.json`'s `kit_version` on `main`.
-3. **Build the worklist (fail closed on version).** Order versions as
+2. **Fetch the kit changelog and current version** from a local clone of harness-kit
+   (`--kit`). Private GitHub raw URLs will 404; `gh` is the operator's job, not the
+   tool's. Then:
+
+   ```sh
+   python scripts/kit_poll.py --project . --kit /path/to/harness-kit
+   ```
+
+   The tool reads `CHANGELOG.md` and `kit-manifest.json` on that clone, builds the
+   worklist, maps membership through STANDUP, and runs `classify` against **this**
+   tree. It does not copy files.
+
+3. **Build the worklist (fail closed on version).** The tool orders versions as
    `YYYY.MM` = `YYYY.MM.0`, then patch. Include:
    - every changelog `##` section with version **greater than** local `kit_version`, and
    - the section whose version **equals** local `kit_version`, if one exists.
@@ -120,5 +129,5 @@ durable home, not a PR body.
 The lanes and the reader-assignment rule are doctrine plus ordinary CI/bot configuration —
 portable to any harness. What must survive re-implementation: the three-lane risk split,
 the fresh-install test on majors, the named-reader table, the kit-as-dependency sweep, a
-versioned stamp, and a pollable changelog that a project can read without write access to
-the kit.
+versioned stamp, and a poll that a project can run without write access to the kit and
+that never copies files.
