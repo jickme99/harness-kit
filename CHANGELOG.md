@@ -16,6 +16,28 @@ does not apply must **consider** it (`spec/versioning.md`).
 
 ---
 
+## 2026.09.5 — 2026-09-10
+
+First harvest from consumer #1. STANDUP maps the review tools. Poll tests skip a product changelog.
+
+- **Lane:** 1 for the poll test that treated any `CHANGELOG.md` as the kit poll surface
+  (a stamp with Keep a Changelog then failed `parse_changelog`). Lane 3 for STANDUP
+  copy arrows on `review_stamp.py` / `review_rates.py` (already in the kit, never
+  installed).
+- **Applies to:** every stamp. A project that already copied those two scripts is
+  unchanged except the test skip. New stand-ups copy them.
+- **What changed:**
+  - `tests/test_kit_poll.py` — live changelog contract skips unless the file has
+    `## 2026.09.2` (kit poll surface, not a product changelog).
+  - `STANDUP.md` — `reference/tools/review_stamp.py` → `scripts/` and
+    `reference/tools/review_rates.py` → `scripts/` as two separate bullets.
+  - Consumer #1 harvest (origin engine): **accepted** the STANDUP mapping (tools
+    already in the kit). **Declined** product roles, Cursor lane rules, product
+    scripts, and `firewall_scan.py` — those stay in the project. Never copied
+    origin bytes.
+- **Does not change:** stamp/poll/harvest CLI shape; empty-stdin fail-open;
+  corporate kit.
+
 ## 2026.09.4 — 2026-09-10
 
 One stamp method. Harvest is a proposal. Empty stdin stays fail-open.

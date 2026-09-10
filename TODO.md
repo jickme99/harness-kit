@@ -15,9 +15,9 @@
   from the kit side. Poll-from-project is live as of `2026.09.1` (`CHANGELOG.md` +
   `spec/versioning.md`). Until consumer #2, kit-opens-upgrade-PRs stays future work;
   declined upgrades remain kit feedback either way.
-- **Stamping the origin project as consumer #1 is a follow-up** — run the kit's
-  `kit_stamp.py` against a clean origin checkout (`STANDUP.md` step 5). Same command as
-  any new project. Do not hand-edit a copied `kit-files.txt`.
+- **RESOLVED 2026-09-10 — origin stamped as consumer #1.** Engine PR #53 landed
+  `kit-files.txt` / `kit-manifest.json` via `kit_stamp.py`. Poll apply (stamp/poll/harvest
+  CLIs, START-HERE; wiki and harness_probes declined — they live in HQ) is origin PR #54.
 - **The corporate kit is HELD** (owner decision 2026-09-01) until this personal kit
   survives real cross-tool testing — Cursor, maybe ChatGPT. When it is authored, it is
   authored FRESH corp-side: patterns cross, files never, either direction — and patterns
@@ -80,4 +80,10 @@
   harness-adjacent extra; never copies into the kit). Empty stdin on the Cursor bridge
   remains fail-open: deny froze every Windows command when conda `python.cmd` dropped
   the pipe. Residual stays watched. Harvest no longer waits on a consumer stamp — the
-  tool ships; origin stamp is still the first consumer fingerprint (listed above).
+  tool ships; origin stamp landed as engine PR #53.
+
+- **RESOLVED 2026-09-10 — first harvest from consumer #1 (`2026.09.5`).** Accepted:
+  STANDUP now copies `review_stamp.py` / `review_rates.py` (already in the kit, were
+  kit-repo-only). Poll live-changelog test skips a product CHANGELOG. Declined (stay
+  in the project): product roles, Cursor lane `.mdc`s, product scripts, origin
+  `firewall_scan.py`. Never copied origin bytes.
