@@ -68,6 +68,31 @@ def test_unknown_applies_to_is_consider_not_skip(poll):
     assert rows[0]["lane"].startswith("1")
 
 
+def test_live_changelog_2026_09_2_keeps_wrapped_applies_to(poll):
+    path = ROOT / "CHANGELOG.md"
+    if not path.is_file():
+        pytest.skip("CHANGELOG.md is kit-repo-only")
+    rows = {r["version"]: r for r in poll.worklist(
+        "2026.09.2", poll.parse_changelog(path.read_text(encoding="utf-8")))}
+    row = rows["2026.09.2"]
+    assert "AGENTS.project.md" in row["applies_to"]
+    assert "Lane 3" in row["lane"]
+
+
+def test_wrapped_lane_and_applies_to_keep_continuation_lines(poll):
+    sections = poll.parse_changelog(
+        "## 2026.09.2 — x\n\n"
+        "- **Lane:** 1 for the install-path miss.\n"
+        "  Lane 3 for the AGENTS template.\n"
+        "- **Applies to:** Cursor for the install path.\n"
+        "  Every stamp for `templates/AGENTS.project.md`.\n"
+    )
+    rows = poll.worklist("2026.09", sections)
+    assert "Lane 3 for the AGENTS template" in rows[0]["lane"]
+    assert "templates/AGENTS.project.md" in rows[0]["applies_to"]
+    assert rows[0]["skip"] is False
+
+
 def test_standup_maps_harness_template_and_guards(poll):
     standup_path = ROOT / "STANDUP.md"
     if not standup_path.is_file():

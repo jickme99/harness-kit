@@ -27,7 +27,7 @@
     "reference/guards/harness_probes.py": "b74442bf2303a9f350bb23ab48c844f2468569df0579df751087a848b95f6e16",
     "reference/guards/merge_green_check.py": "3073e21a1c96825ac1bcb6a2620ba0cca2fff96ecaa85f59ba1680bbbf2e638e",
     "reference/tools/kit_manifest.py": "b48782a6376831c8506141e630f97c67aa75321f851563a81d094f46d5b22946",
-    "reference/tools/kit_poll.py": "58d66309a8ef547ccd102f694f5d010494d28784d8abc089411ec7d7bc566aab",
+    "reference/tools/kit_poll.py": "96ca86eb98a98bd288ddf3a6465af250aee6b715647fd2f6ecb5f2ac6137043b",
     "reference/tools/review_rates.py": "79000830139783bd933fa00e7d012e6ed17c818a4b65110ffdafe7d75500db6c",
     "reference/tools/review_stamp.py": "058c00df1302800f84014b046d8f8281c67e685297605d4fcc1d7f8cb5ed7578",
     "spec/firewall.md": "8b0ef9ab77678e11162696ec2b4f661ab1a7c7ebe3b05227a9c19b74b3985ae2",
@@ -54,7 +54,7 @@
     "tests/test_guard_contracts.py": "083927132b9471fd6248f08e522b2e1d5a763fe3c05a4c72fbed89bbcaaa38e2",
     "tests/test_guard_wiring_probe.py": "f309bcc4bd29291e5681166d4fe672463049d27f74ee5e2424bc2b20a18cb1ff",
     "tests/test_kit_manifest.py": "18d7cd2283f4727eb5d5e4cedf6f982d1ca0de055d222e437fb8c0d646c35c84",
-    "tests/test_kit_poll.py": "52803dae8f3b535c1452b5c24041f66523e834e486dac7c4391b6aeb3fcf816a"
+    "tests/test_kit_poll.py": "7cec2aa484fcaafaecfcaf4f031f68d88a3259a42d83e97454f69de65c6f76d1"
   },
   "kit_version": "2026.09.3"
 }

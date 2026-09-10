@@ -13,8 +13,9 @@ drift mapped through STANDUP, and `classify` of the project stamp against this t
 true`, `skip: false`). Same-version sections stay on the worklist. Never self-apply —
 the project Merge gate is the activation.
 
-Membership mapping is parsed from STANDUP.md (plus any extra `--map-from` files).
-A second mapping table here would go stale the same way a skip-allowlist would.
+Membership mapping is parsed from STANDUP.md plus `adapters/*.md` (and any
+`--map-from` extras). A second mapping table here would go stale the same way a
+skip-allowlist would.
 """
 from __future__ import annotations
 
@@ -33,8 +34,14 @@ from kit_manifest import KitError, canonical, classify, read_list
 _VERSION = re.compile(r"^(\d{4})\.(\d{2})(?:\.(\d+))?$")
 _HEADING = re.compile(r"^##\s+(\d{4}\.\d{2}(?:\.\d+)?)\b(.*)$")
 _COPY_ARROW = re.compile(r"`([^`]+)`\s*→\s*(?:[^`\n]{0,120})?`([^`]+)`")
-_APPLIES = re.compile(r"\*\*Applies to:\*\*\s*(.+)")
-_LANE = re.compile(r"\*\*Lane:\*\*\s*(.+)")
+_APPLIES = re.compile(
+    r"\*\*Applies to:\*\*\s*(.+?)(?=\n-\s+\*\*|\n## |\Z)", re.S)
+_LANE = re.compile(
+    r"\*\*Lane:\*\*\s*(.+?)(?=\n-\s+\*\*|\n## |\Z)", re.S)
+
+
+def _one_line(text: str) -> str:
+    return " ".join(text.split())
 
 NEVER_SELF_APPLY = (
     "propose a project PR through the project's Merge gate; never copy files from "
@@ -94,10 +101,10 @@ def worklist(local_version: str, sections: list[dict]) -> list[dict]:
         applies = _APPLIES.search(body)
         lane = _LANE.search(body)
         out.append({
-            "applies_to": applies.group(1).strip() if applies else None,
+            "applies_to": _one_line(applies.group(1)) if applies else None,
             "consider": True,
             "heading": sec["heading"],
-            "lane": lane.group(1).strip() if lane else None,
+            "lane": _one_line(lane.group(1)) if lane else None,
             "same_version": ver == local,
             "skip": False,
             "version": sec["version"],
