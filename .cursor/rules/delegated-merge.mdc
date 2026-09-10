@@ -1,0 +1,24 @@
+---
+description: Done-and-good is merge approval for PRs this session opened.
+alwaysApply: true
+---
+
+# Delegated merge
+
+When a unit of work is finished and the owner is good with it, that **is** merge
+approval. Do not wait for a second "please merge" — they forget, and the PR sits.
+
+Counts as good-with-it: "yes", "take care of it", "I approve", "I'm good with it",
+"looks good", "ship it", or confirming the work without asking to hold the PR.
+
+Then, for PRs **this session opened** (or that this work produced):
+
+1. Squash-merge (`gh pr merge --squash`).
+2. In **this kit repo**, if `kit_version` moved, tag that string and push the tag.
+3. Do not merge unrelated open PRs, and do not merge if checks are red (except
+   this repo, which has no Actions — no-run is allowed).
+4. Origin/consumer Merge is included when the work was in that repo and they
+   were good with it. Publish stays a human gate.
+
+Still required before `gh pr create`: `/review-security` then `/review-bugbot` on
+the exact diff; no extra commits after bugbot.
