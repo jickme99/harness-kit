@@ -41,6 +41,9 @@ identical across shapes. Shape is a stand-up-time answer, not a fork of the kit.
      placeholders: the project's rules, its own coverage table, its pointers.
    - `templates/CLAUDE.project.md` → `CLAUDE.md` (the Claude Code entry point; a pointer
      stub — the constitution is `HARNESS.md`, tool files point at it).
+   - `templates/AGENTS.project.md` → `AGENTS.md` (Cursor and Codex read this natively;
+     same pointer-stub pattern). If `AGENTS.md` already exists, read it first — do not
+     overwrite an install runbook or other job with a pointer stub.
    - `reference/guards/*.py` → `scripts/` in the project. Set the marked install-time
      seams (the probe pack's second-repo path/slug and gh account; the merge guard's
      `HARNESS_GH_ACCOUNT` if the machine has multiple gh logins).
@@ -51,8 +54,12 @@ identical across shapes. Shape is a stand-up-time answer, not a fork of the kit.
 2. **Install the guards' wiring for your tool** — per the adapter doc (`adapters/claude.md`,
    `adapters/cursor.md`, `adapters/codex.md`). For Claude Code that is
    `reference/claude/settings.json` → `.claude/settings.json` (and optionally the
-   user-level layer; see `spec/guards.md` on why two layers exist). For a harness without
-   hooks, the adapter doc tells you what you are carrying as doctrine instead.
+   user-level layer; see `spec/guards.md` on why two layers exist). For Cursor that is
+   `reference/cursor/hooks.json` → `.cursor/hooks.json`, `reference/cursor/bridge.cmd` →
+   `.cursor/hooks/bridge.cmd` (the extra `hooks/` directory is load-bearing — see
+   `adapters/cursor.md`), and `reference/cursor/hook_bridge.py` →
+   `scripts/cursor_hook_bridge.py`. For a harness without hooks, the adapter doc tells
+   you what you are carrying as doctrine instead.
 3. **Instantiate the wiki skeleton.** `templates/wiki/` → the brain (`wiki/` in the brain
    repo, or `wiki/` in the one-repo shape). Set each page's frontmatter dates; write the
    first `decisions.md` entry — the answers to Questions 1 and 2, dated.
@@ -64,7 +71,7 @@ identical across shapes. Shape is a stand-up-time answer, not a fork of the kit.
    Use the **current** `kit_version` from the kit repo's `kit-manifest.json` / `CHANGELOG.md`
    (do not copy a stale example). As of this kit line:
    ```sh
-   python scripts/kit_manifest.py generate --list kit-files.txt --root . --version 2026.09.1 --out kit-manifest.json
+   python scripts/kit_manifest.py generate --list kit-files.txt --root . --version 2026.09.2 --out kit-manifest.json
    ```
    where `kit-files.txt` lists the kit-owned files you just installed (copy the kit's own
    list as a starting point and edit it to your layout — membership is a decision, not a
@@ -89,8 +96,27 @@ python scripts/harness_probes.py --probe guard_wiring
 #      git reset --hard HEAD                (must be refused: no -C <absolute path>)
 ```
 
-Pass = tests green, the probe reports every guard wired with its target existing at the
-layer your tool uses, and the live probes are refused.
+Read the probe JSON. Pass/fail is adapter-aware, not "every layer armed":
+
+- A **project-level** layer whose config file is present (`claude_project` =
+  `.claude/settings.json`, `cursor_project` = `.cursor/hooks.json`) must have an empty
+  `not_armed` list and `ok_to_collect`. Cursor-only stamps show `claude_project` absent;
+  that is a fact, not a fail. Claude-only stamps show `cursor_project` absent; same.
+- `present_project_layers` names the configs that exist; `unarmed_present_project_layers`
+  must be empty. Read those two lists — do not fail a Cursor-only stamp because
+  `layers.claude_project.not_armed` (or the unused Cursor list) still names the three
+  guards. An unused layer's `not_armed` is a fact about absence, not a gate fail.
+- If **neither** project-level config is present, this step passes only when the adapter
+  you installed is doctrine-only for the three guards (today: Codex). Record that in
+  `wiki/decisions.md`.
+- `claude_user` is IF-AVAILABLE: reported, not required for this gate.
+- On a Cursor layer the probe may report `empty_stdin_residual.permission: allow`. That
+  is the recorded Windows residual — not a wiring fail. Do not flip the bridge to deny
+  on empty stdin without a live Windows test.
+
+Pass = tests green, the probe matches the rules above, and the live probes are refused
+on a harness that has hooks. A doctrine-only adapter has no live hook to fire; do not
+pretend piping JSON at Python is that test (`tests/` already covers the guards).
 
 **What a failing gate means — plainly:** the harness you just stood up does not enforce
 what its documents claim, and every promise in `HARNESS.md`'s mechanical column is

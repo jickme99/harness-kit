@@ -16,6 +16,38 @@ does not apply must **consider** it (`spec/versioning.md`).
 
 ---
 
+## 2026.09.2 — 2026-09-10
+
+Cursor stand-up actually wires, and the gate is adapter-aware.
+
+- **Lane:** 1 for the install-path miss (a Cursor stamp that followed the adapter produced
+  a hook that never fired). Lane 3 for the AGENTS template, the Gate column, and the
+  empty-stdin residual watcher.
+- **Applies to:** Cursor for the install path, wiring probe, and residual. Every stamp
+  for `templates/AGENTS.project.md`, the REQUIRED / IF-AVAILABLE column, STANDUP gate
+  language, and `inbox/` being gitignored.
+- **What changed:**
+  - D1 — `adapters/cursor.md` / `STANDUP.md`: `bridge.cmd` installs to
+    `.cursor/hooks/bridge.cmd`, matching shipped `hooks.json`. The extra `hooks/`
+    directory is load-bearing (`%~dp0..\..\scripts\`).
+  - D3 — `harness_probes.py --probe guard_wiring` reports `claude_project`,
+    `claude_user`, and `cursor_project`. A missing unused adapter is a fact. JSON keys
+    `project` / `user` are renamed to `claude_project` / `claude_user` (no consumer
+    stamp known). `present_project_layers` / `unarmed_present_project_layers` are the
+    STANDUP reading.
+  - D4 — empty/unreadable stdin still fail-opens (Windows pipe gap). The Cursor layer
+    names that residual; `tests/test_cursor_bridge.py` watches `permission: allow`.
+    Do not flip to deny without a live Windows test. Bridge debug JSONL writes only
+    when `CURSOR_HOOK_DEBUG` is set (probe/tests stay read-only).
+  - D6 — `templates/AGENTS.project.md` pointer stub; STANDUP copy step. Verify an
+    existing `AGENTS.md` before overwriting.
+  - Adapter coverage tables (and the HARNESS template) gained a **Gate** column:
+    REQUIRED vs IF-AVAILABLE.
+  - `inbox/` is gitignored (owner drop-box, not kit membership).
+- **Does not change:** empty stdin remains fail-open (watched, not flipped to deny);
+  stamping origin as consumer #1; poll / harvest CLIs (Wave B); origin probe scripts
+  copied by bytes.
+
 ## 2026.09.1 — 2026-09-03
 
 Pollable versioning: this changelog, the poll recipe, and a patch bump so the first kit

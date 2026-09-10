@@ -92,8 +92,11 @@ read-only and idempotent, and a doubled denial costs nothing.
 Known residual, recorded rather than hidden: the hooks invoke bare `python`. A missing
 SCRIPT exits 2 and blocks (loud, safe); a missing INTERPRETER exits 127, which Claude Code
 treats as non-blocking — the silent failure mode. The mitigations are the wiring probe
-(`harness_probes.py --probe guard_wiring`, which reports the interpreter rather than
-assuming it) and a live negative test.
+(`harness_probes.py --probe guard_wiring`, which reports Claude and Cursor layers
+separately — a missing unused adapter is a fact, not a fail — and reports the
+interpreter rather than assuming it) and a live negative test. Cursor's extra
+`hooks/` directory is load-bearing: `hooks.json` calls `.cursor/hooks/bridge.cmd`,
+and the `.cmd` only resolves `scripts/` from that folder.
 
 ## What an implementing agent must achieve on another harness
 

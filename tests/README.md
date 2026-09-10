@@ -44,6 +44,10 @@ UNCOVERED note (the merge guard's gh-dependent paths — see the note in
 shipping a discovery pass over a tree that cannot grow. A project's tree CAN grow;
 implement discovery there.
 
+The Cursor bridge is not a Guard in this registry. `tests/test_cursor_bridge.py` watches
+the recorded empty-stdin fail-open residual and the install path. `tests/test_guard_wiring_probe.py`
+covers adapter-aware `guard_wiring` (Cursor-only stamps must not fail the Claude layer).
+
 ## Two halves, neither sufficient alone
 
 These contracts ask only *"does novel input land on the safe side"*. A guard that refused

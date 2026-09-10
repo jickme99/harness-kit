@@ -499,17 +499,19 @@ def probe_lesson_dispositions() -> dict:
             "open_loop_count": open_total}
 
 
-#: The guard scripts every layer is expected to wire, by the script each hook must point at.
-#: Two layers exist ON PURPOSE (HARNESS.md §2): USER level (`~/.claude/settings.json`,
-#: machine-absolute paths — fires in whichever checkout you wandered into, but lives outside
-#: both repos where no test, CI job or docs gate can see it; decisions 2026-08-31) and
-#: PROJECT level (this repo's own `.claude/settings.json`, `${CLAUDE_PROJECT_DIR}` paths —
-#: travels with every clone, which is what makes a cold start on another machine guarded;
-#: decisions 2026-09-01, Phase 6a). On this workstation both fire; the double execution is
-#: deliberate defense-in-depth.
+#: The guard scripts every mechanical layer is expected to reach. Claude Code wires them
+#: as PreToolUse commands in settings.json (two layers ON PURPOSE — HARNESS.md §2):
+#: USER (`~/.claude/settings.json`, machine-absolute; fires in whichever checkout you
+#: wandered into; lives outside the repo) and PROJECT (`.claude/settings.json`,
+#: `${CLAUDE_PROJECT_DIR}` paths; travels with the clone). Cursor wires them through
+#: `.cursor/hooks.json` → `.cursor/hooks/bridge.cmd` → `scripts/cursor_hook_bridge.py`.
+#: A missing unused adapter is a fact, not a fail; a present adapter whose targets are
+#: missing is the founding miss (23 deniable commands, 0 denied).
 USER_SETTINGS = pathlib.Path.home() / ".claude" / "settings.json"
-PROJECT_SETTINGS = HQ_ROOT / ".claude" / "settings.json"
 EXPECTED_GUARDS = ("az_guard.py", "git_scope_guard.py", "merge_green_check.py")
+CURSOR_HOOKS_REL = pathlib.Path(".cursor") / "hooks.json"
+EXPECTED_CURSOR_BRIDGE_REL = pathlib.Path(".cursor") / "hooks" / "bridge.cmd"
+EXPECTED_CURSOR_BRIDGE_PY_REL = pathlib.Path("scripts") / "cursor_hook_bridge.py"
 
 
 def _guard_wiring_layer(settings_path: pathlib.Path, project_dir: pathlib.Path) -> dict:
@@ -559,43 +561,227 @@ def _guard_wiring_layer(settings_path: pathlib.Path, project_dir: pathlib.Path) 
         guards[script] = entry
     return {
         "guards": guards,
-        "not_armed": sorted(s for s, g in guards.items()
-                            if not g["wired"] or not g.get("target_exists")),
+        "not_armed": _not_armed(guards),
         "ok_to_collect": True,
         "settings_file_present": True,
         "settings_path": str(settings_path),
     }
 
 
+def _not_armed(guards: dict[str, dict]) -> list[str]:
+    return sorted(s for s, g in guards.items()
+                  if not g["wired"] or not g.get("target_exists"))
+
+
+def _claude_settings_path(project_dir: pathlib.Path) -> pathlib.Path:
+    return project_dir / ".claude" / "settings.json"
+
+
+def _command_points_at(cmd: str, expected_rel: pathlib.Path,
+                       project_dir: pathlib.Path) -> bool:
+    """True when a hooks.json command names expected_rel under project_dir."""
+    raw = cmd.strip().strip('"')
+    expected = (project_dir / expected_rel).resolve()
+    candidate = pathlib.Path(raw)
+    if not candidate.is_absolute():
+        candidate = project_dir / raw
+    try:
+        return candidate.resolve() == expected
+    except OSError:
+        return _posix_hook_rel(raw) == expected_rel.as_posix()
+
+
+def _posix_hook_rel(raw: str) -> str:
+    """Strip a `./` prefix, not a `./` character set.
+
+    `str.lstrip("./")` would turn `.cursor/...` into `cursor/...` and the
+    correct D1 path would look wrong.
+    """
+    norm = raw.replace("\\", "/")
+    while norm.startswith("./"):
+        norm = norm[2:]
+    return norm
+
+
+def _cursor_event_wiring(settings: dict, project_dir: pathlib.Path) -> dict[str, dict]:
+    """beforeShellExecution / beforeMCPExecution commands, and whether each
+    names `.cursor/hooks/bridge.cmd`."""
+    hooks = settings.get("hooks") or {}
+    events: dict[str, dict] = {}
+    for event in ("beforeShellExecution", "beforeMCPExecution"):
+        commands = [
+            entry["command"]
+            for entry in hooks.get(event) or []
+            if isinstance(entry, dict) and isinstance(entry.get("command"), str)
+        ]
+        events[event] = {
+            "commands": commands,
+            "points_at_expected_bridge": any(
+                _command_points_at(c, EXPECTED_CURSOR_BRIDGE_REL, project_dir)
+                for c in commands
+            ),
+        }
+    return events
+
+
+def _empty_stdin_residual(bridge_py: pathlib.Path) -> dict:
+    """Run the Cursor bridge with empty stdin. Fail-open is the recorded residual.
+
+    Fail-closed on empty stdin froze every command on Windows when the pipe
+    dropped (conda `python.cmd`). A probe that treated allow as a wiring fail
+    would force the freeze back in. This is a named fact, not a gate fail.
+    """
+    try:
+        r = subprocess.run(
+            [sys.executable, str(bridge_py)],
+            input="",
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+    except (OSError, subprocess.TimeoutExpired) as e:
+        return fail(f"cursor bridge empty-stdin probe could not run: {e}")
+    raw = (r.stdout or "").strip()
+    try:
+        body = json.loads(raw) if raw else {}
+    except json.JSONDecodeError as e:
+        return fail(f"cursor bridge empty-stdin stdout was not JSON: {e}")
+    permission = body.get("permission") if isinstance(body, dict) else None
+    return {
+        "ok_to_collect": True,
+        "permission": permission,
+        "recorded_as": "residual",
+        "reason": (
+            "empty/unreadable stdin fail-opens so a Windows pipe gap cannot freeze "
+            "the agent; do not flip to deny without a live Windows test"
+        ),
+        "watched": permission == "allow",
+    }
+
+
+def _cursor_guard_wiring_layer(project_dir: pathlib.Path) -> dict:
+    """Cursor project layer: hooks.json command path, bridge, and the three guards.
+
+    Cursor does not name each guard in hooks.json. It names the bridge. A layer is
+    armed when beforeShellExecution points at `.cursor/hooks/bridge.cmd`, that
+    file exists, `scripts/cursor_hook_bridge.py` exists, and each guard script
+    exists. The extra `hooks/` directory is load-bearing: the `.cmd` resolves
+    `%~dp0..\\..\\scripts\\` only from `.cursor/hooks/`.
+    """
+    hooks_path = project_dir / CURSOR_HOOKS_REL
+    if not hooks_path.exists():
+        return {
+            "empty_stdin_residual": {"present": False, "ok_to_collect": True},
+            "events": {},
+            "guards": {script: {"wired": False} for script in EXPECTED_GUARDS},
+            "hooks_file_present": False,
+            "kind": "cursor",
+            "not_armed": sorted(EXPECTED_GUARDS),
+            "ok_to_collect": True,
+            "scope": "travels with the clone — Cursor beforeShell/beforeMCP",
+            "settings_path": str(hooks_path),
+        }
+    try:
+        settings = json.loads(hooks_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as e:
+        return fail(f"{hooks_path} could not be read: {e}")
+
+    events = _cursor_event_wiring(settings, project_dir)
+    bridge_cmd = project_dir / EXPECTED_CURSOR_BRIDGE_REL
+    bridge_py = project_dir / EXPECTED_CURSOR_BRIDGE_PY_REL
+    cmd_exists = bridge_cmd.is_file()
+    py_exists = bridge_py.is_file()
+    shell = events.get("beforeShellExecution") or {}
+    shell_chain = (
+        bool(shell.get("points_at_expected_bridge")) and cmd_exists and py_exists
+    )
+    guards: dict[str, dict] = {}
+    for script in EXPECTED_GUARDS:
+        target = project_dir / "scripts" / script
+        exists = target.is_file()
+        guards[script] = {
+            "target": str(target),
+            "target_exists": exists,
+            "via": "cursor_hook_bridge",
+            "wired": shell_chain and exists,
+        }
+    return {
+        "bridge_cmd_exists": cmd_exists,
+        "bridge_cmd_path": str(bridge_cmd),
+        "bridge_script_exists": py_exists,
+        "bridge_script_path": str(bridge_py),
+        "empty_stdin_residual": (
+            _empty_stdin_residual(bridge_py) if py_exists
+            else {"present": False, "ok_to_collect": True}
+        ),
+        "events": events,
+        "expected_bridge_rel": EXPECTED_CURSOR_BRIDGE_REL.as_posix(),
+        "guards": guards,
+        "hooks_file_present": True,
+        "kind": "cursor",
+        "not_armed": _not_armed(guards),
+        "ok_to_collect": True,
+        "scope": "travels with the clone — Cursor beforeShell/beforeMCP",
+        "settings_path": str(hooks_path),
+    }
+
+
 def probe_guard_wiring() -> dict:
-    """Are the guards actually WIRED — at each layer separately — and do their scripts exist?
+    """Are the guards actually WIRED — at each adapter layer — and do their scripts exist?
 
     The founding fact: the subscription guard sat inert through **23 commands that should
     have been denied and 0 were**, because the settings file lived in a commit the working
     branch predated. Wiring it at user level fixed that and moved the blind spot — the file
     is outside both repos, so this probe is the only reader that can exist. Phase 6a then
     added the PROJECT layer back, wired relative to `${CLAUDE_PROJECT_DIR}`, so a fresh
-    clone is guarded too; the layers are reported separately because they answer different
-    questions — `user` is "is THIS machine belt-and-suspenders", `project` is "does a cold
-    start elsewhere get guards at all".
+    clone is guarded too.
 
-    What it CANNOT prove: that the harness actually invokes the hook at runtime, at either
-    layer. That is not observable from here, and the honest limit is stated rather than
-    implied. What it CAN prove is the failure mode that has actually bitten: a hook that is
-    absent, or one whose target script is missing. Note the asymmetry the design turns on —
-    a missing script exits 2 and BLOCKS (loud), while a missing interpreter exits 127 and is
-    NON-blocking (silent), which is why `interpreter` is reported rather than assumed."""
+    Cursor is a third layer, not a second Claude settings file. A Cursor-only stamp
+    that followed the adapter still failed this probe when it only read
+    `.claude/settings.json`. Layers are reported separately because they answer
+    different questions: `claude_user` is "is THIS machine belt-and-suspenders",
+    `claude_project` / `cursor_project` are "does a cold start elsewhere get guards
+    at all". A missing unused adapter is a fact. A present adapter with missing
+    targets is the miss.
+
+    What it CANNOT prove: that the harness actually invokes the hook at runtime.
+    That is not observable from here. What it CAN prove is the failure mode that
+    has actually bitten: a hook that is absent, or one whose target script is
+    missing, or a Cursor `hooks.json` that points at a `bridge.cmd` that is not
+    where the shipped file says. `interpreter` is reported on Claude layers
+    because a missing interpreter exits 127 and is NON-blocking (silent).
+    """
+    return _probe_guard_wiring_at(HQ_ROOT)
+
+
+def _probe_guard_wiring_at(root: pathlib.Path) -> dict:
     layers = {
-        "project": _guard_wiring_layer(PROJECT_SETTINGS, HQ_ROOT),
-        "user": _guard_wiring_layer(USER_SETTINGS, HQ_ROOT),
+        "claude_project": _guard_wiring_layer(_claude_settings_path(root), root),
+        "claude_user": _guard_wiring_layer(USER_SETTINGS, root),
+        "cursor_project": _cursor_guard_wiring_layer(root),
     }
-    layers["project"]["scope"] = "travels with the clone — what a cold start gets"
-    layers["user"]["scope"] = "this machine only — invisible to any other checkout"
+    layers["claude_project"]["scope"] = "travels with the clone — Claude PreToolUse"
+    layers["claude_user"]["scope"] = "this machine only — invisible to any other checkout"
+    present: list[str] = []
+    unarmed_present: list[str] = []
+    # Project adapters only. A missing unused adapter is omitted, not a fail.
+    for name in ("claude_project", "cursor_project"):
+        layer = layers[name]
+        if not layer.get("ok_to_collect"):
+            unarmed_present.append(name)
+            continue
+        if not (layer.get("settings_file_present") or layer.get("hooks_file_present")):
+            continue
+        present.append(name)
+        if layer.get("not_armed"):
+            unarmed_present.append(name)
     return {
+        "does_not_prove": "that the harness invokes the hook at runtime",
         "layers": layers,
         "ok_to_collect": all(v.get("ok_to_collect") for v in layers.values()),
-        "proves": "the hook is declared and its script exists, per layer",
-        "does_not_prove": "that the harness invokes the hook at runtime",
+        "present_project_layers": present,
+        "proves": "the hook is declared and its script exists, per adapter layer",
+        "unarmed_present_project_layers": unarmed_present,
     }
 
 

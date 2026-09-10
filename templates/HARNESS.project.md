@@ -86,18 +86,19 @@ nothing if it runs, and confirm the refusal.
 ## 3. Coverage — what a given harness actually has
 
 <!-- Fill honestly per this project. The kit's adapters/ files carry per-tool starting
-     tables. Read the doctrine-only column as the promises an agent personally holds when
-     working here from a harness without hooks. -->
+     tables, including a REQUIRED / IF-AVAILABLE column. REQUIRED mechanical rows must be
+     armed at the project layer your adapter uses. Read the doctrine-only column as the
+     promises an agent personally holds when working here from a harness without hooks. -->
 
-| Guarantee | Mechanical in {{proven tool}} | Standalone-checkable on any harness | Doctrine-only |
-|---|---|---|---|
-| az pins `--subscription` | {{yes/no + how}} | yes — pipe payload to `az_guard.py` | fallback |
-| Destructive git names its repo | {{...}} | yes | fallback |
-| Merge only on green checks | {{...}} | yes (needs `gh` auth) | fallback |
-| {{CI gates, if any}} | {{server-side — list the workflows}} | n/a | — |
-| Wiki append-only + auto-write | no | partially — probe pack | **yes** |
-| Commit protocol | no | no | **yes** |
-| {{firewall row, two-repo shape}} | {{...}} | {{...}} | **yes** |
+| Guarantee | Gate | Mechanical in {{proven tool}} | Standalone-checkable on any harness | Doctrine-only |
+|---|---|---|---|---|
+| az pins `--subscription` | REQUIRED | {{yes/no + how}} | yes — pipe payload to `az_guard.py` | fallback |
+| Destructive git names its repo | REQUIRED | {{...}} | yes | fallback |
+| Merge only on green checks | REQUIRED | {{...}} | yes (needs `gh` auth) | fallback |
+| {{CI gates, if any}} | IF-AVAILABLE | {{server-side — list the workflows}} | n/a | — |
+| Wiki append-only + auto-write | REQUIRED | no | partially — probe pack | **yes** |
+| Commit protocol | REQUIRED | no | no | **yes** |
+| {{firewall row, two-repo shape}} | IF-AVAILABLE | {{...}} | {{...}} | **yes** |
 
 ## 4. Pointers, not copies
 
@@ -111,6 +112,8 @@ nothing if it runs, and confirm the refusal.
 - `.claude/agents/*.md` — the role roster; each `fence:` frontmatter block is the
   machine-readable list of paths that role owns.
 - `CLAUDE.md` — the Claude Code entry point (points back here).
+- `AGENTS.md` — the Cursor/Codex entry point (points back here). Do not assume this
+  file is the constitution if it already had another job.
 - {{other tool entry points and house pages}}
 
 ## 5. The honest promise

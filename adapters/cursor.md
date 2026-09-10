@@ -16,8 +16,10 @@ Install.
    re-pointing their EXAMPLE rows/globs at your project's files.
 2. **Point Cursor at the real constitution — verify what `AGENTS.md` is first.** Cursor
    reads `AGENTS.md` natively, which makes it a trap when that file has a different job
-   (in the origin it is the install runbook, not the constitution). The pointer rule names
-   the governing documents explicitly instead.
+   (in the origin it is the install runbook, not the constitution). If the file does not
+   yet exist, install `templates/AGENTS.project.md` as `AGENTS.md`. Do not overwrite an
+   existing `AGENTS.md` that already has another job. The pointer rule names the
+   governing documents explicitly instead.
 3. **`reference/cursor/BUGBOT.md` → `.cursor/BUGBOT.md`**, with your project's doctrine
    list swapped in. Read its own first paragraph: there is **no severity or finding-type
    filter** at repo or project level — severity appears in Bugbot's output but is not
@@ -73,11 +75,22 @@ Cursor **does** have pre-execution hooks: `.cursor/hooks.json` `beforeShellExecu
 does not fire in native Cursor Agent (live unpinned `az account show` ran until this
 adapter was wired).
 
-Install `reference/cursor/hooks.json` and `reference/cursor/bridge.cmd` into
-`.cursor/`, and `reference/cursor/hook_bridge.py` into `scripts/cursor_hook_bridge.py`
-next to the three guards. The `.cmd` wrapper is **load-bearing on Windows**:
-`python scripts/...` as the hook command uses conda's `python.cmd`, which drops piped
-stdin, and the hook then sees an empty payload. Call `python.exe`.
+Install:
+
+- `reference/cursor/hooks.json` → `.cursor/hooks.json`
+- `reference/cursor/bridge.cmd` → `.cursor/hooks/bridge.cmd`
+- `reference/cursor/hook_bridge.py` → `scripts/cursor_hook_bridge.py` next to the three
+  guards
+
+The extra `hooks/` directory is **load-bearing**. The shipped `hooks.json` calls
+`.cursor/hooks/bridge.cmd`, and the `.cmd` resolves the bridge with
+`%~dp0..\..\scripts\`, which only lands on the repo `scripts/` folder from
+`.cursor/hooks/`. Putting `bridge.cmd` in `.cursor/` (one level up) produces a hook
+that never fires — the instrument-that-does-not-run class.
+
+The `.cmd` wrapper is **also load-bearing on Windows**: `python scripts/...` as the hook
+command uses conda's `python.cmd`, which drops piped stdin, and the hook then sees an
+empty payload. Call `python.exe`.
 
 The bridge always prints a Cursor `{permission: allow|deny}` object. Silence is invalid
 JSON; with `failClosed: true` that would block every command. Azure MCP is refused by
@@ -88,14 +101,18 @@ Live on the origin HQ checkout: unpinned `az account show` refused; pinned
 
 ## Coverage
 
-| Guarantee | Mechanical | Standalone-checkable | Doctrine-only |
-|---|---|---|---|
-| az pins `--subscription` | **yes** — `beforeShellExecution` via the bridge (verified 2026-09-01) | yes — pipe payload to `az_guard.py` | residual: empty/unreadable stdin fail-opens (Windows pipe gap) |
-| Destructive git names its repo | **yes** — same | yes — `git_scope_guard.py` | same residual |
-| Merge only on green checks | **yes** — same; a delegated master squash-merge still goes through this guard; a merge clicked in GitHub never does | yes — `merge_green_check.py` | web-UI merge is outside the hook |
-| Azure MCP unused | **yes** — `beforeMCPExecution` denies by server name | n/a | origin posture |
-| CI gates (docs contract, ledger, firewall) | **yes** — server-side, tool-independent | n/a | — |
-| Fence awareness (rules in context) | partial — `.mdc` rules inject the fence text when matching files are in context; **a tripwire is a reminder, not enforcement**, and attachment-on-context is not attachment-on-write | no | **yes** |
-| Review policy (must-fix bar, fail-open-enumeration hunt) | no — `BUGBOT.md` is prose to a reader, not a filter. Local `/review-bugbot` is what stores the patch ID GitHub uses to skip remote | no | **yes** |
-| Code-cyber seat (`/review-security`) | no — git-diff review, not a hook | the command's findings · clean · blocked | **yes** (do not also run a prose cyber lens) |
-| Wiki protocol / commit protocol / report contract | no | staleness + dispositions via `harness_probes.py` | **yes** |
+**REQUIRED** — stand-up is incomplete without this on Cursor (mechanical rows must be
+armed at the Cursor project layer; doctrine rows you personally hold). **IF-AVAILABLE**
+— only when that surface is opted in (vendor review, CI, MCP).
+
+| Guarantee | Gate | Mechanical | Standalone-checkable | Doctrine-only |
+|---|---|---|---|---|
+| az pins `--subscription` | REQUIRED | **yes** — `beforeShellExecution` via the bridge (verified 2026-09-01) | yes — pipe payload to `az_guard.py` | residual: empty/unreadable stdin fail-opens (Windows pipe gap); named by the wiring probe, not a gate fail |
+| Destructive git names its repo | REQUIRED | **yes** — same | yes — `git_scope_guard.py` | same residual |
+| Merge only on green checks | REQUIRED | **yes** — same; a delegated master squash-merge still goes through this guard; a merge clicked in GitHub never does | yes — `merge_green_check.py` | web-UI merge is outside the hook |
+| Azure MCP unused | IF-AVAILABLE | **yes** — `beforeMCPExecution` denies by server name | n/a | origin posture |
+| CI gates (docs contract, ledger, firewall) | IF-AVAILABLE | **yes** — server-side, tool-independent | n/a | — |
+| Fence awareness (rules in context) | IF-AVAILABLE | partial — `.mdc` rules inject the fence text when matching files are in context; **a tripwire is a reminder, not enforcement**, and attachment-on-context is not attachment-on-write | no | **yes** |
+| Review policy (must-fix bar, fail-open-enumeration hunt) | IF-AVAILABLE | no — `BUGBOT.md` is prose to a reader, not a filter. Local `/review-bugbot` is what stores the patch ID GitHub uses to skip remote | no | **yes** |
+| Code-cyber seat (`/review-security`) | IF-AVAILABLE | no — git-diff review, not a hook | the command's findings · clean · blocked | **yes** (do not also run a prose cyber lens) |
+| Wiki protocol / commit protocol / report contract | REQUIRED | no | staleness + dispositions via `harness_probes.py` | **yes** |

@@ -27,6 +27,9 @@ Azure MCP is unused in this venture (owner, 2026-09-01 — same posture as
 Claude Desktop). The shell path (``az --subscription``) is the one the
 az-guard can actually see. This bridge refuses Azure MCP by name so that
 door cannot reopen by accident.
+
+Empty/unreadable stdin fail-opens (Windows pipe gap). Debug JSONL writes only when
+``CURSOR_HOOK_DEBUG`` is set — residual watching and STANDUP must not mutate the tree.
 """
 from __future__ import annotations
 
@@ -178,6 +181,8 @@ def decide(payload: dict) -> dict:
 
 
 def _debug(event: dict) -> None:
+    if not os.environ.get("CURSOR_HOOK_DEBUG"):
+        return
     path = ROOT / "local" / "cursor-hook-debug.jsonl"
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -204,6 +209,8 @@ def main() -> int:
         }
         _debug({"event": "empty-stdin", "argv": sys.argv[1:], "env": interesting,
                 "nbytes": len(raw_bytes), "head_hex": head_hex})
+        # Fail OPEN on empty stdin (Windows pipe drop / conda python.cmd).
+        # Recorded residual: do not flip to deny without a live Windows test.
         json.dump({"continue": True, "permission": "allow"}, sys.stdout)
         sys.stdout.write("\n")
         return 0
@@ -216,6 +223,8 @@ def main() -> int:
                 "head_hex": head_hex, "argv": sys.argv[1:]})
         # Fail OPEN on an unreadable payload so a Windows stdin encoding miss
         # cannot freeze the agent. Real denials require a parsed command.
+        # Same recorded residual as empty stdin. Do not flip to deny without
+        # a live Windows test; a contract watches this.
         json.dump({"continue": True, "permission": "allow"}, sys.stdout)
         sys.stdout.write("\n")
         return 0
