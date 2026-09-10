@@ -15,9 +15,9 @@
   from the kit side. Poll-from-project is live as of `2026.09.1` (`CHANGELOG.md` +
   `spec/versioning.md`). Until consumer #2, kit-opens-upgrade-PRs stays future work;
   declined upgrades remain kit feedback either way.
-- **Stamping the origin project as consumer #1 is a follow-up** — install
-  `kit-files.txt`/`kit-manifest.json` into it so `classify` can tell kit files from
-  tailoring there, making "the origin operates from the kit" literally true.
+- **Stamping the origin project as consumer #1 is a follow-up** — run the kit's
+  `kit_stamp.py` against a clean origin checkout (`STANDUP.md` step 5). Same command as
+  any new project. Do not hand-edit a copied `kit-files.txt`.
 - **The corporate kit is HELD** (owner decision 2026-09-01) until this personal kit
   survives real cross-tool testing — Cursor, maybe ChatGPT. When it is authored, it is
   authored FRESH corp-side: patterns cross, files never, either direction — and patterns
@@ -56,8 +56,8 @@
   code-cyber seat = `/review-security` (findings · clean · blocked); workshop invoke +
   notebook mailbox; delegated Merge is squash-merge when green, Publish never delegated.
   Parked (already listed above, not new): stamp origin as consumer #1; push-queued-runs
-  probe; merge_green quote-aware parse; empty-stdin fail-open residual (named and
-  watched as of `2026.09.2`; still not fail-closed); Codex rewrite.
+  probe; merge_green quote-aware parse; Codex rewrite. Empty-stdin fail-open is a
+  recorded judgment as of `2026.09.4` (Windows freeze); not a parked flip.
 
 - **RESOLVED 2026-09-03 — pollable kit versions (`2026.09.1`).** `CHANGELOG.md` is the
   poll surface; `spec/versioning.md` has the recipe; `kit_version` bumps on every merge
@@ -68,9 +68,16 @@
   install path matches `hooks.json` (`.cursor/hooks/`); `guard_wiring` is adapter-aware;
   `templates/AGENTS.project.md` ships; empty-stdin fail-open is a watched residual, not
   flipped to deny; adapter tables have REQUIRED / IF-AVAILABLE; `inbox/` gitignored.
-  Still parked after this wave: fail-closed empty stdin; stamp origin.
+  Still parked after this wave: stamp origin. Empty-stdin fail-open kept (see `2026.09.4`).
 
 - **RESOLVED 2026-09-10 — Wave B (`2026.09.3`).** `kit_poll.py` is the poll (proposal
   only); `classify` has contracts; START-HERE / wiki/HANDOFF answer the four succession
-  questions; one-tool-per-working-copy is operating-model invariant 10. Harvest CLI still
-  parked until a consumer is stamped.
+  questions; one-tool-per-working-copy is operating-model invariant 10.
+
+- **RESOLVED 2026-09-10 — stamp CLI, harvest CLI, empty-stdin judgment (`2026.09.4`).**
+  `kit_stamp.py` is the only stamp method (STANDUP-mapped dests that exist; no glob, no
+  silent restore). `kit_harvest.py` is the two-way feedback proposal (customized +
+  harness-adjacent extra; never copies into the kit). Empty stdin on the Cursor bridge
+  remains fail-open: deny froze every Windows command when conda `python.cmd` dropped
+  the pipe. Residual stays watched. Harvest no longer waits on a consumer stamp — the
+  tool ships; origin stamp is still the first consumer fingerprint (listed above).
