@@ -11,9 +11,10 @@ Install.
    `alwaysApply`, the rules system skips it. An adapter written as `.md` would look
    installed, be committed, be reviewed, and never load — the "instrument that does not
    run" failure class, one file extension away. Install
-   `reference/cursor/project-rules.mdc` (always-on pointer rule) and
-   `reference/cursor/outside-the-lane.mdc` (fence tripwire) into `.cursor/rules/`,
-   re-pointing their EXAMPLE rows/globs at your project's files.
+   `reference/cursor/project-rules.mdc` → `.cursor/rules/project-rules.mdc` (always-on
+   pointer rule) and `reference/cursor/outside-the-lane.mdc` →
+   `.cursor/rules/outside-the-lane.mdc` (fence tripwire), re-pointing their EXAMPLE
+   rows/globs at your project's files.
 2. **Point Cursor at the real constitution — verify what `AGENTS.md` is first.** Cursor
    reads `AGENTS.md` natively, which makes it a trap when that file has a different job
    (in the origin it is the install runbook, not the constitution). If the file does not

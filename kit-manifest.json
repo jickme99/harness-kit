@@ -1,13 +1,13 @@
 {
   "files": {
     ".gitignore": "915caec650a837c590b06cf198056dbe345b8ff12fc6b891baf04071334db262",
-    "CHANGELOG.md": "ef58320e55a14a3c75c9e764c791135d6d278ff65698c698574c62486efb1e19",
+    "CHANGELOG.md": "8cbea7dc2662e594c35913a2819abc164ddf7cca9e51820193fc5d739bb4ceca",
     "README.md": "4529ebd760cd326b06def03a297eb3377e27d8832ee78e8cd21296f96be19099",
-    "STANDUP.md": "4ceb255e42e59b3356a2148b29f3a02ac58ce60eab9e782742337c8160333936",
+    "STANDUP.md": "79f14f8a3b4675c0d4d20c5d27976fc4f0489a532ddc47e8fdf57cdbfa65bf05",
     "TODO.md": "6252973798570ec641e31a47a687325c681832f43b0af9e8ca2e3d90fc6ea14c",
     "adapters/claude.md": "60b4df90f84b6a588d860608d3340303301aca26acdb5893d3beed4ff2efa7c5",
     "adapters/codex.md": "c63f3433f1e2476e8bf1b475da05c7a17633188da739e7428088b1eaad1cd605",
-    "adapters/cursor.md": "74d794685449918b60c695e0d7ece51c8dd8f0d8c362fbbb79b635d200728391",
+    "adapters/cursor.md": "6a250a0d477ee27e36e3db503f31240b3e62a6cd50e9c08a3fa91b04c65aaffb",
     "kit-files.txt": "dac39a3d31a455eceb04b761da38607d2cf57e4dedb9ae14667a75612cae80a2",
     "reference/ci/docs-gate.yml": "c02f986af8042b2b76c0d9b0dad0ff1055045089798e8a6959166bc579e9b8d6",
     "reference/ci/firewall-push.yml": "fd63dcd2b4e90276b91ee7804ca106134fed86814d611caab16d3ac4ed043bdd",
@@ -54,7 +54,7 @@
     "tests/test_guard_contracts.py": "083927132b9471fd6248f08e522b2e1d5a763fe3c05a4c72fbed89bbcaaa38e2",
     "tests/test_guard_wiring_probe.py": "f309bcc4bd29291e5681166d4fe672463049d27f74ee5e2424bc2b20a18cb1ff",
     "tests/test_kit_manifest.py": "18d7cd2283f4727eb5d5e4cedf6f982d1ca0de055d222e437fb8c0d646c35c84",
-    "tests/test_kit_poll.py": "c2659dbefffbd7beffbc5692c479daab507ea8acb1c2e5b0095c67df8bd0fdae"
+    "tests/test_kit_poll.py": "52803dae8f3b535c1452b5c24041f66523e834e486dac7c4391b6aeb3fcf816a"
   },
   "kit_version": "2026.09.3"
 }

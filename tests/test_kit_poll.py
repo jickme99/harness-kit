@@ -92,6 +92,15 @@ def test_standup_maps_harness_template_and_guards(poll):
     assert poll.map_kit_path("tests/test_kit_poll.py", rules) == "tests/test_kit_poll.py"
     assert poll.map_kit_path(
         "reference/cursor/BUGBOT.md", rules) == ".cursor/BUGBOT.md"
+    assert poll.map_kit_path(
+        "reference/cursor/project-rules.mdc",
+        rules) == ".cursor/rules/project-rules.mdc"
+    assert poll.map_kit_path(
+        "reference/cursor/outside-the-lane.mdc",
+        rules) == ".cursor/rules/outside-the-lane.mdc"
+    assert poll.map_kit_path(
+        "reference/claude/harness-auditor.md",
+        rules) == ".claude/agents/harness-auditor.md"
 
 
 def test_membership_new_member_vs_kit_repo_only(poll):

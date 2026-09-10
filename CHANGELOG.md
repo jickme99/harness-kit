@@ -27,8 +27,9 @@ Poll is a tool. Succession is a file.
 - **What changed:**
   - `reference/tools/kit_poll.py` — worklist (same-version stays; unknown Applies-to is
     consider, never skip), STANDUP-mapped membership (adapter docs included by default;
-    missing STANDUP.md or kit-files.txt fails closed), `classify` of the project stamp
-    against the project tree. Never copies files.
+    Cursor `.mdc` / `BUGBOT.md` and Claude role files are STANDUP arrows; missing
+    STANDUP.md or kit-files.txt fails closed), `classify` of the project stamp against
+    the project tree. Never copies files.
     `python scripts/kit_poll.py --project . --kit <harness-kit clone>`.
   - Tests for `kit_manifest.py` generate/classify (empty list, missing version, CRLF,
     customized/missing buckets).

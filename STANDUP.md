@@ -62,16 +62,21 @@ identical across shapes. Shape is a stand-up-time answer, not a fork of the kit.
    user-level layer; see `spec/guards.md` on why two layers exist). For Cursor that is
    `reference/cursor/hooks.json` → `.cursor/hooks.json`, `reference/cursor/bridge.cmd` →
    `.cursor/hooks/bridge.cmd` (the extra `hooks/` directory is load-bearing — see
-   `adapters/cursor.md`), and `reference/cursor/hook_bridge.py` →
-   `scripts/cursor_hook_bridge.py`. For a harness without hooks, the adapter doc tells
-   you what you are carrying as doctrine instead.
+   `adapters/cursor.md`), `reference/cursor/hook_bridge.py` →
+   `scripts/cursor_hook_bridge.py`, `reference/cursor/project-rules.mdc` →
+   `.cursor/rules/project-rules.mdc`, `reference/cursor/outside-the-lane.mdc` →
+   `.cursor/rules/outside-the-lane.mdc`, and `reference/cursor/BUGBOT.md` →
+   `.cursor/BUGBOT.md`. For a harness without hooks, the adapter doc tells you what
+   you are carrying as doctrine instead.
 3. **Instantiate the wiki skeleton.** `templates/wiki/` → the brain (`wiki/` in the brain
    repo, or `wiki/` in the one-repo shape). Set each page's frontmatter dates; write the
    first `decisions.md` entry — the answers to Questions 1 and 2, dated.
 4. **Roles.** Draft the project's product roles from `reference/claude/role-template.md`
    (fences are real paths — start narrow; widening is on the record). Install the two
-   function-role patterns (`harness-auditor.md`, `version-steward.md`), replacing the
-   origin's path and instrument names with the project's own.
+   function-role patterns: `reference/claude/harness-auditor.md` →
+   `.claude/agents/harness-auditor.md` and `reference/claude/version-steward.md` →
+   `.claude/agents/version-steward.md`, replacing origin path and instrument names with
+   the project's own.
 5. **Generate the kit manifest** — the project's stamp, and the hook for future upgrades.
    Use the **current** `kit_version` from the kit repo's `kit-manifest.json` / `CHANGELOG.md`
    (do not copy a stale example). As of this kit line:
