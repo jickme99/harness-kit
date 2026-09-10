@@ -90,5 +90,8 @@
 
 - **RESOLVED 2026-09-10 — kit front door (`2026.09.6`).** This clone is the factory.
   `START-HERE.md` / `CLAUDE.md` / `AGENTS.md` tell the agent to stand up a sibling
-  project and hide stamp/poll from the human. Those three files are kit-repo-only
-  (not STANDUP dests). The product stubs stay `templates/*.project.md`.
+  project and hide stamp/poll from the human. Claude reads `CLAUDE.md`; Cursor and
+  ChatGPT Codex read `AGENTS.md`; ChatGPT in the browser pastes the prompt in
+  `START-HERE.md`. Those three files are kit-repo-only (not STANDUP dests). The
+  product stubs stay `templates/*.project.md`. Codex *enforcement* after stand-up
+  is still untested (`adapters/codex.md`).

@@ -1,9 +1,11 @@
 # harness-kit
 
-**New project:** clone this repo, open **this folder** in Claude or Cursor, and say
-what you want to build. The agent reads `START-HERE.md` and stands up a **separate**
-folder. This clone stays the kit. You then open the new folder and work there. You
-do not run stamp or poll commands.
+**New project:** clone this repo, open **this folder** in Claude, Cursor, or
+ChatGPT Codex, and say what you want to build. Claude reads `CLAUDE.md`; Cursor
+and ChatGPT Codex read `AGENTS.md`. The agent stands up a **separate** folder.
+This clone stays the kit. You then open the new folder and work there. You do
+not run stamp or poll commands. ChatGPT in the browser does not auto-read the
+repo — paste the prompt in `START-HERE.md`.
 
 **A specification with teeth for running a project as one master agent, many disposable
 role-cast workers, and a human at exactly two gates — extracted 2026-09-01 from a live

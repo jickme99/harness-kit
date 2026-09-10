@@ -1,9 +1,11 @@
 # STANDUP — cold-starting a new project from this kit
 
-A human who is not technical opens **this kit clone** in Claude (or Cursor). The front
-door is `CLAUDE.md` / `AGENTS.md` / `START-HERE.md`: you stand up a **separate** project
-folder. This clone stays the kit. They never run stamp, poll, harvest, or pytest — you
-do. When the gate passes, they close this folder and open the new one.
+A human who is not technical opens **this kit clone** in Claude, Cursor, or ChatGPT
+Codex. The front door is `CLAUDE.md` (Claude) / `AGENTS.md` (Cursor and ChatGPT Codex)
+/ `START-HERE.md`. ChatGPT in the browser does not auto-read those files — they paste
+the prompt in `START-HERE.md`. You stand up a **separate** project folder. This clone
+stays the kit. They never run stamp, poll, harvest, or pytest — you do. When the gate
+passes, they close this folder and open the new one.
 
 Written to be executed by an AI agent, with its human answering the questions. Work
 top-to-bottom; do not skip the questions to get to the install steps — two of them change
