@@ -54,6 +54,8 @@ identical across shapes. Shape is a stand-up-time answer, not a fork of the kit.
    - `reference/tools/kit_poll.py` → `scripts/`.
    - `reference/tools/kit_stamp.py` → `scripts/`.
    - `reference/tools/kit_harvest.py` → `scripts/`.
+   - `reference/tools/review_stamp.py` → `scripts/`.
+   - `reference/tools/review_rates.py` → `scripts/`.
    - `tests/` → `tests/` (the guard contract tests and the stamper/poll/harvest contracts).
      Adjust `GUARDS_DIR` at the top of `tests/guard_registry.py` if your scripts live
      elsewhere.

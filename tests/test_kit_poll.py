@@ -72,8 +72,11 @@ def test_live_changelog_2026_09_2_keeps_wrapped_applies_to(poll):
     path = ROOT / "CHANGELOG.md"
     if not path.is_file():
         pytest.skip("CHANGELOG.md is kit-repo-only")
+    text = path.read_text(encoding="utf-8")
+    if "## 2026.09.2" not in text:
+        pytest.skip("this tree's CHANGELOG.md is not the kit poll surface")
     rows = {r["version"]: r for r in poll.worklist(
-        "2026.09.2", poll.parse_changelog(path.read_text(encoding="utf-8")))}
+        "2026.09.2", poll.parse_changelog(text))}
     row = rows["2026.09.2"]
     assert "AGENTS.project.md" in row["applies_to"]
     assert "Lane 3" in row["lane"]
@@ -114,6 +117,10 @@ def test_standup_maps_harness_template_and_guards(poll):
         "reference/tools/kit_stamp.py", rules) == "scripts/kit_stamp.py"
     assert poll.map_kit_path(
         "reference/tools/kit_harvest.py", rules) == "scripts/kit_harvest.py"
+    assert poll.map_kit_path(
+        "reference/tools/review_stamp.py", rules) == "scripts/review_stamp.py"
+    assert poll.map_kit_path(
+        "reference/tools/review_rates.py", rules) == "scripts/review_rates.py"
     assert poll.map_kit_path(
         "reference/cursor/bridge.cmd", rules) == ".cursor/hooks/bridge.cmd"
     assert poll.map_kit_path("spec/operating-model.md", rules) is None
