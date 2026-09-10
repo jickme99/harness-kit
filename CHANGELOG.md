@@ -16,6 +16,35 @@ does not apply must **consider** it (`spec/versioning.md`).
 
 ---
 
+## 2026.09.4 — 2026-09-10
+
+One stamp method. Harvest is a proposal. Empty stdin stays fail-open.
+
+- **Lane:** 3 (new component — stamp CLI, harvest CLI). Empty-stdin is a recorded
+  judgment, not a behavior change.
+- **Applies to:** every stamp. New projects and existing consumers fingerprint the
+  same way (`STANDUP.md` step 5). Harvest applies once `kit-manifest.json` exists.
+- **What changed:**
+  - `reference/tools/kit_stamp.py` — the only stamp method. STANDUP-mapped dests that
+    already exist in the project tree become `kit-files.txt` (project paths) and
+    `kit-manifest.json` (hashes + the kit's `kit_version`). Does not copy kit files,
+    does not glob the project, does not name dests that are not installed.
+    `--refresh` rebuilds; `--dry-run` prints the plan.
+    `python scripts/kit_stamp.py --project . --kit <harness-kit clone>`.
+  - `reference/tools/kit_harvest.py` — proposal-only two-way feedback. Reports
+    `customized` stamp members (reverse-mapped to a kit path when STANDUP has one)
+    and harness-adjacent `extra` files under `scripts/`, `.cursor/`, `.claude/`.
+    Never copies into the kit. Product trees (`app/`, `tests/` beyond kit contracts)
+    are out of scope.
+    `python scripts/kit_harvest.py --project . --kit <harness-kit clone>`.
+  - `STANDUP.md` step 5 is this command (not "copy kit-files.txt and hand-edit paths").
+  - Empty stdin on the Cursor bridge **remains fail-open**. Deny froze every command
+    on Windows when conda `python.cmd` dropped the pipe. The residual stays watched
+    (`tests/test_cursor_bridge.py`). Do not flip `hook_bridge.py` without a live
+    Windows test that does not freeze the shell.
+- **Does not change:** Cursor install path; poll CLI shape (`--project` / `--kit`);
+  kit-opens-upgrade-PRs (consumer #2); corporate kit.
+
 ## 2026.09.3 — 2026-09-10
 
 Poll is a tool. Succession is a file.

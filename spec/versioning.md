@@ -53,6 +53,21 @@ compared by **version**, not by hoping someone noticed a hash change.
   master still decides what is *applied*. Kit-opens-upgrade-PRs (the steward at consumer
   #2) is later automation, not a substitute for a project that can read the changelog.
 
+### Stamp recipe (in the consuming project)
+
+A project with no `kit-manifest.json` cannot poll or harvest. Stamp first (`STANDUP.md`
+step 5) with the same command every project uses:
+
+```sh
+python scripts/kit_stamp.py --project . --kit /path/to/harness-kit
+```
+
+That fingerprints STANDUP-mapped dests that already exist. It does not copy kit files
+and it does not glob the project. `--refresh` rebuilds; `--dry-run` prints the plan.
+Do not hand-edit a copied kit `kit-files.txt` — a second mapping drifts. Before
+`scripts/kit_stamp.py` is copied, the kit clone is the same method:
+`python /path/to/harness-kit/reference/tools/kit_stamp.py --project . --kit /path/to/harness-kit`.
+
 ### Poll recipe (in the consuming project)
 
 A project with no `kit-manifest.json` cannot poll. Stamp first (`STANDUP.md` step 5).
@@ -110,8 +125,25 @@ A project with no `kit-manifest.json` cannot poll. Stamp first (`STANDUP.md` ste
 5. **Never self-apply.** The project Merge gate is the activation. Declining an entry is
    kit feedback: send it up; do not quietly drift.
 
+### Harvest recipe (in the consuming project)
+
+A stamp is required. Output is JSON. **Never copies files into the kit.**
+
+```sh
+python scripts/kit_harvest.py --project . --kit /path/to/harness-kit
+```
+
+- **customized** — stamp members whose content drifted. Reverse-mapped to the kit path
+  when STANDUP has one. These are kit-PR *candidates*, not copies.
+- **extra** — files under `scripts/`, `.cursor/`, or `.claude/` that the stamp does not
+  name and that are not a mapped kit dest. Product trees (`app/`, `tests/` beyond kit
+  contracts) are out of scope — that would be a glob.
+- **never_self_apply** is always true. Activation is a kit PR through the kit Merge
+  gate. Origin paths, env names, and denylists stay in the project.
+
 The kit's `classify` answers "may this upgrade rewrite this file in *this* tree?" The
-changelog answers "is there anything to consider?" Neither is sufficient alone.
+changelog answers "is there anything to consider?" Harvest answers "what did this
+project invent that the kit might want as a pattern?" None is sufficient alone.
 
 ## Mechanics (reference)
 
@@ -129,5 +161,6 @@ durable home, not a PR body.
 The lanes and the reader-assignment rule are doctrine plus ordinary CI/bot configuration —
 portable to any harness. What must survive re-implementation: the three-lane risk split,
 the fresh-install test on majors, the named-reader table, the kit-as-dependency sweep, a
-versioned stamp, and a poll that a project can run without write access to the kit and
-that never copies files.
+versioned stamp (from `kit_stamp.py`), a poll that a project can run without write access
+to the kit and that never copies files, and a harvest that can offer customizations back
+as a proposal and that never copies files into the kit.

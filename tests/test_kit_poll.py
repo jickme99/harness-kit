@@ -111,6 +111,10 @@ def test_standup_maps_harness_template_and_guards(poll):
     assert poll.map_kit_path(
         "reference/tools/kit_poll.py", rules) == "scripts/kit_poll.py"
     assert poll.map_kit_path(
+        "reference/tools/kit_stamp.py", rules) == "scripts/kit_stamp.py"
+    assert poll.map_kit_path(
+        "reference/tools/kit_harvest.py", rules) == "scripts/kit_harvest.py"
+    assert poll.map_kit_path(
         "reference/cursor/bridge.cmd", rules) == ".cursor/hooks/bridge.cmd"
     assert poll.map_kit_path("spec/operating-model.md", rules) is None
     assert poll.map_kit_path("adapters/cursor.md", rules) is None

@@ -38,6 +38,8 @@ here is doctrine unless a probe or gate is wired to check it.
    ("no lessons this session" must be SAID, not implied) — and the harness audit runs
    here; (4) poll the kit (`python scripts/kit_poll.py --project . --kit <clone>`) and
    record "caught up" or the worklist headings in `wiki/log.md` — never self-apply;
+   harvest (`python scripts/kit_harvest.py --project . --kit <clone>`) is the offer
+   path when this tree customized kit files — also never copy;
    (5) parking lot, next-session priming (`wiki/HANDOFF.md`), light lint, commit + push.
 7. **Cross-references use `[[Page Title]]`**, and the index page is updated whenever a
    page is added, renamed or removed.

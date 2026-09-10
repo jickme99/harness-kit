@@ -52,7 +52,9 @@ identical across shapes. Shape is a stand-up-time answer, not a fork of the kit.
      `HARNESS_GH_ACCOUNT` if the machine has multiple gh logins).
    - `reference/tools/kit_manifest.py` → `scripts/`.
    - `reference/tools/kit_poll.py` → `scripts/`.
-   - `tests/` → `tests/` (the guard contract tests and the stamper/poll contracts).
+   - `reference/tools/kit_stamp.py` → `scripts/`.
+   - `reference/tools/kit_harvest.py` → `scripts/`.
+   - `tests/` → `tests/` (the guard contract tests and the stamper/poll/harvest contracts).
      Adjust `GUARDS_DIR` at the top of `tests/guard_registry.py` if your scripts live
      elsewhere.
    - `templates/pr-template.md` → `.github/pull_request_template.md`, placeholders filled.
@@ -77,17 +79,28 @@ identical across shapes. Shape is a stand-up-time answer, not a fork of the kit.
    `.claude/agents/harness-auditor.md` and `reference/claude/version-steward.md` →
    `.claude/agents/version-steward.md`, replacing origin path and instrument names with
    the project's own.
-5. **Generate the kit manifest** — the project's stamp, and the hook for future upgrades.
-   Use the **current** `kit_version` from the kit repo's `kit-manifest.json` / `CHANGELOG.md`
-   (do not copy a stale example). As of this kit line:
+5. **Stamp the project** — the fingerprint that makes poll and harvest possible. This is
+   the only stamp method; a new project and an existing consumer run the same command.
+   It does **not** copy kit files (install is steps 1–4). It fingerprints the
+   STANDUP-mapped dests that **already exist** in this tree, writes `kit-files.txt`
+   (project paths) and `kit-manifest.json` (hashes + the kit's current `kit_version`).
+   Destinations that are not installed are not named, so `classify` `missing` does not
+   fight "do not silently restore." Kit-repo-only paths (`spec/`, `adapters/`, …) stay
+   in the kit. `kit-manifest.json` is the output, not a member of the list.
+
    ```sh
-   python scripts/kit_manifest.py generate --list kit-files.txt --root . --version 2026.09.3 --out kit-manifest.json
+   python scripts/kit_stamp.py --project . --kit <harness-kit clone>
    ```
-   where `kit-files.txt` lists the kit-owned files you just installed (copy the kit's own
-   list as a starting point and edit it to your layout — membership is a decision, not a
-   glob). Commit both files. A project without this stamp cannot poll for updates.
+
+   Before the copy in step 1 exists, the same file from the clone is the same method:
+   `python <clone>/reference/tools/kit_stamp.py --project . --kit <clone>`.
+   `--dry-run` prints the plan. `--refresh` rebuilds an existing stamp from the current
+   tree. Do not hand-edit a copied kit `kit-files.txt` — that is a second mapping and
+   it will drift. Commit both files. A project without this stamp cannot poll or harvest.
    Later: `python scripts/kit_poll.py --project . --kit <harness-kit clone>`
-   (`spec/versioning.md`). Never self-apply.
+   (`spec/versioning.md`). To offer local customizations back to the kit:
+   `python scripts/kit_harvest.py --project . --kit <harness-kit clone>`
+   (proposal-only; never copies into the kit). Never self-apply.
 6. **(Two-repo shape only) Arm the firewall** per `spec/firewall.md`: author the scanner
    in the body repo, seed the denylist in the brain repo from your own hard constraints,
    sync the secret, record the hash.

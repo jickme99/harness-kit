@@ -47,8 +47,9 @@ implement discovery there.
 The Cursor bridge is not a Guard in this registry. `tests/test_cursor_bridge.py` watches
 the recorded empty-stdin fail-open residual and the install path. `tests/test_guard_wiring_probe.py`
 covers adapter-aware `guard_wiring` (Cursor-only stamps must not fail the Claude layer).
-`tests/test_kit_manifest.py` and `tests/test_kit_poll.py` cover the stamper and the poll
-(proposal-only; STANDUP is the path map).
+`tests/test_kit_manifest.py`, `tests/test_kit_poll.py`, and
+`tests/test_kit_stamp_harvest.py` cover the classifier, the poll, the stamp method, and
+the harvest proposal (STANDUP is the path map; harvest never copies).
 
 ## Two halves, neither sufficient alone
 

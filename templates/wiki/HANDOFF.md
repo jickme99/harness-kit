@@ -29,7 +29,9 @@ Stamped `{{kit_version from kit-manifest.json}}`. Poll before close-out:
 python scripts/kit_poll.py --project . --kit {{path to a harness-kit clone}}
 ```
 
-Never self-apply. Record "caught up" or the worklist heading in [[log]].
+Never self-apply. Record "caught up" or the worklist heading in [[log]]. Harvest
+(`python scripts/kit_harvest.py --project . --kit {{path to a harness-kit clone}}`)
+offers customized kit files back; never copy into the kit.
 
 ## Not in this repo
 

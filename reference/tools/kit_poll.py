@@ -189,6 +189,52 @@ def membership_drift(kit_files: list[str], stamp_files: list[str],
     }
 
 
+def install_map(project: pathlib.Path, kit: pathlib.Path,
+                map_from: list[pathlib.Path] | None = None) -> dict:
+    """STANDUP-mapped kit dests: present in the project, mapped-but-absent, kit-repo-only.
+
+    Stamp fingerprints `present` only. Absent dests are not named in the stamp
+    (poll still offers them as new_members). Never globs the project tree.
+    `reverse` maps present project dests back to the kit path.
+    """
+    rules = copy_rules(map_source_texts(kit, map_from))
+    present: list[dict] = []
+    absent: list[dict] = []
+    kit_repo_only: list[str] = []
+    reverse: dict[str, str] = {}
+    for kit_path in read_list(kit / "kit-files.txt"):
+        dest = map_kit_path(kit_path, rules)
+        if dest is None:
+            kit_repo_only.append(kit_path)
+            continue
+        entry = {"kit": kit_path, "project": dest}
+        if (project / dest).is_file():
+            present.append(entry)
+            reverse[dest] = kit_path
+        else:
+            absent.append(entry)
+    return {
+        "absent": absent,
+        "kit_repo_only": kit_repo_only,
+        "kit_version": _kit_version(kit),
+        "present": present,
+        "reverse": reverse,
+        "rules": rules,
+    }
+
+
+def _kit_version(kit: pathlib.Path) -> str:
+    path = kit / "kit-manifest.json"
+    if not path.is_file():
+        raise KitError(f"{path} does not exist — point --kit at a harness-kit clone")
+    raw = _read_json(path, "kit kit-manifest.json").get("kit_version")
+    if not isinstance(raw, str) or not raw.strip():
+        raise KitError("kit kit-manifest.json has no kit_version")
+    version = raw.strip()
+    parse_version(version)
+    return version
+
+
 def _read_json(path: pathlib.Path, what: str) -> object:
     try:
         return json.loads(path.read_text(encoding="utf-8"))

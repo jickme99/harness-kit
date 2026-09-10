@@ -14,7 +14,9 @@ cold start does not depend on chat memory.
 2. **Next task** — `wiki/HANDOFF.md` (Next) and `wiki/status.md` (Pending / blocking).
 3. **Kit version** — `kit-manifest.json` field `kit_version`. Poll with
    `python scripts/kit_poll.py --project . --kit {{path to a harness-kit clone}}`.
-   Never self-apply: propose a project PR.
+   Offer local kit-file customizations back with
+   `python scripts/kit_harvest.py --project . --kit {{path to a harness-kit clone}}`.
+   Never self-apply: propose a project PR (poll) or a kit PR (harvest).
 4. **What is not in this repo** — `wiki/HANDOFF.md` (Not in this repo). If this is the
    body half of a two-repo shape, the brain is a sibling checkout, not this tree.
 
