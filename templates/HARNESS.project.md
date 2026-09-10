@@ -114,6 +114,8 @@ nothing if it runs, and confirm the refusal.
 - `CLAUDE.md` — the Claude Code entry point (points back here).
 - `AGENTS.md` — the Cursor/Codex entry point (points back here). Do not assume this
   file is the constitution if it already had another job.
+- `START-HERE.md` — succession (last decision, next task, kit version, not in this repo).
+- `wiki/HANDOFF.md` — the last session's four answers, kept current at close-out.
 - {{other tool entry points and house pages}}
 
 ## 5. The honest promise

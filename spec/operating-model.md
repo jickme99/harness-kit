@@ -45,6 +45,12 @@ another harness must achieve.
    prior conclusion, it passes along the open disjunction with it, and instructs the worker
    that overturning the conclusion is an acceptable outcome. Repetition is not
    corroboration when every telling has the same single source.
+10. **One tool per working copy.** Two agent tools on the same checkout share the git
+    index, user-level hooks, and the `gh` account — those are machine-global, not
+    session-local. Two masters on two dirty copies of one repo is two writers without a
+    fence table. Memory that is not in the repo is tool-local; name it (which product's
+    chat) and do not assume the other tool can see it. Fan-out ceiling is machine-local
+    (CPU, RAM, API rate); do not hardcode a number.
 
 ## Why (the failures that taught these)
 
@@ -67,6 +73,10 @@ another harness must achieve.
   taste, not correctness, and burns the whole schedule doing it.
 - **Spawn inherit** priced every worker at the master's cost the first time a costly
   control-room model dispatched a Task without a pin.
+- **One tool per working copy** is the one-writer rule at machine scope: user-level
+  hooks fire for every tool on the box, `gh` is whichever account is active, and two
+  dirty checkouts of one repo have no shared fence table. Name tool-local memory
+  rather than assuming the other product's session can see it.
 - **Workshop invoke and mailbox** were measured on Cursor-as-master: asking the owner to
   paste a starting card was friction the spoken invoke already covered; the vendor cannot
   post from one Agent chat into another, so the durable mailbox is a dated Inbox on the
@@ -109,6 +119,8 @@ another harness must achieve.
 - A way to cast a fresh agent into a role definition it did not write, with the role's
   fence stated in machine-readable form the agent can be checked against.
 - Physical isolation per worker (worktrees or equivalent) so two writers cannot collide.
+- One tool per working copy; user-level hooks and `gh` are machine-global; tool-local
+  memory is named and not assumed visible to another product.
 - Spawn pins a slug from the project's vendor adapter table and never inherits the parent
   chat's model. Vendor names stay in that table, not in Claude role-file `model:` fields.
 - The two gates: opening a PR is automation. Publish is always a human click the owner

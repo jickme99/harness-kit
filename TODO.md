@@ -68,5 +68,9 @@
   install path matches `hooks.json` (`.cursor/hooks/`); `guard_wiring` is adapter-aware;
   `templates/AGENTS.project.md` ships; empty-stdin fail-open is a watched residual, not
   flipped to deny; adapter tables have REQUIRED / IF-AVAILABLE; `inbox/` gitignored.
-  Still parked: fail-closed empty stdin; stamp origin; Wave B (poll/harvest tools,
-  HANDOFF templates).
+  Still parked after this wave: fail-closed empty stdin; stamp origin.
+
+- **RESOLVED 2026-09-10 — Wave B (`2026.09.3`).** `kit_poll.py` is the poll (proposal
+  only); `classify` has contracts; START-HERE / wiki/HANDOFF answer the four succession
+  questions; one-tool-per-working-copy is operating-model invariant 10. Harvest CLI still
+  parked until a consumer is stamped.

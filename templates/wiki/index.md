@@ -19,12 +19,14 @@ or removed — that update is one of the auto-write triggers, not a favor.
 - `decisions.md` and `log.md` are **append-only**: supersede via a new dated entry, never
   rewrite an old one.
 - Snapshot pages (this one, [[status]]) keep `updated:` honest — the probe pack measures
-  both the frontmatter's claim and the body's newest date against [[log]].
+  both the frontmatter's claim and the body's newest date against [[log]]. [[HANDOFF]] is
+  a close-out snapshot (doctrine); refresh it when a session ends.
 
 ## Pages
 
 - [[index]] — this page
 - [[status]] — where things stand
+- [[HANDOFF]] — last session's four answers (snapshot; refresh at close-out)
 - [[decisions]] — dated decisions with rationale (append-only)
 - [[log]] — the work log (append-only)
 - [[feedback]] — owner preferences and lessons, with disposition markers

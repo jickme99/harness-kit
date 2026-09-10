@@ -44,12 +44,17 @@ identical across shapes. Shape is a stand-up-time answer, not a fork of the kit.
    - `templates/AGENTS.project.md` → `AGENTS.md` (Cursor and Codex read this natively;
      same pointer-stub pattern). If `AGENTS.md` already exists, read it first — do not
      overwrite an install runbook or other job with a pointer stub.
+   - `templates/START-HERE.project.md` → `START-HERE.md` (succession: last decision,
+     next task, kit version, what is not in this repo). Fill it; a cold start that
+     cannot answer those four is not stood up.
    - `reference/guards/*.py` → `scripts/` in the project. Set the marked install-time
      seams (the probe pack's second-repo path/slug and gh account; the merge guard's
      `HARNESS_GH_ACCOUNT` if the machine has multiple gh logins).
    - `reference/tools/kit_manifest.py` → `scripts/`.
-   - `tests/` (the guard contract tests) → the project's `tests/`, adjusting the guard
-     paths at the top of `tests/guard_registry.py` if your scripts live elsewhere.
+   - `reference/tools/kit_poll.py` → `scripts/`.
+   - `tests/` → `tests/` (the guard contract tests and the stamper/poll contracts).
+     Adjust `GUARDS_DIR` at the top of `tests/guard_registry.py` if your scripts live
+     elsewhere.
    - `templates/pr-template.md` → `.github/pull_request_template.md`, placeholders filled.
 2. **Install the guards' wiring for your tool** — per the adapter doc (`adapters/claude.md`,
    `adapters/cursor.md`, `adapters/codex.md`). For Claude Code that is
@@ -57,26 +62,32 @@ identical across shapes. Shape is a stand-up-time answer, not a fork of the kit.
    user-level layer; see `spec/guards.md` on why two layers exist). For Cursor that is
    `reference/cursor/hooks.json` → `.cursor/hooks.json`, `reference/cursor/bridge.cmd` →
    `.cursor/hooks/bridge.cmd` (the extra `hooks/` directory is load-bearing — see
-   `adapters/cursor.md`), and `reference/cursor/hook_bridge.py` →
-   `scripts/cursor_hook_bridge.py`. For a harness without hooks, the adapter doc tells
-   you what you are carrying as doctrine instead.
+   `adapters/cursor.md`), `reference/cursor/hook_bridge.py` →
+   `scripts/cursor_hook_bridge.py`, `reference/cursor/project-rules.mdc` →
+   `.cursor/rules/project-rules.mdc`, `reference/cursor/outside-the-lane.mdc` →
+   `.cursor/rules/outside-the-lane.mdc`, and `reference/cursor/BUGBOT.md` →
+   `.cursor/BUGBOT.md`. For a harness without hooks, the adapter doc tells you what
+   you are carrying as doctrine instead.
 3. **Instantiate the wiki skeleton.** `templates/wiki/` → the brain (`wiki/` in the brain
    repo, or `wiki/` in the one-repo shape). Set each page's frontmatter dates; write the
    first `decisions.md` entry — the answers to Questions 1 and 2, dated.
 4. **Roles.** Draft the project's product roles from `reference/claude/role-template.md`
    (fences are real paths — start narrow; widening is on the record). Install the two
-   function-role patterns (`harness-auditor.md`, `version-steward.md`), replacing the
-   origin's path and instrument names with the project's own.
+   function-role patterns: `reference/claude/harness-auditor.md` →
+   `.claude/agents/harness-auditor.md` and `reference/claude/version-steward.md` →
+   `.claude/agents/version-steward.md`, replacing origin path and instrument names with
+   the project's own.
 5. **Generate the kit manifest** — the project's stamp, and the hook for future upgrades.
    Use the **current** `kit_version` from the kit repo's `kit-manifest.json` / `CHANGELOG.md`
    (do not copy a stale example). As of this kit line:
    ```sh
-   python scripts/kit_manifest.py generate --list kit-files.txt --root . --version 2026.09.2 --out kit-manifest.json
+   python scripts/kit_manifest.py generate --list kit-files.txt --root . --version 2026.09.3 --out kit-manifest.json
    ```
    where `kit-files.txt` lists the kit-owned files you just installed (copy the kit's own
    list as a starting point and edit it to your layout — membership is a decision, not a
    glob). Commit both files. A project without this stamp cannot poll for updates.
-   Later: `spec/versioning.md` (poll recipe).
+   Later: `python scripts/kit_poll.py --project . --kit <harness-kit clone>`
+   (`spec/versioning.md`). Never self-apply.
 6. **(Two-repo shape only) Arm the firewall** per `spec/firewall.md`: author the scanner
    in the body repo, seed the denylist in the brain repo from your own hard constraints,
    sync the secret, record the hash.
