@@ -15,8 +15,9 @@ Then, for PRs **this session opened** (or that this work produced):
 
 1. Squash-merge (`gh pr merge --squash`).
 2. In **this kit repo**, if `kit_version` moved, tag that string and push the tag.
-3. Do not merge unrelated open PRs, and do not merge if checks are red (except
-   this repo, which has no Actions — no-run is allowed).
+3. Do not merge unrelated open PRs. Wait until checks are success, skipped, or
+   neutral — in-progress is not green. This repo has no Actions, so no-run is
+   allowed (same as the merge-green guard).
 4. Origin/consumer Merge is included when the work was in that repo and they
    were good with it. Publish stays a human gate.
 
