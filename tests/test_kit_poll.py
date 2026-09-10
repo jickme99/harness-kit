@@ -125,6 +125,9 @@ def test_standup_maps_harness_template_and_guards(poll):
         "reference/cursor/bridge.cmd", rules) == ".cursor/hooks/bridge.cmd"
     assert poll.map_kit_path("spec/operating-model.md", rules) is None
     assert poll.map_kit_path("adapters/cursor.md", rules) is None
+    assert poll.map_kit_path("CLAUDE.md", rules) is None
+    assert poll.map_kit_path("AGENTS.md", rules) is None
+    assert poll.map_kit_path("START-HERE.md", rules) is None
     assert poll.map_kit_path("tests/test_kit_poll.py", rules) == "tests/test_kit_poll.py"
     assert poll.map_kit_path(
         "reference/cursor/BUGBOT.md", rules) == ".cursor/BUGBOT.md"

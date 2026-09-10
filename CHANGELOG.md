@@ -16,6 +16,21 @@ does not apply must **consider** it (`spec/versioning.md`).
 
 ---
 
+## 2026.09.6 — 2026-09-10
+
+Kit front door. This clone is the factory, not the product.
+
+- **Lane:** 3 (new component — kit-repo `START-HERE.md` / `CLAUDE.md` / `AGENTS.md`).
+  No guard behavior change.
+- **Applies to:** every new stand-up from this clone. Existing stamps do not install
+  these files (kit-repo-only; they are not STANDUP dests).
+- **What changed:**
+  - Opening this repo in Claude or Cursor now says: create a **separate** project
+    folder, run STANDUP, hide stamp/poll from the human, then tell them to open the
+    new path. Do not turn this checkout into the app.
+  - `STANDUP.md` / `README.md` state the same shape.
+- **Does not change:** stamp/poll/harvest CLI; empty-stdin fail-open; corporate kit.
+
 ## 2026.09.5 — 2026-09-10
 
 First harvest from consumer #1. STANDUP maps the review tools. Poll tests skip a product changelog.

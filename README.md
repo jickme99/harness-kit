@@ -1,5 +1,10 @@
 # harness-kit
 
+**New project:** clone this repo, open **this folder** in Claude or Cursor, and say
+what you want to build. The agent reads `START-HERE.md` and stands up a **separate**
+folder. This clone stays the kit. You then open the new folder and work there. You
+do not run stamp or poll commands.
+
 **A specification with teeth for running a project as one master agent, many disposable
 role-cast workers, and a human at exactly two gates — extracted 2026-09-01 from a live
 venture after ~5 weeks of operation and a 4-day harness hardening.**
@@ -56,6 +61,7 @@ Two more promises the kit makes about the projects it stamps:
 
 | Path | What it is |
 |---|---|
+| `START-HERE.md` / `CLAUDE.md` / `AGENTS.md` | Kit front door. This clone is the factory; stand up a sibling project. Not the product stubs in `templates/`. |
 | `STANDUP.md` | The cold-start protocol for a NEW project — run by an AI agent with its human answering questions; ends in a runnable gate. |
 | `spec/` | One page per subsystem: `operating-model` · `guards` · `review` · `wiki-protocol` · `firewall` · `versioning` · `graduation`. Invariants, failure history, mechanics, and what a re-implementation must achieve. |
 | `reference/guards/` | The three guards + the probe pack, copied faithfully from the origin (install-time seams marked). |

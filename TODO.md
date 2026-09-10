@@ -87,3 +87,8 @@
   kit-repo-only). Poll live-changelog test skips a product CHANGELOG. Declined (stay
   in the project): product roles, Cursor lane `.mdc`s, product scripts, origin
   `firewall_scan.py`. Never copied origin bytes.
+
+- **RESOLVED 2026-09-10 — kit front door (`2026.09.6`).** This clone is the factory.
+  `START-HERE.md` / `CLAUDE.md` / `AGENTS.md` tell the agent to stand up a sibling
+  project and hide stamp/poll from the human. Those three files are kit-repo-only
+  (not STANDUP dests). The product stubs stay `templates/*.project.md`.

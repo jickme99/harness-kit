@@ -10,7 +10,7 @@ a fingerprint taken before. Poll for *whether* to upgrade from CHANGELOG.md
 (`spec/versioning.md`); use this tool for *which files* in this tree.
 
     # in the kit's own checkout: fingerprint the files the kit ships
-    python reference/tools/kit_manifest.py generate --list kit-files.txt --root . --version 2026.09.5 --out kit-manifest.json
+    python reference/tools/kit_manifest.py generate --list kit-files.txt --root . --version 2026.09.6 --out kit-manifest.json
 
     # in a project that installed the kit: which files are still the kit's?
     python scripts/kit_manifest.py classify --manifest kit-manifest.json --root .

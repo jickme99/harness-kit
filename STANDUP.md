@@ -1,9 +1,15 @@
 # STANDUP — cold-starting a new project from this kit
 
+A human who is not technical opens **this kit clone** in Claude (or Cursor). The front
+door is `CLAUDE.md` / `AGENTS.md` / `START-HERE.md`: you stand up a **separate** project
+folder. This clone stays the kit. They never run stamp, poll, harvest, or pytest — you
+do. When the gate passes, they close this folder and open the new one.
+
 Written to be executed by an AI agent, with its human answering the questions. Work
 top-to-bottom; do not skip the questions to get to the install steps — two of them change
 what gets installed, and one of them is a compliance matter. The protocol ends in a
-**runnable gate**; a project is not stood up until the gate passes.
+**runnable gate**; a project is not stood up until the gate passes. Do not turn this
+kit checkout into the product.
 
 ## Question 1 — the visibility question (decides the repo shape)
 
@@ -36,7 +42,11 @@ identical across shapes. Shape is a stand-up-time answer, not a fork of the kit.
 
 ## Install steps
 
-1. **Copy the core files.**
+Create the **new** project directory first (default: a sibling of this kit clone).
+Every arrow below is *from this clone* into **that** directory. Do not copy product
+files into this checkout. Do not `cd` this clone into becoming the app.
+
+1. **Copy the core files** into the new project directory.
    - `templates/HARNESS.project.md` → the project root as `HARNESS.md`. Fill its
      placeholders: the project's rules, its own coverage table, its pointers.
    - `templates/CLAUDE.project.md` → `CLAUDE.md` (the Claude Code entry point; a pointer
@@ -87,15 +97,17 @@ identical across shapes. Shape is a stand-up-time answer, not a fork of the kit.
    STANDUP-mapped dests that **already exist** in this tree, writes `kit-files.txt`
    (project paths) and `kit-manifest.json` (hashes + the kit's current `kit_version`).
    Destinations that are not installed are not named, so `classify` `missing` does not
-   fight "do not silently restore." Kit-repo-only paths (`spec/`, `adapters/`, …) stay
-   in the kit. `kit-manifest.json` is the output, not a member of the list.
+   fight "do not silently restore." Kit-repo-only paths (`spec/`, `adapters/`, this clone's `CLAUDE.md` /
+   `AGENTS.md` / `START-HERE.md`, …) stay in the kit. `kit-manifest.json` is the
+   output, not a member of the list. `--project` is the **new** folder, not this
+   clone.
 
    ```sh
-   python scripts/kit_stamp.py --project . --kit <harness-kit clone>
+   python scripts/kit_stamp.py --project <new project folder> --kit <harness-kit clone>
    ```
 
    Before the copy in step 1 exists, the same file from the clone is the same method:
-   `python <clone>/reference/tools/kit_stamp.py --project . --kit <clone>`.
+   `python <clone>/reference/tools/kit_stamp.py --project <new project folder> --kit <clone>`.
    `--dry-run` prints the plan. `--refresh` rebuilds an existing stamp from the current
    tree. Do not hand-edit a copied kit `kit-files.txt` — that is a second mapping and
    it will drift. Commit both files. A project without this stamp cannot poll or harvest.
@@ -152,3 +164,6 @@ it matters (the origin measured exactly this — 23 commands that should have be
 0 denied, because a settings file lived in the wrong commit). Fix the wiring, or move the
 affected rows of the coverage table to doctrine-only in writing so the record stays
 honest, and record the gap in `wiki/decisions.md`.
+
+When the gate passes, tell the human the new folder path. They close this kit clone
+and open that folder. Product work starts there. This checkout stays the kit.
