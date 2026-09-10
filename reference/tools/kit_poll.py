@@ -189,6 +189,24 @@ def _read_json(path: pathlib.Path, what: str) -> object:
         raise KitError(f"{what} is not valid JSON: {e}") from e
 
 
+def map_source_texts(kit: pathlib.Path,
+                     map_from: list[pathlib.Path] | None = None) -> str:
+    """STANDUP plus adapter docs (the versioning map), then any --map-from extras."""
+    standup = kit / "STANDUP.md"
+    if not standup.is_file():
+        raise KitError(f"{standup} does not exist — STANDUP.md is the membership map")
+    parts = [standup.read_text(encoding="utf-8")]
+    adapters = kit / "adapters"
+    if adapters.is_dir():
+        parts.extend(p.read_text(encoding="utf-8")
+                     for p in sorted(adapters.glob("*.md")) if p.is_file())
+    for extra in map_from or ():
+        if not extra.is_file():
+            raise KitError(f"--map-from {extra} does not exist")
+        parts.append(extra.read_text(encoding="utf-8"))
+    return "\n".join(parts)
+
+
 def poll(project: pathlib.Path, kit: pathlib.Path,
          map_from: list[pathlib.Path] | None = None) -> dict:
     """Facts for one poll. Raises KitError instead of inventing a version or a skip."""
@@ -210,18 +228,9 @@ def poll(project: pathlib.Path, kit: pathlib.Path,
         kit_version = _read_json(kit_manifest_path, "kit kit-manifest.json").get("kit_version")
 
     rows = worklist(local, parse_changelog(changelog_path.read_text(encoding="utf-8")))
-
-    standup = kit / "STANDUP.md"
-    texts = []
-    if standup.is_file():
-        texts.append(standup.read_text(encoding="utf-8"))
-    for extra in map_from or ():
-        if extra.is_file():
-            texts.append(extra.read_text(encoding="utf-8"))
-    rules = copy_rules("\n".join(texts))
-
+    rules = copy_rules(map_source_texts(kit, map_from))
     kit_list = kit / "kit-files.txt"
-    kit_files = read_list(kit_list) if kit_list.is_file() else []
+    kit_files = read_list(kit_list)
     files = stamp.get("files")
     stamp_files = list(files) if isinstance(files, dict) else []
     drift = membership_drift(kit_files, stamp_files, rules)

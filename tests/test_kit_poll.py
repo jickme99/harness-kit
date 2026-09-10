@@ -72,8 +72,7 @@ def test_standup_maps_harness_template_and_guards(poll):
     standup_path = ROOT / "STANDUP.md"
     if not standup_path.is_file():
         pytest.skip("STANDUP.md is kit-repo-only; stamps do not install it")
-    standup = standup_path.read_text(encoding="utf-8")
-    rules = poll.copy_rules(standup)
+    rules = poll.copy_rules(poll.map_source_texts(ROOT))
     assert poll.map_kit_path("templates/HARNESS.project.md", rules) == "HARNESS.md"
     assert poll.map_kit_path("templates/CLAUDE.project.md", rules) == "CLAUDE.md"
     assert poll.map_kit_path("templates/AGENTS.project.md", rules) == "AGENTS.md"
@@ -91,6 +90,8 @@ def test_standup_maps_harness_template_and_guards(poll):
     assert poll.map_kit_path("spec/operating-model.md", rules) is None
     assert poll.map_kit_path("adapters/cursor.md", rules) is None
     assert poll.map_kit_path("tests/test_kit_poll.py", rules) == "tests/test_kit_poll.py"
+    assert poll.map_kit_path(
+        "reference/cursor/BUGBOT.md", rules) == ".cursor/BUGBOT.md"
 
 
 def test_membership_new_member_vs_kit_repo_only(poll):
@@ -117,6 +118,35 @@ def test_poll_refuses_unstamped_project(tmp_path, poll):
     (kit / "CHANGELOG.md").write_text("## 2026.09.3 — x\n", encoding="utf-8")
     with pytest.raises(poll.KitError, match="stamp first"):
         poll.poll(tmp_path / "proj", kit)
+
+
+def _stamped_pair(tmp_path, poll, *, standup: bool = True, kit_files: bool = True):
+    kit = tmp_path / "kit"
+    proj = tmp_path / "proj"
+    kit.mkdir()
+    proj.mkdir()
+    (kit / "CHANGELOG.md").write_text("## 2026.09.3 — x\n", encoding="utf-8")
+    if standup:
+        (kit / "STANDUP.md").write_text("`a.md` → `a.md`\n", encoding="utf-8")
+    if kit_files:
+        (kit / "kit-files.txt").write_text("a.md\n", encoding="utf-8")
+        (kit / "a.md").write_text("x\n", encoding="utf-8")
+    (proj / "kit-manifest.json").write_text(
+        poll.canonical({"files": {"a.md": "a" * 64}, "kit_version": "2026.09.3"}),
+        encoding="utf-8")
+    return proj, kit
+
+
+def test_poll_refuses_kit_without_standup(tmp_path, poll):
+    proj, kit = _stamped_pair(tmp_path, poll, standup=False)
+    with pytest.raises(poll.KitError, match="STANDUP.md is the membership map"):
+        poll.poll(proj, kit)
+
+
+def test_poll_refuses_kit_without_file_list(tmp_path, poll):
+    proj, kit = _stamped_pair(tmp_path, poll, kit_files=False)
+    with pytest.raises(poll.KitError, match="kit file list"):
+        poll.poll(proj, kit)
 
 
 def test_poll_json_never_self_apply(tmp_path, poll):

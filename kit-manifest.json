@@ -1,7 +1,7 @@
 {
   "files": {
     ".gitignore": "915caec650a837c590b06cf198056dbe345b8ff12fc6b891baf04071334db262",
-    "CHANGELOG.md": "f2300c466d971957ff31599734427f7ea6cdf3a1c51640e460f3ef2eef2a65d9",
+    "CHANGELOG.md": "ef58320e55a14a3c75c9e764c791135d6d278ff65698c698574c62486efb1e19",
     "README.md": "4529ebd760cd326b06def03a297eb3377e27d8832ee78e8cd21296f96be19099",
     "STANDUP.md": "4ceb255e42e59b3356a2148b29f3a02ac58ce60eab9e782742337c8160333936",
     "TODO.md": "6252973798570ec641e31a47a687325c681832f43b0af9e8ca2e3d90fc6ea14c",
@@ -27,7 +27,7 @@
     "reference/guards/harness_probes.py": "b74442bf2303a9f350bb23ab48c844f2468569df0579df751087a848b95f6e16",
     "reference/guards/merge_green_check.py": "3073e21a1c96825ac1bcb6a2620ba0cca2fff96ecaa85f59ba1680bbbf2e638e",
     "reference/tools/kit_manifest.py": "b48782a6376831c8506141e630f97c67aa75321f851563a81d094f46d5b22946",
-    "reference/tools/kit_poll.py": "749ecf3274045c1094c32047b247ae281c8f904f8db416d96dd544cd30bab2ea",
+    "reference/tools/kit_poll.py": "58d66309a8ef547ccd102f694f5d010494d28784d8abc089411ec7d7bc566aab",
     "reference/tools/review_rates.py": "79000830139783bd933fa00e7d012e6ed17c818a4b65110ffdafe7d75500db6c",
     "reference/tools/review_stamp.py": "058c00df1302800f84014b046d8f8281c67e685297605d4fcc1d7f8cb5ed7578",
     "spec/firewall.md": "8b0ef9ab77678e11162696ec2b4f661ab1a7c7ebe3b05227a9c19b74b3985ae2",
@@ -54,7 +54,7 @@
     "tests/test_guard_contracts.py": "083927132b9471fd6248f08e522b2e1d5a763fe3c05a4c72fbed89bbcaaa38e2",
     "tests/test_guard_wiring_probe.py": "f309bcc4bd29291e5681166d4fe672463049d27f74ee5e2424bc2b20a18cb1ff",
     "tests/test_kit_manifest.py": "18d7cd2283f4727eb5d5e4cedf6f982d1ca0de055d222e437fb8c0d646c35c84",
-    "tests/test_kit_poll.py": "4fe86789158035a4da9009133cffd5932279552fb300acff87fb5d83a1e5b3ce"
+    "tests/test_kit_poll.py": "c2659dbefffbd7beffbc5692c479daab507ea8acb1c2e5b0095c67df8bd0fdae"
   },
   "kit_version": "2026.09.3"
 }
