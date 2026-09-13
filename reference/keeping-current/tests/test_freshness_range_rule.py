@@ -100,15 +100,13 @@ def test_the_cli_writes_range_json_and_its_exit_code_is_the_verdict(tmp_path, ca
         os.environ.clear(); os.environ.update(saved)
 
 
-def test_the_workflows_strip_a_promotion_tag_to_its_commit_and_call_the_range_rule():
+def test_the_workflows_strip_a_promotion_tag_to_its_commit_and_call_the_range_rule(read_chassis):
     """Lesson #188: the first promoted `<sha8>-rYYYYMMDD` tag reached prod on 2026-09-11 and the daily job's rebuild
     step still demanded a bare 8-character tag. Both readers of the deployed tag now strip the suffix, and both
     lanes' shells call this module rather than judging a range themselves."""
-    import pathlib
-    root = pathlib.Path(__file__).resolve().parents[1]
-    fresh = (root / "templates/freshness.yml").read_text(encoding="utf-8")       # the kit ships templates
-    deploy = (root / "templates/deploy.yml").read_text(encoding="utf-8")
+    fresh = read_chassis("templates", "freshness.yml")
     assert 'LIVE_SHA8="${TAG%%-*}"' in fresh and "python3 -m infra.freshness range" in fresh
     assert "-f lane=routine" in fresh and 'SHA8="${BUILD_SHA8:-}"' in fresh
-    assert 'LIVE_SHA8="${LIVE_SHA8%%-*}"' in deploy and "python3 -m infra.freshness range" in deploy
     assert "not an 8-character commit sha" in fresh          # the refusal stays, on the stripped value
+    deploy = read_chassis("templates", "deploy.yml", optional=True)
+    assert 'LIVE_SHA8="${LIVE_SHA8%%-*}"' in deploy and "python3 -m infra.freshness range" in deploy
