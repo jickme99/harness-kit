@@ -97,19 +97,24 @@ nothing if it runs, and confirm the refusal.
 | Merge only on green checks | REQUIRED | {{...}} | yes (needs `gh` auth) | fallback |
 | {{CI gates, if any}} | IF-AVAILABLE | {{server-side — list the workflows}} | n/a | — |
 | Wiki append-only + auto-write | REQUIRED | no | partially — probe pack | **yes** |
+| Work map inferred and written | REQUIRED | no | partially — `wiki/operating-model.md` exists and Kinds of work is not `{{KIND_PLACEHOLDER}}` | **yes** |
 | Commit protocol | REQUIRED | no | no | **yes** |
 | Keeping current (freshness, canary, routine lane) | IF-AVAILABLE | {{yes if Question 3 copied the chassis}} | yes — `python -m pytest tests/test_freshness_*.py tests/test_canary_rules.py` | doctrine until the chassis is installed; spec in the kit |
 | {{firewall row, two-repo shape}} | IF-AVAILABLE | {{...}} | {{...}} | **yes** |
 
 ## 4. Pointers, not copies
 
-<!-- The operating model is specified once, in the wiki — this file points, it does not
-     restate. A rule written twice is a rule that will drift. -->
+<!-- The contract is the kit's `spec/operating-model.md` (kit-repo-only). This
+     project's page is the snapshot of how it applies here. This file points; it
+     does not restate. A rule written twice is a rule that will drift. -->
 
-- `wiki/{{operating-model page}}` — the agent operating model: one master, disposable
-  role-cast agents, worktree isolation, the two owner gates (Merge may be delegated to
-  the master when green; Publish is never delegated). Keeping-current (`spec/keeping-current.md`)
-  is how a container project stays current after Merge; it is not a third gate.
+- `wiki/operating-model.md` — this project's snapshot of the operating model: one
+  master, disposable role-cast agents, worktree isolation, the two owner gates
+  (Merge may be delegated to the master when green; Publish is never delegated),
+  and **Kinds of work** (inferred by the master; the owner never authors them).
+  Keeping-current (`spec/keeping-current.md`) is how a container project stays
+  current after Merge; it is not a third gate. A house-named page is allowed if
+  this pointer names it.
 - `wiki/{{review page}}` — the review-lens roster and loop caps.
 - `.claude/agents/*.md` — the role roster; each `fence:` frontmatter block is the
   machine-readable list of paths that role owns.

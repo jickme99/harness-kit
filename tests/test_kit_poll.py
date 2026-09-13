@@ -108,6 +108,8 @@ def test_standup_maps_harness_template_and_guards(poll):
         "templates/START-HERE.project.md", rules) == "START-HERE.md"
     assert poll.map_kit_path(
         "templates/wiki/HANDOFF.md", rules) == "wiki/HANDOFF.md"
+    assert poll.map_kit_path(
+        "templates/wiki/operating-model.md", rules) == "wiki/operating-model.md"
     mapped_guard = poll.map_kit_path("reference/guards/az_guard.py", rules)
     assert mapped_guard == "scripts/az_guard.py"
     assert "//" not in mapped_guard

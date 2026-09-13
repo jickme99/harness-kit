@@ -15,8 +15,8 @@ here is doctrine unless a probe or gate is wired to check it.
    staleness; git makes corrections trivial.** The failure mode this prevents is a status
    page describing last week while the log describes today.
 3. **Snapshot pages carry honest frontmatter.** Every page has YAML frontmatter (`title`,
-   `type`, `created`, `updated`, optional `tags`, `related`); snapshot pages (status, the
-   operating-model page) are measured against the append-only log — both what the
+   `type`, `created`, `updated`, optional `tags`, `related`); snapshot pages
+   (`wiki/status.md`, `wiki/operating-model.md`) are measured against the append-only log — both what the
    frontmatter CLAIMS (`updated:`) and what the body SAYS (its newest non-future date).
    The distinction exists because bumping `updated:` without rewriting the page scored
    clean until an audit found a status page claiming currency while its body described a
@@ -67,7 +67,10 @@ here is doctrine unless a probe or gate is wired to check it.
 - `reference/guards/harness_probes.py` carries the mechanical readers: `snapshot_staleness`
   (frontmatter AND body vs the log's newest entry) and `lesson_dispositions` (unmarked
   in-scope entries as open loops). Facts to machines, judgment to agents: the probes only
-  count; the auditor reads.
+  count; the auditor reads. `SNAPSHOT_PAGES` is an install-time seam: the kit default is
+  still origin-shaped (`wiki/status.md`, `wiki/parallel-sessions.md`). New stamps name
+  `wiki/operating-model.md` there when they customize the seam; do not change the kit
+  default until that is a stamp-time write.
 - The harness-auditor role (`reference/claude/harness-auditor.md`) is the standing READER
   of these instruments — T1 (fix bookkeeping silently), T2 (dispatch, never touch),
   T3 (flag to the owner; the report LEADS with T3).

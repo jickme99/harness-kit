@@ -15,8 +15,11 @@ Read in order:
 1. `START-HERE.md` — last decision, next task, kit version, what is not in this repo
 2. `HARNESS.md`
 3. `wiki/HANDOFF.md` then `wiki/status.md` — where things stand
-4. `wiki/feedback.md` — owner preferences (prevents repeat mistakes)
-5. For {{strategy/content}} work: `wiki/{{strategy page}}` · for build work:
+4. `wiki/operating-model.md` — kinds of work for this project. If it still carries
+   `{{KIND_PLACEHOLDER}}`, filling it is the first task; do not start product edits
+   first. Do not ask the owner to name jobs.
+5. `wiki/feedback.md` — owner preferences (prevents repeat mistakes)
+6. For {{strategy/content}} work: `wiki/{{strategy page}}` · for build work:
    `wiki/{{roadmap page}}` and the relevant plan page
 
 ## Claude-specific wiring (what this file exists for)
