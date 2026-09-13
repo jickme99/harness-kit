@@ -34,12 +34,13 @@ way the work itself is run.
 
 **`python scripts/harness_probes.py` in the private HQ repo, and consume its JSON.** It is
 the audit's instrument panel: main-branch CI conclusion and the age of any red, snapshot
-staleness (status and `wiki/operating-model.md` — or the house path HARNESS §4 names —
-`updated:` against the newest log entry), unpushed local branches across BOTH repos and
-every worktree, checkout drift against origin,
-worktrees whose branch is already merged, the review ledger's counts by type and its last
-date, the lesson ledger's unmarked entries (`lesson_dispositions` — checklist item 14), and
-whether the firewall denylist matches the hash last synced into the Actions secret.
+staleness (`SNAPSHOT_PAGES` in the probe pack — kit default `wiki/status.md` and
+`wiki/parallel-sessions.md`; `wiki/operating-model.md` is checklist item 2 until that
+seam is stamped), unpushed local branches across BOTH repos and every worktree,
+checkout drift against origin, worktrees whose branch is already merged, the review
+ledger's counts by type and its last date, the lesson ledger's unmarked entries
+(`lesson_dispositions` — checklist item 14), and whether the firewall denylist matches
+the hash last synced into the Actions secret.
 
 The split it enforces: **facts to the machine, judgment to you.** Every probe returns data
 plus `ok_to_collect` — a probe that could not run says so as a fact, and a fact nobody could

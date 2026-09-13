@@ -16,7 +16,7 @@
     "reference/ci/docs-gate.yml": "c02f986af8042b2b76c0d9b0dad0ff1055045089798e8a6959166bc579e9b8d6",
     "reference/ci/firewall-push.yml": "fd63dcd2b4e90276b91ee7804ca106134fed86814d611caab16d3ac4ed043bdd",
     "reference/claude/README.md": "b92ca87d256e0391b0583caf6e44eda32367e02667e8cd2e1297b9880c28d1e1",
-    "reference/claude/harness-auditor.md": "e872413050d721f1e95951cd1bfbb54df561e1a9551c48c405072ddc82281c5f",
+    "reference/claude/harness-auditor.md": "0bf6a0d54ba1e3ccbdbb3f776e2df6f2f34eb011e9e8ff939c96c1efe650e219",
     "reference/claude/role-template.md": "45e7770fa8bb5dc87ae08bdb492308162d402f224ba22b3d4295a67a16894be8",
     "reference/claude/settings.json": "e0c5688d8bb6ca8b641b38d2ee115e31d0e731c97b1148c6e53d78e768fbd7ff",
     "reference/claude/version-steward.md": "c99c615ee52962f12cdd2bf7152a8cac0e0225de5f62501641ebf5ca3c97d3ac",
