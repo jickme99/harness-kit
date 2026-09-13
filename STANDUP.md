@@ -8,7 +8,7 @@ stays the kit. They never run stamp, poll, harvest, or pytest — you do. When t
 passes, they close this folder and open the new one.
 
 Written to be executed by an AI agent, with its human answering the questions. Work
-top-to-bottom; do not skip the questions to get to the install steps — two of them change
+top-to-bottom; do not skip the questions to get to the install steps — three of them change
 what gets installed, and one of them is a compliance matter. The protocol ends in a
 **runnable gate**; a project is not stood up until the gate passes. Do not turn this
 kit checkout into the product.
@@ -41,6 +41,25 @@ identical across shapes. Shape is a stand-up-time answer, not a fork of the kit.
   This is company IP crossing an organisational boundary through a tool someone switched
   on, and it fails the same way an information firewall does — quietly, and only visibly
   in hindsight. Do not install such an adapter without a recorded approval.
+
+## Question 3 — the deploy question (decides whether the keeping-current chassis is copied)
+
+> **"Does this project ship a container image — an app or a scheduled job — that has to stay current by itself?"**
+
+- **YES, an app that serves traffic → copy the chassis including `deploy.yml`**
+  (install step 5). GitHub + Azure Container Apps is the proven method
+  (`adapters/github-azure.md`). Spec: `spec/keeping-current.md`. Record the
+  answer in `wiki/decisions.md`. Fill every placeholder. First two runs of
+  every job are `dry`. Write a plain-language page for the owner: what runs
+  itself, what waits for a click, what to do when something is red.
+- **YES, only a scheduled job → copy the chassis EXCEPT `deploy.yml`.** There
+  is no ingress to split. Job refresh uses `infra/refresh_rules.py`; the
+  workflow stays per-project (not a filled-in template). Same fill-in, dry
+  first, and owner page as above.
+- **NO → skip the chassis.** A wiki, a library, or a brain repo does not get
+  `deploy.yml`. The spec still applies as doctrine where it fits (pin installed
+  bytes, three outcomes, refuse rather than guess). The version-steward
+  (`spec/versioning.md`) remains the weekly reader.
 
 ## Install steps
 
@@ -86,16 +105,34 @@ files into this checkout. Do not `cd` this clone into becoming the app.
    you are carrying as doctrine instead.
 3. **Instantiate the wiki skeleton.** `templates/wiki/` → the brain (`wiki/` in the brain
    repo, or `wiki/` in the one-repo shape). Set each page's frontmatter dates; write the
-   first `decisions.md` entry — the answers to Questions 1 and 2, dated.
+   first `decisions.md` entry — the answers to Questions 1, 2, and 3, dated.
 4. **Roles.** Draft the project's product roles from `reference/claude/role-template.md`
    (fences are real paths — start narrow; widening is on the record). Install the two
    function-role patterns: `reference/claude/harness-auditor.md` →
    `.claude/agents/harness-auditor.md` and `reference/claude/version-steward.md` →
    `.claude/agents/version-steward.md`, replacing origin path and instrument names with
    the project's own.
-5. **Stamp the project** — the fingerprint that makes poll and harvest possible. This is
+5. **Keeping current (Question 3 yes only).** Copy the chassis; fill every
+   `__PLACEHOLDER__` and `__OWNER_GITHUB_LOGIN__`. Do not copy these into a project that
+   does not ship a container. The factory clone does not run these jobs against itself.
+   - `reference/keeping-current/infra/` → `infra/`
+   - `reference/keeping-current/app/` → `app/` (extend `selftest.py` with one
+     real probe per service; a config read is not proof)
+   - `reference/keeping-current/tests/` → `tests/`
+   - `reference/keeping-current/templates/tests.yml` → `.github/workflows/tests.yml`
+   - `reference/keeping-current/templates/deploy.yml` → `.github/workflows/deploy.yml`
+     (apps that serve traffic only; a job-only stamp skips this)
+   - `reference/keeping-current/templates/freshness.yml` → `.github/workflows/freshness.yml`
+   - `reference/keeping-current/templates/weekly-note.yml` → `.github/workflows/weekly-note.yml`
+   - `reference/keeping-current/templates/dependabot.yml` → `.github/dependabot.yml`
+   - `reference/keeping-current/templates/CODEOWNERS` → `.github/CODEOWNERS`
+   Do not copy `dependabot-automerge.yml` here. Then follow `adapters/github-azure.md`
+   (identities, contracts, adoption A–F). The routine lane starts OFF. The
+   version-steward reads the weekly note; it does not bump pins by hand on this
+   project.
+6. **Stamp the project** — the fingerprint that makes poll and harvest possible. This is
    the only stamp method; a new project and an existing consumer run the same command.
-   It does **not** copy kit files (install is steps 1–4). It fingerprints the
+   It does **not** copy kit files (install is steps 1–5). It fingerprints the
    STANDUP-mapped dests that **already exist** in this tree, writes `kit-files.txt`
    (project paths) and `kit-manifest.json` (hashes + the kit's current `kit_version`).
    Destinations that are not installed are not named, so `classify` `missing` does not
@@ -117,9 +154,15 @@ files into this checkout. Do not `cd` this clone into becoming the app.
    (`spec/versioning.md`). To offer local customizations back to the kit:
    `python scripts/kit_harvest.py --project . --kit <harness-kit clone>`
    (proposal-only; never copies into the kit). Never self-apply.
-6. **(Two-repo shape only) Arm the firewall** per `spec/firewall.md`: author the scanner
+7. **(Two-repo shape only) Arm the firewall** per `spec/firewall.md`: author the scanner
    in the body repo, seed the denylist in the brain repo from your own hard constraints,
    sync the secret, record the hash.
+
+## Adoption D (keeping-current, after drills — not stand-up)
+
+After the canary drills and `ROUTINE_LANE=on`, copy auto-merge. The workflow
+no-ops while the variable is not exactly `on`.
+- `reference/keeping-current/templates/dependabot-automerge.yml` → `.github/workflows/dependabot-automerge.yml`
 
 ## THE GATE (runnable — the stand-up is not done until this passes)
 

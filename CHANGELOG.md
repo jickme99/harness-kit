@@ -16,6 +16,33 @@ does not apply must **consider** it (`spec/versioning.md`).
 
 ---
 
+## 2026.09.7 — 2026-09-12
+
+Keeping current. Optional chassis for a project that ships a container.
+
+- **Lane:** 3 (new component — `spec/keeping-current.md`, `adapters/github-azure.md`,
+  `reference/keeping-current/`). No guard behavior change.
+- **Applies to:** optional. New stand-ups answer STANDUP Question 3. Existing stamps
+  see the files as new members and consider them; a wiki or library declines. Do not
+  install into a project that does not ship a container image.
+- **What changed:**
+  - Tool-neutral spec: two lanes by what the change is; routine Merge is still the
+    Merge gate, exercised by records; three outcomes; canary (or one real job
+    execution); hashed lock; kill switch fails to OFF; weekly note; drills; dry
+    first. Publish is never routine.
+  - GitHub + Azure Container Apps method as an adapter, proven on production
+    2026-09-08..12.
+  - Portable rule modules and tests (stdlib + pytest). Workflows and shells ship
+    with placeholders and refuse to run while one remains. Scheduled freshness is
+    `dry` until `FRESHNESS_APPLY=on`. Auto-merge is adoption D and no-ops while
+    `ROUTINE_LANE` is not `on`. A job-only stamp skips `deploy.yml`.
+  - Version-steward reads the weekly note when the chassis is installed; it does
+    not bump those pins by hand.
+- **Does not change:** the three REQUIRED guards; default stamps without Question 3;
+  this factory clone (it still does not run a freshness job against itself).
+  Auto-merge of patch/minor lock-only updates is off until the canary drills pass
+  and `ROUTINE_LANE` is set.
+
 ## 2026.09.6 — 2026-09-10
 
 Kit front door. This clone is the factory, not the product.

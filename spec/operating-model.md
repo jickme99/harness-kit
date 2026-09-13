@@ -19,9 +19,13 @@ another harness must achieve.
 3. **Two owner gates — Merge and Publish — and everything between them is autonomous.**
    Merge: the owner accepts a finished change into the default branch, **or** explicitly
    delegates routine Merge to the standing master, who squash-merges when checks are
-   success / skipped / neutral. Publish: anything public-facing stops for a human. The
-   gates never loosen; narration between them loosens as chains prove clean. Workers
-   never merge. The Publish gate is never delegated.
+   success / skipped / neutral. On a project that installed the keeping-current chassis
+   (`spec/keeping-current.md`), a machine may also merge and deploy a *routine* change
+   when live records prove it (bot-only verified range, hashed lock, canary). That is
+   still the Merge gate, exercised by records — not a third gate and not a skipped one.
+   Publish: anything public-facing stops for a human. The gates never loosen; narration
+   between them loosens as chains prove clean. Workers never merge. The Publish gate is
+   never delegated.
 4. **Fences are real paths.** Each role file declares `owns` and `forbidden_notable` in
    machine-parseable frontmatter. Prose is for humans; the frontmatter IS the contract.
 5. **One writer per path — and the rule is tool-agnostic.** The master never runs two jobs

@@ -21,7 +21,13 @@
 - **The corporate kit is HELD** (owner decision 2026-09-01) until this personal kit
   survives real cross-tool testing — Cursor, maybe ChatGPT. When it is authored, it is
   authored FRESH corp-side: patterns cross, files never, either direction — and patterns
-  cross only after they have survived a second harness.
+  cross only after they have survived a second harness. There is one kit factory: this
+  repo. Keeping-current harvested here as `2026.09.7`.
+
+- **RESOLVED 2026-09-12 — keeping-current play harvested (`2026.09.7`).** Spec,
+  GitHub/Azure adapter, portable rules and tests, STANDUP Question 3. Job-kind
+  refresh *workflow* still per-project (rules shipped). Second-host adapter not
+  written. Weekly note still one repository.
 - **RESOLVED 2026-09-01 — bare selector-less merge bypassing the merge-green guard.**
   Found by this kit's contract suite at extraction; fixed upstream the same day (origin
   engine PR #47: every merge occurrence in a call checked, the bare current-branch form

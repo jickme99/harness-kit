@@ -37,6 +37,15 @@ nobody takes it. Reference role file: `reference/claude/version-steward.md`.
    a what-it-adds note, never automatic. **Updates arrive as PRs through the project's own
    Merge gate — never pushed** — and a DECLINED upgrade is kit feedback, not a compliance
    failure.
+6. **Keeping-current is the same job, machines doing the routine part, when the project
+   opted in.** `spec/keeping-current.md` does not replace these lanes for a wiki or a
+   library. On a container project that installed the chassis and met the preconditions
+   (hashed lock, tests that build the image, canary, kill switch), patch/minor lock-only
+   updates and scanned rebuilds of the deployed commit may merge and deploy through the
+   routine lane. The steward becomes the reader of the weekly note and the red issues;
+   it does not bump those pins by hand. Majors, the base-image line, workflows, and
+   identities stay judgement-lane. Publish stays a human. Until the chassis is installed,
+   invariants 1–5 are the whole story.
 
 ## Kit versions and the poll (MUST)
 
@@ -162,5 +171,7 @@ The lanes and the reader-assignment rule are doctrine plus ordinary CI/bot confi
 portable to any harness. What must survive re-implementation: the three-lane risk split,
 the fresh-install test on majors, the named-reader table, the kit-as-dependency sweep, a
 versioned stamp (from `kit_stamp.py`), a poll that a project can run without write access
-to the kit and that never copies files, and a harvest that can offer customizations back
-as a proposal and that never copies files into the kit.
+to the kit and that never copies files, a harvest that can offer customizations back
+as a proposal and that never copies files into the kit, and — when the project ships a
+container — the keeping-current invariants (`spec/keeping-current.md`) with portable tests
+on the rules.

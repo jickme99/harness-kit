@@ -140,6 +140,56 @@ def test_standup_maps_harness_template_and_guards(poll):
     assert poll.map_kit_path(
         "reference/claude/harness-auditor.md",
         rules) == ".claude/agents/harness-auditor.md"
+    assert poll.map_kit_path(
+        "reference/keeping-current/infra/canary_rules.py",
+        rules) == "infra/canary_rules.py"
+    assert poll.map_kit_path(
+        "reference/keeping-current/templates/freshness.yml",
+        rules) == ".github/workflows/freshness.yml"
+    assert poll.map_kit_path(
+        "reference/keeping-current/templates/dependabot.yml",
+        rules) == ".github/dependabot.yml"
+    assert poll.map_kit_path(
+        "reference/keeping-current/app/selftest.py",
+        rules) == "app/selftest.py"
+    assert poll.map_kit_path(
+        "reference/keeping-current/app/__init__.py",
+        rules) == "app/__init__.py"
+    assert poll.map_kit_path("spec/keeping-current.md", rules) is None
+    assert poll.map_kit_path("adapters/github-azure.md", rules) is None
+    assert poll.map_kit_path(
+        "reference/keeping-current/README.md", rules) is None
+    assert poll.map_kit_path(
+        "reference/keeping-current/templates/dependabot-automerge.yml",
+        rules) == ".github/workflows/dependabot-automerge.yml"
+    assert poll.map_kit_path(
+        "reference/keeping-current/templates/deploy.yml",
+        rules) == ".github/workflows/deploy.yml"
+    standup = standup_path.read_text(encoding="utf-8")
+    assert "5. **Keeping current" in standup and "6. **Stamp" in standup
+    step5 = standup.split("5. **Keeping current")[1].split("6. **Stamp")[0]
+    assert "`reference/keeping-current/templates/dependabot-automerge.yml`" not in step5
+    assert "Do not copy `dependabot-automerge.yml`" in step5
+
+
+def test_keeping_current_kit_files_map_or_are_kit_only(poll):
+    """Every keeping-current member has a STANDUP dest, except the kit-only README."""
+    standup_path = ROOT / "STANDUP.md"
+    if not standup_path.is_file():
+        pytest.skip("STANDUP.md is kit-repo-only; stamps do not install it")
+    rules = poll.copy_rules(poll.map_source_texts(ROOT))
+    kit_only = {"reference/keeping-current/README.md"}
+    listed = [
+        raw.strip()
+        for raw in (ROOT / "kit-files.txt").read_text(encoding="utf-8").splitlines()
+        if raw.strip().startswith("reference/keeping-current/")
+    ]
+    assert listed, "kit-files.txt lost the keeping-current members"
+    mapped = {path: poll.map_kit_path(path, rules) for path in listed}
+    missing = [path for path in listed if path not in kit_only and mapped[path] is None]
+    leaked = [path for path in listed if path in kit_only and mapped[path] is not None]
+    assert not missing, missing
+    assert not leaked, leaked
 
 
 def test_membership_new_member_vs_kit_repo_only(poll):

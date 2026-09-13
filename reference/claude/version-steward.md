@@ -121,6 +121,11 @@ sweep report; the fix path is IT/winget on the operator's side, never a repo PR.
 that matters (a shipped fix not running anywhere), report it with the affected jobs — the
 image roll itself is an infra dispatch through the master, not this role's hands.
 
+**When the project installed the keeping-current chassis** (`spec/keeping-current.md`):
+this role is the reader of the weekly note and of open `deploy` / `freshness` issues. It
+does not bump pins by hand. A red issue older than one sweep, a weekly note that did not
+arrive, or a drill past its due date is a backlog finding the harness-auditor will flag.
+
 ## Fences
 
 *The `fence:` block in this file's frontmatter is the machine-readable contract; the prose

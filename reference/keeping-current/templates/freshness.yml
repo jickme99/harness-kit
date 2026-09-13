@@ -1,0 +1,664 @@
+# TEMPLATE — copy to `.github/workflows/freshness.yml` and replace EVERY `__PLACEHOLDER__` (the Prepare
+# step refuses to run while one remains). The doctrine, the fill-in list and the verification standard
+# are in spec/keeping-current.md; the rules this file calls live in infra/freshness/ behind
+# tests/test_freshness_*.py. Harvested from a live job (re-harvested
+# 2026-09-11 after the two lanes: step 4b's range check, the rebuild target, the routine-lane dispatch),
+# with that project's names removed — the comments below still tell its story, which is the point.
+name: freshness
+# Daily image freshness — Phase 2 of spec/keeping-current.md (design B, steps 1-6).
+#
+# WHAT IT DOES, once a day and on demand: reads what Defender currently says about the rostered
+# repositories (one unless you add rows) and resolves every finding to its own digest; prunes images
+# nothing can deploy; and — weekly, or the same day a FIXABLE finding lands on the image prod is
+# actually running — rebuilds the DEPLOYED COMMIT on the current base, scans that exact digest,
+# compares its package inventory with the deployed image's, and promotes the SCANNED BYTES through
+# the owner's existing gate. It writes one page every run: that page is the heartbeat.
+#
+# WHAT DECIDES, AND WHAT ACTS. Same split as Phase 1's retention: this file runs `az`, Trivy and
+# `gh` and does the acting; every rule lives in infra/freshness/, behind tests/test_freshness_*.py.
+# `python3 -m infra.freshness <command>` takes its inputs from the ENVIRONMENT, never from flags.
+# There is deliberately no `jq` here: python3 is already a dependency and the same lines can then be
+# exercised on the maintainer's workstation, which is where this file's data shaping was tested.
+#
+# ITS OWN IDENTITY, NARROWLY SCOPED (security lens F1). Not the gated deploy identity, which
+# often holds more. Verified by read-back, this job's identity
+# `__REPO__-freshness` (__IDENTITY_RESOURCE_GROUP__, client id in the repository variable AZURE_FRESHNESS_CLIENT_ID)
+# holds exactly five assignments, four of them on the one registry resource:
+#     AcrPush                                          on .../registries/__REGISTRY__  (push the candidate; pull for the scans)
+#     AcrDelete                                        on .../registries/__REGISTRY__  (the prune; the candidate's manifest)
+#     Container Registry Tasks Contributor             on .../registries/__REGISTRY__  (`az acr build` is an ACR Tasks quick build)
+#     Container Registry Data Importer and Data Reader on .../registries/__REGISTRY__  (`az acr import` of the scanned digest)
+#     Reader    on /subscriptions/__SUBSCRIPTION_GUID__            (the Defender read and the live images; cannot change anything)
+# Federated credential `gh-main-freshness` -> repo:__ORG__/__REPO__:ref:refs/heads/main.
+# NAMING AN `environment:` ON THIS JOB WOULD CHANGE THE OIDC SUBJECT CLAIM to the environment form
+# and azure/login would stop working — deploy.yml carries both credentials for exactly that reason;
+# this identity carries only the ref form. So: one job, no environment, and the prod GATE stays where
+# it belongs — on deploy.yml, which this job can only DISPATCH.
+#
+# WHY TWO REGISTRY ROLES BEYOND AcrPush. `az acr build` is an ACR Tasks Quick Build: it needs
+# `Microsoft.ContainerRegistry/registries/scheduleRun/action` + `listBuildSourceUploadUrl`, which live
+# in "Container Registry Tasks Contributor", NOT in AcrPush (Microsoft's own guidance: local build ->
+# AcrPush, remote build -> Tasks Contributor). `az acr import` needs `.../registries/importImage/action`,
+# which lives in "Container Registry Data Importer and Data Reader". Both were granted ON THE REGISTRY
+# RESOURCE only (still far narrower than Contributor) on 2026-09-10. The AcrPush-only alternative —
+# `docker build` + `docker push` for the build, pull/tag/push for the promote — is written out at those
+# two steps in case a future reviewer wants the roles back; both steps still say in words what a 403
+# there would mean. The daily read, the classification, the prune and the summary need none of this:
+# the rebuild only fires on a Monday, on a fixable DEPLOYED finding, or on `rebuild: force`.
+on:
+  schedule:
+    - cron: '0 6 * * *'          # 06:00 UTC daily
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'dry = compute and print everything, change nothing. full = prune, promote, dispatch.'
+        type: choice
+        default: dry
+        options: [dry, full]
+      rebuild:
+        description: 'auto = Mondays or a fixable DEPLOYED finding. force = always. skip = never.'
+        type: choice
+        default: auto
+        options: [auto, force, skip]
+
+run-name: freshness ${{ inputs.mode || (vars.FRESHNESS_APPLY == 'on' && 'full' || 'dry') }}${{ inputs.rebuild && format(' / rebuild {0}', inputs.rebuild) || '' }}
+
+# No more than this. `actions: write` is for the one `gh workflow run deploy.yml` dispatch and for
+# reading whether a prod approval is already waiting; `issues: write` is for the fixed-destination
+# failure notice (security lens F10 — GitHub's own routing follows whoever last edited the cron line).
+permissions:
+  id-token: write
+  contents: read
+  actions: write
+  issues: write
+
+# One freshness run at a time. A manual dispatch landing on top of the 06:00 schedule would have two
+# runs pruning the same registry and building the same candidate tag; `cancel-in-progress: false`
+# because a half-finished prune or import is worse than a queued run.
+concurrency:
+  group: freshness
+  cancel-in-progress: false
+
+env:
+  SUB: __SUBSCRIPTION_GUID__      # the production subscription, by GUID — never by name
+  ACR: __REGISTRY__
+  REG: __REGISTRY__.azurecr.io
+  IMG: __APP_REPOSITORY__
+  BASE_IMAGE: mcr.microsoft.com/azurelinux/base/python:3.12   # the same base deploy.yml builds on
+  OUT: ${{ github.workspace }}/.freshness
+  # A MANUAL run defaults to `dry`, so nobody can act by accident from the Run workflow button.
+  # A SCHEDULED run is `dry` until the repository variable FRESHNESS_APPLY is exactly `on` — the
+  # same fail-to-OFF shape as ROUTINE_LANE. Spec invariant 11: the first live run is dry; cron
+  # must not prune at 06:00 the morning after a fill-in. Turn FRESHNESS_APPLY on after those
+  # dry runs have been read. A promotion still stops at the owner's gate either way.
+  MODE: ${{ inputs.mode || (vars.FRESHNESS_APPLY == 'on' && 'full' || 'dry') }}
+  OWNER: __OWNER_GITHUB_LOGIN__
+  # Repositories this job READS AND PRUNES but never rebuilds (built elsewhere): comma-separated,
+  # or empty. The kit's rules mark every finding of theirs MONITORED-ONLY on the page.
+  FRESHNESS_MONITORED_ONLY: ''
+  REBUILD: ${{ inputs.rebuild || 'auto' }}
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  freshness:
+    runs-on: ubuntu-latest
+    steps:
+      # Actions pinned to full commit SHAs, not tags: a tag is a mutable pointer its own maintainer
+      # can move, and this job runs unattended 365 times a year (security lens F2). The trailing
+      # comment is the version the SHA was, so a reader — and Dependabot — can see the upgrade.
+      # checkout and azure/login are the exact SHAs deploy.yml pins.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+        with:
+          fetch-depth: 0        # the rebuild resolves the DEPLOYED commit, which may be far back
+
+      - name: Prepare
+        run: |
+          set -euo pipefail
+          mkdir -p "$OUT"
+          # THE TEMPLATE GUARD. Env values, not a grep of this file: comments and examples
+          # name the placeholder shape, and a self-scan would abort every filled-in copy
+          # (spec: a guard must not match its own error message / kit audit #13).
+          case "$SUB$ACR$IMG$REG$OWNER" in
+            *__*) echo "ABORT: freshness.yml still carries __PLACEHOLDERS__ in its env block."; exit 1 ;;
+          esac
+          # `az graph` is a CLI EXTENSION. Dynamic install either prompts (and hangs) or is off,
+          # depending on the runner image's az defaults, so ask for it explicitly and fail here —
+          # with a sentence — rather than three steps later inside the paging loop.
+          az extension add --name resource-graph --upgrade --only-show-errors \
+            || { echo "ABORT: could not install the resource-graph CLI extension."; exit 1; }
+          # containerapp is an extension too. deploy.yml has relied on the runner's dynamic install
+          # for it since day one; naming it here costs one line and removes the dependency.
+          az extension add --name containerapp --upgrade --only-show-errors || { echo "ABORT: could not install the containerapp CLI extension."; exit 1; }
+          echo "DATE=$(date -u +%Y-%m-%d)" >> "$GITHUB_ENV"
+          echo "STAMP=$(date -u +%Y%m%d)" >> "$GITHUB_ENV"
+          echo "RUN_URL=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >> "$GITHUB_ENV"
+          case "$MODE" in dry|full) ;; *) echo "ABORT: mode '$MODE' is neither dry nor full."; exit 1 ;; esac
+          case "$REBUILD" in auto|force|skip) ;; *) echo "ABORT: rebuild '$REBUILD' is not auto|force|skip."; exit 1 ;; esac
+          echo "mode=$MODE rebuild=$REBUILD"
+
+      - uses: azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c        # v3.0.2
+        with:
+          client-id: ${{ vars.AZURE_FRESHNESS_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # ----------------------------------------------------------------------------------------
+      # 2. What is actually running, per repository — read LIVE, never assumed.
+      # ----------------------------------------------------------------------------------------
+      - name: Read the live images
+        run: |
+          set -euo pipefail
+          : > "$OUT/live.tsv"
+          while IFS='|' read -r REPO KIND APP RG; do
+            [ -z "$REPO" ] && continue
+            case "$REPO$KIND$APP$RG" in
+              *__*) echo "ABORT: freshness roster still carries __PLACEHOLDERS__."; exit 1 ;;
+            esac
+            SHOW=(az containerapp show)
+            if [ "$KIND" = "job" ]; then SHOW=(az containerapp job show); fi
+            IMAGE=$("${SHOW[@]}" -n "$APP" -g "$RG" --subscription "$SUB" \
+              --query "properties.template.containers[0].image" -o tsv < /dev/null | tr -d '\r')
+            [ -n "$IMAGE" ] || { echo "ABORT: could not read the live image from $KIND $APP ($RG)."; exit 1; }
+            # The same cross-check infra/registry-retention.sh makes: registry, repository and the
+            # live workload have to name the same project by design, not by coincidence.
+            case "$IMAGE" in
+              "$REG/$REPO:"*) ;;
+              *) echo "ABORT: live image '$IMAGE' does not begin with '$REG/$REPO:'."; exit 1 ;;
+            esac
+            TAG="${IMAGE##*:}"
+            DIG=$(az acr repository show -n "$ACR" --image "$REPO:$TAG" --subscription "$SUB" \
+              --query digest -o tsv < /dev/null | tr -d '\r')
+            [ -n "$DIG" ] || { echo "ABORT: the deployed tag $REPO:$TAG has no manifest in the registry."; exit 1; }
+            az acr manifest list-metadata -r "$ACR" -n "$REPO" --subscription "$SUB" \
+              --orderby time_desc --top 1000 --query "[].digest" -o json < /dev/null > "$OUT/digests-$REPO.json"
+            printf '%s\t%s\t%s\n' "$REPO" "$TAG" "$DIG" >> "$OUT/live.tsv"
+          done <<'ROSTER'
+          __APP_REPOSITORY__|app|__PROD_CONTAINER_APP__|__PROD_RESOURCE_GROUP__
+          ROSTER
+          # One row per repository the registry holds: `repository|kind|workload|resource-group`, kind
+          # = app | job. Images built in OTHER repositories get a row here too (read and pruned) and
+          # their name in FRESHNESS_MONITORED_ONLY (never rebuilt here), e.g.
+          #   other-app|app|<container app>|<resource group>
+          #   other-job|job|<container app job>|<resource group>
+          python3 - <<'PY'
+          import json, os, pathlib
+          out = pathlib.Path(os.environ["OUT"])
+          live = {}
+          for line in (out / "live.tsv").read_text(encoding="utf-8").splitlines():
+              repo, tag, digest = line.split("\t")
+              digests = json.loads((out / f"digests-{repo}.json").read_text(encoding="utf-8"))
+              # The same truncation guard the retention rules make: a keep set (or a STALE/GONE
+              # judgement) computed from half a registry looks exactly like one computed from all.
+              if len(digests) >= 1000:
+                  raise SystemExit(f"ABORT: {repo}'s manifest listing hit --top 1000; raise it first.")
+              live[repo] = {"repository": repo, "tag": tag, "digest": digest, "registry_digests": digests}
+              print(f"{repo}: deployed {tag} -> {digest[:19]} ({len(digests)} manifests)")
+          if not live:
+              raise SystemExit("ABORT: no repository was read — the roster above is empty or every row failed.")
+          (out / "live.json").write_text(json.dumps(live, indent=2), encoding="utf-8")
+          if os.environ.get("GITHUB_ENV"):
+              img = os.environ["IMG"]
+              with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as fh:
+                  fh.write(f"DEPLOYED_DIGEST={live[img]['digest']}\n")
+                  fh.write("FRESHNESS_REPOSITORIES=" + ",".join(sorted(live)) + "\n")   # named on the page
+          PY
+
+      - name: Log in to the registry
+        run: az acr login -n "$ACR" --subscription "$SUB"
+
+      # ----------------------------------------------------------------------------------------
+      # 2b. POLICY — no package manager in a running image. Every live image, every day, however
+      #     and wherever it was built. The Dockerfile block guards the BUILD and the repository test
+      #     guards the SOURCE; this guards the FLEET, with the only test that matters, run inside the
+      #     image itself: is pip importable, is a pip launcher on PATH. `continue-on-error` so a
+      #     violation is recorded and the day's prune and CVE work still happen; the verdict fails
+      #     the run in its own step near the end (the summary carries the table either way).
+      # ----------------------------------------------------------------------------------------
+      - name: Policy — no package manager in a running image
+        id: policy
+        continue-on-error: true
+        run: |
+          # `set +e` on purpose: GitHub runs a step under `bash -e`, and the verdict of one image is a
+          # non-zero exit — the first proof run stopped after one row for exactly that.
+          set +e -uo pipefail
+          : > "$OUT/policy.tsv"
+          bad=0
+          while IFS=$'\t' read -r REPO TAG DIG; do
+            [ -z "$REPO" ] && continue
+            REF="$REG/$REPO@$DIG"
+            if ! docker pull -q "$REF" >/dev/null 2>&1; then
+              printf '%s\t%s\t%s\n' "$REPO" "$TAG" "UNREAD: the image could not be pulled" >> "$OUT/policy.tsv"; bad=1
+              echo "$REPO:$TAG -> UNREAD (pull failed)"; continue
+            fi
+            docker run --rm --entrypoint sh "$REF" -c 'python3 -c "import pip" 2>/dev/null && exit 10; command -v pip >/dev/null 2>&1 && exit 11; exit 0'
+            rc=$?
+            case $rc in
+              0)  V="CLEAN" ;;
+              10) V="VIOLATION: pip is importable"; bad=1 ;;
+              11) V="VIOLATION: a pip launcher is on PATH"; bad=1 ;;
+              *)  V="UNREAD: the check itself failed (exit $rc)"; bad=1 ;;
+            esac
+            printf '%s\t%s\t%s\n' "$REPO" "$TAG" "$V" >> "$OUT/policy.tsv"
+            echo "$REPO:$TAG -> $V"
+          done < "$OUT/live.tsv"
+          [ $bad -eq 0 ] || { echo "POLICY RED: a running image carries a package manager, or could not be checked. The fix is the Dockerfile block in spec/keeping-current.md."; exit 1; }
+
+      # ----------------------------------------------------------------------------------------
+      # 3. What Defender says — PER RESOURCE, paged, subscription-scoped IN THE QUERY TEXT.
+      #    `--subscription` sets the auth context, not the scope (failure lens F8); and
+      #    `summarize … any(rid)` would collapse four digests into one sample (F3). Neither happens
+      #    here, and infra/freshness/findings.py refuses if the rows do not add up to totalRecords.
+      # ----------------------------------------------------------------------------------------
+      - name: Read what Defender currently says
+        run: |
+          set -euo pipefail
+          QUERY="securityresources
+            | where type =~ 'microsoft.security/assessments'
+            | where subscriptionId == '$SUB'
+            | where tostring(properties.status.code) == 'Unhealthy'
+            | where tostring(properties.resourceDetails.Id) contains 'images-sha256:'
+                 or tostring(properties.resourceDetails.Id) contains '/repositories/'
+            | project properties
+            | order by tostring(properties.resourceDetails.Id) asc"
+          rm -f "$OUT"/page-*.json
+          n=0; skip=""
+          while : ; do
+            n=$((n + 1))
+            PAGE=$(printf '%s/page-%02d.json' "$OUT" "$n")
+            if [ -z "$skip" ]; then
+              az graph query -q "$QUERY" --first 1000 --subscription "$SUB" -o json > "$PAGE"
+            else
+              az graph query -q "$QUERY" --first 1000 --skip-token "$skip" --subscription "$SUB" -o json > "$PAGE"
+            fi
+            [ -s "$PAGE" ] || { echo "ABORT: the Resource Graph read returned nothing on page $n."; exit 1; }
+            skip=$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1],encoding="utf-8")).get("skip_token") or "")' "$PAGE")
+            [ -z "$skip" ] && break
+            [ "$n" -lt 20 ] || { echo "ABORT: more than 20 pages of findings — refusing to loop."; exit 1; }
+          done
+          python3 - <<'PY'
+          import json, os, pathlib
+          out = pathlib.Path(os.environ["OUT"])
+          pages = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(out.glob("page-*.json"))]
+          (out / "pages.json").write_text(json.dumps(pages), encoding="utf-8")
+          rows = sum(len(p.get("data") or []) for p in pages)
+          print(f"pages {len(pages)}, rows {rows}, totalRecords {pages[0].get('total_records')}")
+          PY
+
+      - name: Classify every finding against the live images
+        id: classify
+        env:
+          GRAPH_PAGES: ${{ github.workspace }}/.freshness/pages.json
+          LIVE_IMAGES: ${{ github.workspace }}/.freshness/live.json
+        run: |
+          set -euo pipefail
+          python3 -m infra.freshness classify
+          python3 - <<'PY'
+          import json, os, pathlib
+          rows = json.loads(pathlib.Path(os.environ["OUT"], "classified.json").read_text(encoding="utf-8"))["rows"]
+          n = sum(1 for r in rows if r["needs_a_hand"])
+          if os.environ.get("GITHUB_OUTPUT"):
+              with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+                  fh.write(f"needs_a_hand={n}\n")
+          print(f"a fixable finding on the DEPLOYED {os.environ['IMG']} image: {n}")
+          PY
+
+      # ----------------------------------------------------------------------------------------
+      # 4. Prune — one mechanism across every rostered repository, the same script the deploys call.
+      #    continue-on-error: a cleanup that fails must not hide the day's findings or its summary.
+      # ----------------------------------------------------------------------------------------
+      - name: Prune the prod registry
+        id: prune
+        continue-on-error: true
+        run: |
+          set +e
+          if [ "$MODE" = "full" ]; then
+            RETENTION_APPLY=1 bash infra/registry-retention.sh prod
+          else
+            bash infra/registry-retention.sh prod          # the default DRY RUN
+          fi
+          rc=$?
+          set -e
+          if [ $rc -eq 0 ]; then
+            echo "RETENTION=Registry retention ($MODE): OK — every repository verified by a re-read of the registry." >> "$GITHUB_ENV"
+          else
+            echo "RETENTION=Registry retention ($MODE): FAILED (exit $rc). Nothing else in this run is affected; run \`bash infra/registry-retention.sh prod\` by hand and read the ABORT lines." >> "$GITHUB_ENV"
+          fi
+          exit $rc
+
+      # ----------------------------------------------------------------------------------------
+      # 4b. Phase D (spec/keeping-current.md D): is `main` ahead of the deployed commit by Dependabot's
+      #     commits ONLY? Then the rebuild below builds `main` — the dependency update ships through the
+      #     routine lane, scanned. One human commit in the range and the deployed commit is rebuilt as
+      #     usual; the update waits for the next gated deploy. GitHub's compare answer is the evidence
+      #     (author id + verified), never the local log; the rule is infra/freshness/range_rule.py.
+      # ----------------------------------------------------------------------------------------
+      - name: Is a dependency update waiting on main?
+        id: range
+        run: |
+          set -euo pipefail
+          TAG=$(python3 -c 'import json,os,sys;print(json.load(open(sys.argv[1],encoding="utf-8"))[os.environ["IMG"]]["tag"])' "$OUT/live.json")
+          LIVE_SHA8="${TAG%%-*}"          # a promoted tag is <sha8>-rYYYYMMDD; the commit is the first part
+          HEAD=$(git rev-parse HEAD)
+          echo "deployed commit $LIVE_SHA8 (tag $TAG); main is ${HEAD::8}"
+          DEPENDENCY=0
+          if gh api "repos/$GITHUB_REPOSITORY/compare/$LIVE_SHA8...$HEAD" > "$OUT/compare.json" 2> "$OUT/compare.err"; then
+            set +e
+            COMPARE="$OUT/compare.json" python3 -m infra.freshness range
+            rc=$?
+            set -e
+            if [ "$rc" = "0" ]; then
+              DEPENDENCY=1
+              N=$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1],encoding="utf-8"))["count"])' "$OUT/range.json")
+              echo "DEP_WHY=a dependency update is waiting: $N Dependabot commit(s) on main since the deployed $LIVE_SHA8" >> "$GITHUB_ENV"
+            fi
+          else
+            echo "GitHub could not compare $LIVE_SHA8...${HEAD::8}: $(head -c 300 "$OUT/compare.err") — treating main as not routine"
+          fi
+          echo "LIVE_SHA8=$LIVE_SHA8" >> "$GITHUB_ENV"
+          echo "DEPENDENCY=$DEPENDENCY" >> "$GITHUB_ENV"
+          if [ "$DEPENDENCY" = "1" ]; then echo "BUILD_SHA8=${HEAD::8}" >> "$GITHUB_ENV"; else echo "BUILD_SHA8=$LIVE_SHA8" >> "$GITHUB_ENV"; fi
+          echo "dependency=$DEPENDENCY" >> "$GITHUB_OUTPUT"
+
+      # ----------------------------------------------------------------------------------------
+      # 5. Rebuild — weekly, the same day a fixable finding lands on the DEPLOYED image, or the day a
+      #    Dependabot-only `main` is waiting (4b).
+      # ----------------------------------------------------------------------------------------
+      - name: Decide whether to rebuild
+        id: plan
+        env:
+          # Through the environment, never interpolated into the script: a step output is data.
+          HANDS: ${{ steps.classify.outputs.needs_a_hand }}
+        run: |
+          set -euo pipefail
+          DOW=$(date -u +%u)            # 1 = Monday
+          WHY=""
+          case "$REBUILD" in
+            skip)  WHY="" ;;
+            force) WHY="the run was dispatched with rebuild=force" ;;
+            auto)
+              if [ "${DEPENDENCY:-0}" = "1" ]; then WHY="$DEP_WHY"; fi
+              if [ "$DOW" = "1" ]; then WHY="${WHY:+$WHY; }it is Monday"; fi
+              if [ "${HANDS:-0}" != "0" ]; then WHY="${WHY:+$WHY; }a fixable finding is open on the DEPLOYED image"; fi
+              # An open `freshness` issue means the last verdict was RED, or a run fell over: re-verify
+              # every day until a scan comes back clean, so that the close at the end of this file is
+              # EARNED by a fresh scan and never by a day that merely did not look. (The first dry run,
+              # 2026-09-11, went RED on msgpack; without this line the next quiet weekday would have
+              # closed that issue with the package still in the image.)
+              OPEN=$(gh issue list --state open --label freshness --json number --jq 'map(.number | tostring) | join(",")')
+              if [ -n "$OPEN" ]; then WHY="${WHY:+$WHY; }freshness issue #$OPEN is open — re-verifying"; fi
+              ;;
+          esac
+          if [ -n "$WHY" ]; then
+            echo "rebuild=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "rebuild=0" >> "$GITHUB_OUTPUT"
+          fi
+          echo "REBUILD_WHY=${WHY:-no rebuild today (not Monday, nothing fixable on the deployed image)}" >> "$GITHUB_ENV"
+          echo "${WHY:-no rebuild today}"
+
+      - name: Check whether a prod approval is already waiting
+        if: steps.plan.outputs.rebuild == '1'
+        run: |
+          set -euo pipefail
+          # F5/F6 — never file a second approval while one waits. Both states count: `waiting` is a
+          # run sitting at the gate, `in_progress` is one already approved and mid-flight. `gh --jq`
+          # is gh's own built-in expression engine; no jq binary is involved.
+          W=$(gh run list --workflow deploy.yml --status waiting --limit 20 --json createdAt \
+                --jq 'sort_by(.createdAt) | .[0].createdAt // empty')
+          I=$(gh run list --workflow deploy.yml --status in_progress --limit 20 --json createdAt \
+                --jq 'sort_by(.createdAt) | .[0].createdAt // empty')
+          SINCE=$(printf '%s\n%s\n' "$W" "$I" | grep -v '^$' | sort | head -1 || true)
+          echo "PENDING_SINCE=$SINCE" >> "$GITHUB_ENV"
+          echo "pending prod run since: ${SINCE:-none}"
+          # Phase C (spec/keeping-current.md C): an open `deploy` issue — a canary that failed and rolled
+          # back — HOLDS a promotion too. The routine lane refuses on its own while one is open; this
+          # says so in the decision instead of dispatching a run that would only refuse.
+          HELD=$(gh issue list --state open --label deploy --json number,createdAt \
+                   --jq 'sort_by(.createdAt) | .[0] | select(. != null) | "deploy issue #\(.number) is open (since \(.createdAt))"')
+          echo "HELD_BY=$HELD" >> "$GITHUB_ENV"
+          echo "held by: ${HELD:-nothing}"
+
+      - name: Rebuild on the current base — the deployed commit, or main when only Dependabot has moved it
+        id: build
+        if: steps.plan.outputs.rebuild == '1'
+        run: |
+          set -euo pipefail
+          # BUILD_SHA8 comes from 4b: the deployed commit's sha8 (a promoted tag <sha8>-rYYYYMMDD is
+          # stripped to its commit — the first such tag reached prod on 2026-09-11) or main's tip when
+          # every commit since the deployed one is Dependabot's and verified.
+          SHA8="${BUILD_SHA8:-}"
+          [ -n "$SHA8" ] || { echo "ABORT: BUILD_SHA8 is unset — step 4b did not run."; exit 1; }
+          if [ "${DEPENDENCY:-0}" = "1" ]; then echo "building main (${SHA8}) — a Dependabot-only update since the deployed $LIVE_SHA8"; else echo "rebuilding the deployed commit $SHA8"; fi
+          case "$SHA8" in
+            [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]) ;;
+            *) echo "ABORT: the deployed tag '$SHA8' is not an 8-character commit sha; refusing to guess a commit."; exit 1 ;;
+          esac
+          # Never `main`'s tip (security lens F4): a routine "packages moved" click must never carry
+          # unrelated in-flight work. Refuse on ambiguity rather than resolve it.
+          MATCHES=$(git rev-parse --disambiguate="$SHA8" | wc -l)
+          [ "$MATCHES" = "1" ] || { echo "ABORT: '$SHA8' matches $MATCHES objects in this repository — ambiguous, refusing."; exit 1; }
+          FULL=$(git rev-parse --verify "$SHA8^{commit}")
+          echo "deployed commit: $FULL"
+          # A worktree, not a checkout: the workspace keeps THIS commit's infra/freshness and its
+          # workflow file while the build reads the deployed commit's source. A plain `git checkout`
+          # here would swap the code of every step that follows.
+          SRC="$RUNNER_TEMP/deployed-src"
+          rm -rf "$SRC"
+          git worktree add --detach "$SRC" "$FULL"
+
+          # The base image's resolved digest (security lens F11 — the base tag floats, so without
+          # this there is no record of what "current base" was on the day). `az acr manifest
+          # list-metadata` cannot read MCR; `docker buildx imagetools inspect` can and is what the
+          # runner ships, with `docker manifest inspect` as the named fallback (it needs
+          # DOCKER_CLI_EXPERIMENTAL on some CLI versions). Verified on ubuntu-latest 2026-09-11: the
+          # first form answered, so the fallback has not been exercised. If BOTH
+          # come back empty the step FAILS rather than recording an empty digest.
+          BASE_DIGEST=$(docker buildx imagetools inspect "$BASE_IMAGE" --format '{{.Manifest.Digest}}' 2>/dev/null || true)
+          if [ -z "$BASE_DIGEST" ]; then
+            BASE_DIGEST=$(DOCKER_CLI_EXPERIMENTAL=enabled docker manifest inspect "$BASE_IMAGE" 2>/dev/null \
+              | python3 -c 'import json,sys;print(json.load(sys.stdin).get("digest") or "")' || true)
+          fi
+          [ -n "$BASE_DIGEST" ] || { echo "ABORT: could not resolve $BASE_IMAGE to a digest — refusing to build an unrecorded base."; exit 1; }
+          echo "BASE_DIGEST=$BASE_DIGEST" >> "$GITHUB_ENV"
+          echo "base: $BASE_IMAGE -> $BASE_DIGEST"
+
+          CAND="$SHA8-cand-$STAMP"
+          echo "CAND_TAG=$CAND" >> "$GITHUB_ENV"
+          echo "REFRESH_TAG=$SHA8-r$STAMP" >> "$GITHUB_ENV"
+          # Runs as "Container Registry Tasks Contributor" ON THE REGISTRY (see the header). The
+          # AcrPush-only alternative, if that role is ever withdrawn, is two lines instead of one:
+          #   az acr login -n "$ACR"
+          #   docker build --build-arg BASE_IMAGE="$BASE_IMAGE" -t "$REG/$IMG:$CAND" "$SRC" && docker push "$REG/$IMG:$CAND"
+          az acr build --registry "$ACR" --image "$IMG:$CAND" \
+            --build-arg BASE_IMAGE="$BASE_IMAGE" --no-logs "$SRC" \
+            || { echo "ABORT: the candidate build failed. A 403 here means this identity needs 'Container Registry Tasks Contributor' on $ACR — AcrPush does not cover ACR Tasks — or the build must move to docker build + docker push, which AcrPush alone can do."; exit 1; }
+          CAND_DIGEST=$(az acr repository show -n "$ACR" --image "$IMG:$CAND" --subscription "$SUB" \
+            --query digest -o tsv | tr -d '\r')
+          [ -n "$CAND_DIGEST" ] || { echo "ABORT: the candidate tag has no digest after the build."; exit 1; }
+          echo "CAND_DIGEST=$CAND_DIGEST" >> "$GITHUB_ENV"
+          echo "candidate: $IMG:$CAND -> $CAND_DIGEST"
+
+      # Both sides scanned BY DIGEST with the same tool and the same settings — one code path, so a
+      # difference between the two lists is a real difference (failure lens F6). `list-all-pkgs` is
+      # what makes Trivy emit the FULL package inventory rather than only the vulnerable packages;
+      # the whole comparison is built on that list, so it is not optional. No `continue-on-error`:
+      # a scan that cannot run fails the job loudly (security lens F3), and the summary still posts
+      # and still says INCONCLUSIVE, because it runs `if: always()`.
+      - name: Scan the deployed image
+        if: steps.plan.outputs.rebuild == '1'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25   # v0.36.0
+        with:
+          image-ref: ${{ env.REG }}/${{ env.IMG }}@${{ env.DEPLOYED_DIGEST }}
+          format: json
+          output: ${{ github.workspace }}/.freshness/deployed-trivy.json
+          severity: HIGH,CRITICAL
+          scanners: vuln
+          list-all-pkgs: true
+          exit-code: '0'          # this job decides what a finding means; the scan only reports
+
+      - name: Scan the candidate image
+        if: steps.plan.outputs.rebuild == '1'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25   # v0.36.0
+        with:
+          image-ref: ${{ env.REG }}/${{ env.IMG }}@${{ env.CAND_DIGEST }}
+          format: json
+          output: ${{ github.workspace }}/.freshness/candidate-trivy.json
+          severity: HIGH,CRITICAL
+          scanners: vuln
+          list-all-pkgs: true
+          exit-code: '0'
+
+      - name: Compare the two package inventories
+        if: steps.plan.outputs.rebuild == '1'
+        env:
+          DEPLOYED_TRIVY: ${{ github.workspace }}/.freshness/deployed-trivy.json
+          CANDIDATE_TRIVY: ${{ github.workspace }}/.freshness/candidate-trivy.json
+        run: python3 -m infra.freshness compare
+
+      - name: Decide
+        id: decide
+        if: steps.plan.outputs.rebuild == '1'
+        env:
+          CANDIDATE_TRIVY: ${{ github.workspace }}/.freshness/candidate-trivy.json
+          ACCEPTED: ${{ github.workspace }}/infra/freshness/accepted-cves.txt
+          TAG: ${{ env.CAND_TAG }}
+        run: |
+          set -euo pipefail
+          # Exits 1 on RED, which fails this step on purpose: the job goes red, the issue step files
+          # it, and the owner hears about a fixable CVE from us before the scanner-of-record pages someone.
+          python3 -m infra.freshness decide
+          python3 - <<'PY'
+          import json, os, pathlib
+          d = json.loads(pathlib.Path(os.environ["OUT"], "decision.json").read_text(encoding="utf-8"))
+          if os.environ.get("GITHUB_OUTPUT"):
+              with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+                  fh.write("promote=%s\n" % ("1" if d["promote"] else "0"))
+          print(d["sentence"])
+          PY
+
+      # ----------------------------------------------------------------------------------------
+      # 6. Promote the SCANNED digest, or delete the candidate. `dry` never reaches either import.
+      #    Belt and braces: `decision.promote` is already false in dry mode by construction
+      #    (infra/freshness/decide.py::will_promote), and this `if:` says so again in the file a
+      #    reader opens.
+      # ----------------------------------------------------------------------------------------
+      - name: Promote the scanned digest and ask for the gate
+        if: steps.plan.outputs.rebuild == '1' && steps.decide.outputs.promote == '1' && env.MODE == 'full'
+        run: |
+          set -euo pipefail
+          # An import BY DIGEST inside the same registry: the bytes that were scanned are the bytes
+          # that ship. Never overwrite <sha8> — HANDOFF.md's restore points depend on it.
+          # Runs as "Container Registry Data Importer and Data Reader" on $ACR (see the header); the
+          # AcrPush-only alternative is docker pull "$REG/$IMG@$CAND_DIGEST", docker tag, docker push.
+          az acr import -n "$ACR" --subscription "$SUB" \
+            --source "$REG/$IMG@$CAND_DIGEST" --image "$IMG:$REFRESH_TAG" \
+            || { echo "ABORT: the import failed. A 403 here means this identity needs 'Container Registry Data Importer and Data Reader' on $ACR."; exit 1; }
+          # Verify against the registry, not against the command's own exit code (playbook section 6).
+          SHIPPED=$(az acr repository show -n "$ACR" --image "$IMG:$REFRESH_TAG" --subscription "$SUB" --query digest -o tsv | tr -d '\r')
+          [ "$SHIPPED" = "$CAND_DIGEST" ] || { echo "ABORT: $REFRESH_TAG is $SHIPPED, not the scanned $CAND_DIGEST."; exit 1; }
+          az acr repository untag -n "$ACR" --image "$IMG:$CAND_TAG" --subscription "$SUB"
+          REASON=$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1],encoding="utf-8"))["sentence"])' "$OUT/decision.json")
+          # Phase C (spec/keeping-current.md C): the ROUTINE lane — no click. The routine job re-checks the
+          # claim itself (a promotion tag of the commit prod runs, no deploy issue open, no other deploy
+          # in flight, the kill switch on) and hands the request to the gated lane if the switch is off.
+          gh workflow run deploy.yml --ref main -f lane=routine -f image_tag="$REFRESH_TAG" -f reason="$REASON"
+          echo "dispatched deploy.yml (lane=routine) with $REFRESH_TAG — $REASON"
+
+      - name: Delete the candidate image
+        if: always() && steps.plan.outputs.rebuild == '1' && steps.decide.outputs.promote != '1'
+        run: |
+          set -uo pipefail
+          # Green, held, inconclusive, red or a dry run: the speculative build never survives the
+          # run. It is not a deploy-history tag and must not occupy one of retention's floor slots
+          # (security lens F7) — and it must not be left merely UNTAGGED either, because an untagged
+          # full-size manifest is exactly what Defender re-scans for the next seven days
+          # (findings log G3). So the MANIFEST goes, not just the tag.
+          if [ -n "${CAND_TAG:-}" ]; then
+            az acr repository delete -n "$ACR" --image "$IMG:$CAND_TAG" --yes --subscription "$SUB" \
+              && echo "candidate image $CAND_TAG deleted (mode=$MODE)" \
+              || echo "candidate image $CAND_TAG could not be deleted — DELETE IT BY HAND: az acr repository delete -n $ACR --image $IMG:$CAND_TAG --yes"
+          else
+            echo "no candidate tag was created; nothing to delete."
+          fi
+
+      # The policy verdict fails the run HERE, after the prune and the rebuild have had their day: a
+      # package manager in a running image must not stop the CVE work, and must still turn the run red.
+      - name: Fail the run if the policy was violated
+        if: always() && steps.policy.outcome == 'failure'
+        run: |
+          echo "POLICY RED — see the policy table in the summary. The fix is the Dockerfile block (spec/keeping-current.md); the run stays red until every live image is clean."
+          exit 1
+
+      # ----------------------------------------------------------------------------------------
+      # 7. The page — on EVERY run, including the run where everything above it fell over.
+      # ----------------------------------------------------------------------------------------
+      - name: Write the summary
+        if: always()
+        env:
+          DATE: ${{ env.DATE }}
+          BASE_DIGEST: ${{ env.BASE_DIGEST }}
+          RETENTION: ${{ env.RETENTION }}
+          RUN_URL: ${{ env.RUN_URL }}
+        run: |
+          set -uo pipefail
+          python3 -m infra.freshness summary > "$OUT/summary.md"
+          {
+            cat "$OUT/summary.md"
+            echo
+            echo "_Rebuild: ${REBUILD_WHY:-not evaluated}._"
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat "$OUT/summary.md"
+
+      # The page says WHAT; the files say WHERE. Trivy's two inventories (with each package's file
+      # path), the classified findings, the decision and the pages Defender returned are kept for 30
+      # days, so a RED line can be traced to its target and path without re-running anything.
+      - name: Keep the run's working files
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a   # v7.0.1
+        with:
+          name: freshness-${{ env.STAMP }}-${{ github.run_id }}
+          path: ${{ github.workspace }}/.freshness/
+          retention-days: 30
+          if-no-files-found: error      # an empty upload is a broken run, not a quiet one
+          include-hidden-files: true    # `.freshness` is a dot-directory; the action skips those unless told
+
+      # ----------------------------------------------------------------------------------------
+      # 8. A FIXED destination for failure. GitHub's own routing follows whoever last edited the
+      #    cron line (security lens F10), so it is not relied on: one issue, one label, one
+      #    assignee, opened on failure and closed on the next success.
+      # ----------------------------------------------------------------------------------------
+      - name: Open or update the freshness issue
+        if: failure()
+        run: |
+          set -uo pipefail
+          gh label create freshness --color B60205 --description "image freshness job" 2>/dev/null || true
+          TITLE="freshness: RED $DATE"
+          BODY="$OUT/summary.md"
+          [ -s "$BODY" ] || echo "The run failed before it could write a summary." > "$BODY"
+          echo "$RUN_URL" >> "$BODY"
+          EXISTING=$(gh issue list --state open --label freshness --json number,title \
+            --jq "[.[] | select(.title == \"$TITLE\")] | .[0].number // empty")
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body-file "$BODY"
+            echo "commented on #$EXISTING"
+          else
+            gh issue create --title "$TITLE" --body-file "$BODY" --label freshness --assignee "$OWNER"
+          fi
+
+      - name: Close any open freshness issue
+        if: success()
+        run: |
+          set -uo pipefail
+          # Earned, not assumed: only a run whose rebuild AND scan came back clean closes an issue —
+          # GREEN_SILENT, PROMOTE or HOLD (in all three the scan itself found nothing fixable). A day
+          # that did not rebuild, or an INCONCLUSIVE read, closes nothing. With the re-verify trigger
+          # above, every day with an open issue rebuilds, so the clean day arrives on its own.
+          KIND=$(python3 -c 'import json,sys,pathlib;p=pathlib.Path(sys.argv[1]);print(json.loads(p.read_text(encoding="utf-8")).get("kind","") if p.exists() else "")' "$OUT/decision.json")
+          case "$KIND" in
+            GREEN_SILENT|PROMOTE|HOLD) ;;
+            *) echo "closing nothing: this run's decision was '${KIND:-none}' — no clean scan today."; exit 0 ;;
+          esac
+          for n in $(gh issue list --state open --label freshness --json number --jq '.[].number'); do
+            gh issue close "$n" --comment "Closed by a green freshness run on $DATE — $RUN_URL (decision: $KIND)"
+            echo "closed #$n"
+          done

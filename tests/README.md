@@ -7,6 +7,14 @@ network, no fixtures beyond the standard library. Run from the kit root:
 python -m pytest tests/ -q
 ```
 
+Keeping-current rule tests live next to their modules and are **not** in this directory
+(a stamp that is not a container app must not fail because `infra.freshness` is absent).
+In this kit repo also run:
+
+```sh
+python -m pytest reference/keeping-current/tests/ -q
+```
+
 When stamping a project, copy this directory into the project's `tests/` and adjust
 `GUARDS_DIR` at the top of `guard_registry.py` to where the guard scripts were installed
 (usually `scripts/`). A re-implementation of a guard — any language, any harness — passes

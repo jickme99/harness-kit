@@ -43,6 +43,7 @@ reporting Claude and Cursor configs absent is a fact, not a fail.
 | Merge only on green checks | REQUIRED | **untested** — assume no | yes — `merge_green_check.py` | **yes** |
 | CI gates | IF-AVAILABLE | **yes** — server-side, tool-independent | n/a | — |
 | Everything else (fences, wiki, commit, report contracts) | REQUIRED | no | probes where they run | **yes** |
+| Keeping current (container freshness / canary) | IF-AVAILABLE | **yes** when STANDUP Question 3 copied the chassis (`adapters/github-azure.md`); server-side, tool-independent | the rule tests | doctrine until then |
 
 On this harness, until someone upgrades a row with evidence, you are personally holding
 every promise except the CI gates.

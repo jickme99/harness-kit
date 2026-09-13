@@ -1,0 +1,96 @@
+name: weekly-note
+# Phase F of spec/keeping-current.md (its section E, "What you read instead of clicking"): one GitHub issue a
+# week — `shipped itself: week of <Monday>` — assigned to the owner, listing every routine deploy (machine-
+# approved), every gated deploy (the owner's click), Dependabot's merged / held / closed updates, the daily job's
+# decisions, the issues that close the routine lane, the kill switch's state and the last drill. Runs Monday
+# after the daily job; a dispatch writes the note for the last `days` days on demand. Everything it says comes
+# from GitHub's own records through `gh`; the words are infra/weekly_note.py (tests/test_weekly_note.py).
+# A previous week's note is closed when the new one opens, so exactly one is open at a time.
+on:
+  schedule:
+    - cron: '30 7 * * 1'          # Monday 07:30 UTC, after the 06:00 daily job has finished
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'How many days back the note covers (default 7).'
+        required: false
+        default: '7'
+
+permissions:
+  issues: write            # the note itself; closing last week's
+  actions: read            # the runs
+  pull-requests: read      # Dependabot's pull requests
+  contents: read
+
+env:
+  OUT: ${{ github.workspace }}/.note
+  GH_TOKEN: ${{ github.token }}
+  DAYS: ${{ inputs.days || '7' }}
+  ROUTINE_LANE: ${{ vars.ROUTINE_LANE }}
+  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+jobs:
+  note:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+
+      - name: Gather the week from GitHub's own records
+        run: |
+          set -euo pipefail
+          mkdir -p "$OUT"
+          echo "WEEK_START=$(date -u -d "-$DAYS days" +%Y-%m-%d)" >> "$GITHUB_ENV"
+          gh run list -R "$GITHUB_REPOSITORY" --workflow deploy.yml --limit 200 \
+            --json databaseId,displayTitle,conclusion,status,createdAt,updatedAt,url > "$OUT/deploy-runs.json"
+          gh run list -R "$GITHUB_REPOSITORY" --workflow freshness.yml --limit 60 \
+            --json databaseId,displayTitle,conclusion,status,createdAt,updatedAt,url > "$OUT/freshness-runs.json"
+          gh pr list -R "$GITHUB_REPOSITORY" --author app/dependabot --state all --limit 60 \
+            --json number,title,state,mergedAt,closedAt,createdAt,labels,url > "$OUT/prs.json"
+          gh issue list -R "$GITHUB_REPOSITORY" --state all --limit 100 \
+            --json number,title,state,createdAt,closedAt,labels,url > "$OUT/issues.json"
+          # The daily job keeps its decision in its artifact; read this week's, one small download each.
+          START=$(date -u -d "-$DAYS days" +%Y-%m-%dT00:00:00Z)
+          for ID in $(python3 -c 'import json,sys; s=sys.argv[2]; print(" ".join(str(r["databaseId"]) for r in json.load(open(sys.argv[1])) if r.get("createdAt","")>=s))' "$OUT/freshness-runs.json" "$START"); do
+            NAME=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ID/artifacts" --jq '.artifacts[0].name // empty' || true)
+            [ -n "$NAME" ] || continue
+            gh run download "$ID" -R "$GITHUB_REPOSITORY" -n "$NAME" -D "$OUT/art/$ID" 2>/dev/null || true
+            F=$(find "$OUT/art/$ID" -name decision.json | head -n 1 || true)
+            [ -n "$F" ] && [ "$F" != "$OUT/art/$ID/decision.json" ] && cp "$F" "$OUT/art/$ID/decision.json" || true
+          done
+          echo "gathered: $(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))))' "$OUT/deploy-runs.json") deploy runs, $(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))))' "$OUT/freshness-runs.json") daily runs"
+
+      - name: Write the note
+        run: |
+          set -euo pipefail
+          TITLE=$(python3 -m infra.weekly_note)
+          echo "TITLE=$TITLE" >> "$GITHUB_ENV"
+          cat "$OUT/note.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open the note, or update this week's; close last week's
+        run: |
+          set -euo pipefail
+          gh label create weekly-note -R "$GITHUB_REPOSITORY" --color 0E8A16 --description "what shipped itself this week — read, then close" 2>/dev/null || true
+          OPEN=$(gh issue list -R "$GITHUB_REPOSITORY" --state open --label weekly-note --limit 20 --json number,title)
+          SAME=$(printf '%s' "$OPEN" | python3 -c 'import json,sys; t=sys.argv[1]; print(next((str(i["number"]) for i in json.load(sys.stdin) if i["title"]==t), ""))' "$TITLE")
+          if [ -n "$SAME" ]; then
+            gh issue edit "$SAME" -R "$GITHUB_REPOSITORY" --body-file "$OUT/note.md"
+            echo "updated this week's note: #$SAME"
+          else
+            OWNER=__OWNER_GITHUB_LOGIN__
+            case "$OWNER" in *__*) echo "ABORT: weekly-note.yml still has an unfilled owner login — set the assignee before the first run." >&2; exit 2 ;; esac
+            NEW=$(gh issue create -R "$GITHUB_REPOSITORY" --title "$TITLE" --body-file "$OUT/note.md" --label weekly-note --assignee "$OWNER")
+            echo "opened the note: $NEW"
+            for N in $(printf '%s' "$OPEN" | python3 -c 'import json,sys; print(" ".join(str(i["number"]) for i in json.load(sys.stdin)))'); do
+              gh issue close "$N" -R "$GITHUB_REPOSITORY" --comment "Superseded by this week's note: $NEW"
+            done
+          fi
+
+      - name: Keep the note's inputs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a   # v7.0.1
+        with:
+          name: weekly-note-${{ github.run_id }}
+          path: ${{ github.workspace }}/.note/
+          retention-days: 30
+          if-no-files-found: warn
+          include-hidden-files: true

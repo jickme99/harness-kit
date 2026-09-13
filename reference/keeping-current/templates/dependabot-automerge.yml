@@ -1,0 +1,94 @@
+name: dependabot-automerge
+# TEMPLATE — copy to `.github/workflows/dependabot-automerge.yml` at adoption D (after the canary
+# drills and `ROUTINE_LANE=on`), not at stand-up. Nothing in it is project-specific. The decide job
+# no-ops while `ROUTINE_LANE` is not exactly `on`, so a copy that lands early still cannot merge.
+# Needs: the repository setting "allow auto-merge"; branch protection with a required check named `tests`,
+# code-owner review and 0 required approvals; CODEOWNERS narrowed (templates/CODEOWNERS). Doctrine in
+# spec/keeping-current.md ("Who clicks"). Small patch/minor updates merge themselves; everything else
+# waits for a person. This workflow decides which is which and never merges anything itself — it enables
+# GitHub's auto-merge, and GitHub merges when the required `tests` check is green (branch protection).
+#
+#   routine  = a patch or minor update, touching only pyproject.toml and the lock files
+#              -> `gh pr merge --auto --squash`, one comment saying so
+#   a look   = a major, a base-image line, a GitHub Action, anything touching an owned file
+#              -> label `needs-a-look`, one comment saying why, no merge
+#
+# THE ACTOR GUARD: the job runs only for a pull request GitHub itself attributes to `dependabot[bot]`, from this
+# repository (not a fork). The update type comes from Dependabot's own metadata action, pinned to a commit.
+# The token is the workflow's own: it can enable auto-merge and label, it cannot approve a review (GitHub keeps
+# that switch off), and a change to an owned file still needs the owner's review whatever this file says.
+#
+# The DEPLOY of a merged update is not here: the daily freshness job builds and scans `main` and ships it through
+# the routine canary when every commit since the deployed one is a GitHub-verified Dependabot commit
+# (infra/freshness/range_rule.py). A merge enabled by this token does not start `push` workflows, so the
+# event-independent daily job is the right place — and it ships only what it scanned.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: write          # enabling auto-merge; the merge itself is GitHub's, on green `tests`
+  pull-requests: write     # the label and the one comment
+
+concurrency:
+  group: dependabot-automerge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  off:
+    if: vars.ROUTINE_LANE != 'on'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auto-merge stays off until the routine lane is on
+        run: echo "ROUTINE_LANE is not on — auto-merge stays off (adoption D). Copy this workflow at stand-up if you like; it will not merge until the kill switch is on."
+  decide:
+    if: >-
+      vars.ROUTINE_LANE == 'on' &&
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.actor == 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR_URL: ${{ github.event.pull_request.html_url }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+    steps:
+      - name: Read what Dependabot says this update is
+        id: meta
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98   # v3.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Routine, or a look
+        env:
+          UPDATE_TYPE: ${{ steps.meta.outputs.update-type }}
+          ECOSYSTEM: ${{ steps.meta.outputs.package-ecosystem }}
+          DEPENDENCIES: ${{ steps.meta.outputs.dependency-names }}
+        run: |
+          set -euo pipefail
+          gh label create needs-a-look -R "$GITHUB_REPOSITORY" --color D93F0B \
+            --description "a Dependabot update the routine lane will not merge: a person looks" 2>/dev/null || true
+          FILES=$(gh pr view "$PR_NUMBER" -R "$GITHUB_REPOSITORY" --json files --jq '.files[].path')
+          HOLD=""
+          case "$UPDATE_TYPE" in
+            version-update:semver-patch|version-update:semver-minor) ;;
+            *) HOLD="update type '${UPDATE_TYPE:-unknown}' (only a patch or a minor merges itself)" ;;
+          esac
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            case "$f" in
+              pyproject.toml|requirements-lock.txt|requirements-toolchain.txt|requirements-image.in|requirements-toolchain.in) ;;
+              *) HOLD="${HOLD:+$HOLD; }it touches $f (only the manifest and the lock files merge themselves)" ;;
+            esac
+          done <<< "$FILES"
+          if [ -n "$HOLD" ]; then
+            gh pr edit "$PR_NUMBER" -R "$GITHUB_REPOSITORY" --add-label needs-a-look
+            gh pr comment "$PR_NUMBER" -R "$GITHUB_REPOSITORY" --edit-last --create-if-none \
+              --body "**Held for a look** (the routine lane, spec/keeping-current.md D): $HOLD. Nothing merges until a person merges it."
+            echo "held: $HOLD" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          gh pr merge "$PR_URL" --auto --squash
+          gh pr comment "$PR_NUMBER" -R "$GITHUB_REPOSITORY" --edit-last --create-if-none \
+            --body "**Auto-merge enabled** (the routine lane, spec/keeping-current.md D): $ECOSYSTEM $UPDATE_TYPE of $DEPENDENCIES, touching only the manifest and the lock files. GitHub merges it when the required \`tests\` check is green. The deploy is the daily freshness job's: it builds and scans \`main\` and ships through the routine canary once every commit since the deployed one is Dependabot's."
+          echo "auto-merge enabled: $ECOSYSTEM $UPDATE_TYPE of $DEPENDENCIES" | tee -a "$GITHUB_STEP_SUMMARY"
