@@ -40,7 +40,7 @@ Two more promises the kit makes about the projects it stamps:
   piece do, and what must I honor even though I cannot execute it?*
 - **Self-updating is PROPOSAL-ONLY.** Projects poll the kit (`CHANGELOG.md` vs their
   stamp's `kit_version`) and apply through their own Merge gate — never self-apply.
-  Stamp: `reference/tools/kit_stamp.py` (STANDUP step 5; the same command for every
+  Stamp: `reference/tools/kit_stamp.py` (STANDUP step 6; the same command for every
   project). Poll: `reference/tools/kit_poll.py`. Harvest: `reference/tools/kit_harvest.py`
   (offer customizations back; never copies into the kit). Recipe: `spec/versioning.md`.
   Kit-opens-PRs is later automation (consumer #2). Current kit version is in

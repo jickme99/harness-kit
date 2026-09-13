@@ -65,7 +65,7 @@ compared by **version**, not by hoping someone noticed a hash change.
 ### Stamp recipe (in the consuming project)
 
 A project with no `kit-manifest.json` cannot poll or harvest. Stamp first (`STANDUP.md`
-step 5) with the same command every project uses:
+step 6) with the same command every project uses:
 
 ```sh
 python scripts/kit_stamp.py --project . --kit /path/to/harness-kit
@@ -79,7 +79,7 @@ Do not hand-edit a copied kit `kit-files.txt` — a second mapping drifts. Befor
 
 ### Poll recipe (in the consuming project)
 
-A project with no `kit-manifest.json` cannot poll. Stamp first (`STANDUP.md` step 5).
+A project with no `kit-manifest.json` cannot poll. Stamp first (`STANDUP.md` step 6).
 
 1. **Read local version:**
    ```sh
