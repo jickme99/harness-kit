@@ -137,11 +137,13 @@ another harness must achieve.
     named two independent expensive outputs. Infer from the outcome and the tree, not
     from the presence of `.git`. Checking is a different job from writing
     (`spec/review.md`).
-  - **First session.** If a Kinds of work **heading** is still
-    `{{KIND_PLACEHOLDER}}`, filling it is the first task — before product edits. The runnable STANDUP gate does **not**
-    check this (empty tree). Confirm the outcome in the one sentence the template
-    comment allows; never name jobs, workers, lanes, checkers, models, or counts of
-    those to the owner.
+  - **First session.** If this session is the standing master and a Kinds of work
+    **heading** is still `{{KIND_PLACEHOLDER}}`, filling it is the first task —
+    before product edits. The runnable STANDUP gate does **not** check this
+    (empty tree). Confirm the outcome in the one sentence the template comment
+    allows; never name jobs, workers, lanes, checkers, models, or counts of
+    those to the owner. Workers and the Cursor lane beside a master do not
+    write the map.
   - **Precedence.** The report is the record of a job; the map is the record of a
     kind; dest files are products of a job and never a record of it; only the master
     writes the map. Workers do not author `wiki/operating-model.md`.

@@ -18,9 +18,10 @@ or removed — that update is one of the auto-write triggers, not a favor.
 - Cross-references are `[[Page Title]]`.
 - `decisions.md` and `log.md` are **append-only**: supersede via a new dated entry, never
   rewrite an old one.
-- Snapshot pages (this one, [[status]], [[operating-model]]) keep `updated:` honest — the probe pack measures
-  both the frontmatter's claim and the body's newest date against [[log]]. [[HANDOFF]] is
-  a close-out snapshot (doctrine); refresh it when a session ends.
+- Snapshot pages (this one, [[status]], [[operating-model]]) keep `updated:` honest
+  against [[log]]. The probe pack measures whatever `SNAPSHOT_PAGES` lists
+  (install-time seam; kit default is still origin-shaped). [[HANDOFF]] is a
+  close-out snapshot (doctrine); refresh it when a session ends.
 
 ## Pages
 
