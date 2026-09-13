@@ -117,3 +117,4 @@ armed at the Cursor project layer; doctrine rows you personally hold). **IF-AVAI
 | Review policy (must-fix bar, fail-open-enumeration hunt) | IF-AVAILABLE | no — `BUGBOT.md` is prose to a reader, not a filter. Local `/review-bugbot` is what stores the patch ID GitHub uses to skip remote | no | **yes** |
 | Code-cyber seat (`/review-security`) | IF-AVAILABLE | no — git-diff review, not a hook | the command's findings · clean · blocked | **yes** (do not also run a prose cyber lens) |
 | Wiki protocol / commit protocol / report contract | REQUIRED | no | staleness + dispositions via `harness_probes.py` | **yes** |
+| Keeping current (container freshness / canary) | IF-AVAILABLE | **yes** when STANDUP Question 3 copied the chassis (`adapters/github-azure.md`) | the rule tests | doctrine until then |

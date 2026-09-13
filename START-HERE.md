@@ -30,6 +30,8 @@ They do not run stamp, poll, harvest, or pytest — you do.
    - Will any of this ever be public, or shared beyond the owner?
    - Will any tool send the repo to a third party (for example an external PR
      reviewer)?
+   - Does this ship a container image (an app or a scheduled job) that has to
+     stay current by itself?
    - What are we building, and what should the new folder be called?
 3. Stamp with `--kit` pointed at **this** clone. Run the gate.
 4. When the gate passes, give them the new path and say: close this folder,
@@ -41,7 +43,7 @@ Use this in ChatGPT in the browser, or in any agent that did not load
 `CLAUDE.md` / `AGENTS.md`:
 
 > This folder is harness-kit, not my project. Read START-HERE.md and STANDUP.md.
-> Stand up a new project for me in a sibling folder. Ask me the two STANDUP
+> Stand up a new project for me in a sibling folder. Ask me the STANDUP
 > questions in plain English, then ask what I am building and what to name the
 > folder. Do every copy, fill-in, stamp, and gate yourself — do not ask me to
 > run terminal commands. When the gate passes, tell me the folder path and that

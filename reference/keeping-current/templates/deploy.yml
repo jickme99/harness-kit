@@ -1,0 +1,436 @@
+# TEMPLATE — copy to `.github/workflows/deploy.yml` and replace EVERY `__PLACEHOLDER__` (each job's first step
+# refuses to run while one is left in the env block). The two lanes, the canary and the kill switch are
+# explained in spec/keeping-current.md ("Who clicks"); the canary itself is infra/canary.sh with its rules in
+# infra/canary_rules.py, and the routine job's second claim is infra/freshness/range_rule.py. Taken verbatim
+# from a live workflow (2026-09-11) with that project's names removed — the comments
+# below still tell its story, which is the point of them. Needs: the environment `prod` with the owner as
+# reviewer; two identities (__REPO__-cicd for the gated job: build + deploy; __REPO__-routine for the routine
+# job: AcrPull on the registry, Container Apps Contributor on the one app, Reader on its environment) with
+# federated credentials as the header says; the secrets AZURE_CLIENT_ID / AZURE_TENANT_ID / AZURE_SUBSCRIPTION_ID;
+# the variables AZURE_ROUTINE_CLIENT_ID and ROUTINE_LANE.
+name: deploy-prod
+# Keyless (OIDC) deploy to the production Container App.
+# MANUAL trigger only (workflow_dispatch) — prod releases are deliberate, not auto-on-push.
+# APPROVAL GATE (2026-08-07): the job targets the `prod` environment, which requires a review from
+# the repo owner before it runs. A future merge-capable contributor therefore cannot ship prod alone.
+#
+# Federated credentials on managed identity '__REPO__-cicd' (__IDENTITY_RESOURCE_GROUP__) — BOTH are required:
+#   gh-main      <- repo:__ORG__/__REPO__:ref:refs/heads/main
+#   gh-env-prod  <- repo:__ORG__/__REPO__:environment:prod
+# Naming an `environment:` CHANGES the OIDC subject claim from the ref form to the environment form.
+# Adding the gate without gh-env-prod would break azure/login on the next deploy — hence both exist.
+#
+# Secrets (AZURE_CLIENT_ID/TENANT_ID/SUBSCRIPTION_ID) point at the CI identity + the production subscription.
+#
+# TWO LANES (2026-09-11, spec/keeping-current.md B/C). `lane=gated` (the default) is the job above: the
+# owner's click, the CI identity, build-or-tag, the canary. `lane=routine` is a SECOND job with NO
+# environment and ITS OWN identity `__REPO__-routine` (AcrPull on the registry, Container Apps
+# Contributor on this one app, Reader on the one environment — the exec door reads it to find its
+# endpoint, learned on the lane's first live canary — nothing else; federated
+# credential gh-main-routine, ref form only):
+# it ships only a freshness promotion tag (<sha8>-rYYYYMMDD) whose commit is the commit prod ALREADY
+# RUNS — or, since Phase D, a main ahead of it by GitHub-verified Dependabot commits only — through the
+# same canary, and refuses everything else: the kill switch off (it hands the request to the gated lane
+# instead), an open `deploy` issue, another deploy in flight, any other tag.
+# The variable AZURE_ROUTINE_CLIENT_ID (Settings → Variables) is that identity's client id.
+#
+# TWO OPTIONAL INPUTS (2026-09-10, Phase 2 of spec/keeping-current.md). With no inputs this is
+# exactly the deploy it has always been: build this ref, ship it. Given `image_tag`, it SKIPS its own
+# build and updates the Container App to a tag that already exists in the registry — which is how the
+# freshness job ships THE BYTES IT SCANNED rather than a second build of the same source (failure
+# lens F1: "the image that gets shipped is never the image that got scanned"). `reason` is shown in
+# `run-name`, so the approval screen itself says why it is asking (operations lens 4).
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Existing tag in __REGISTRY__/__APP_REPOSITORY__ to deploy, e.g. 4bb50595-r20260910. Leave empty to build this ref.'
+        required: false
+        default: ''
+      reason:
+        description: 'Why this deploy exists — shown on the approval screen.'
+        required: false
+        default: ''
+      drill:
+        description: 'yes = a DRILL: the new revision carries APP_SELFTEST_FAIL=1 and must be refused before any traffic moves. Proves the rollback; ships nothing.'
+        type: choice
+        default: 'no'
+        options: ['no', 'yes']
+      lane:
+        description: 'gated = the owner clicks (default). routine = no click: only a freshness promotion tag of the commit prod already runs, with no deploy issue open and the kill switch on.'
+        type: choice
+        default: 'gated'
+        options: ['gated', 'routine']
+
+run-name: ${{ inputs.drill == 'yes' && 'DRILL' || (inputs.lane == 'routine' && 'Routine deploy' || 'Deploy') }} ${{ inputs.reason || 'manual' }}
+
+# One deploy at a time PER LANE. A second gated dispatch queues behind the first — including behind
+# one waiting at the gate, which is the point: two canaries on one app would fight over the traffic
+# pin. The routine lane has its own group so it never queues for days behind a run waiting at the
+# gate; the two lanes keep off each other by looking: the routine job refuses while any other deploy
+# run is in progress, and the gated job waits (up to 20 minutes) for a routine run in flight before
+# its own canary starts. Two canaries never overlap.
+concurrency:
+  group: deploy-${{ inputs.lane || 'gated' }}
+  cancel-in-progress: false
+
+permissions:
+  id-token: write          # OIDC
+  issues: write            # the `deploy: RED` issue on a failed canary (spec/keeping-current.md B6)
+  actions: read            # `gh run list` — is a routine deploy in flight?
+  contents: read
+
+env:
+  RG: __PROD_RESOURCE_GROUP__      # the Container App lives here
+  ACR: __REGISTRY__      # the registry
+  APP: __PROD_CONTAINER_APP__
+  IMG: __APP_REPOSITORY__
+  OWNER: __OWNER_GITHUB_LOGIN__
+  BASE_IMAGE: mcr.microsoft.com/azurelinux/base/python:3.12   # MCR base — dodges Docker Hub rate limits
+  # CANARY_ASSET_FILE: ""      # set to the empty string for an app that serves no portal file (skips the served-bytes check)
+  CANARY_OUT: ${{ github.workspace }}/.canary          # the transcript, the verdict, the summary — kept as the run's artifact
+  CANARY_SUFFIX: ${{ github.run_number }}              # revision name = <app>--<tag>-<run number>: unique per run, readable
+  DRILL: ${{ inputs.drill == 'yes' && '1' || '0' }}
+  GH_TOKEN: ${{ github.token }}
+  # HALF OF THE KILL SWITCH (spec/keeping-current.md B): the routine job runs only when the repository
+  # variable ROUTINE_LANE is exactly `on` AND this flag is `true`. Turning the lane OFF is one click in
+  # Settings (the variable); turning it back ON needs this reviewed line as well. A missing or
+  # misspelled variable is off. With the lane off, a routine request is handed to the gated lane.
+  ROUTINE_LANE_ENABLED: 'true'
+
+jobs:
+  build-deploy:
+    if: inputs.lane != 'routine'
+    runs-on: ubuntu-latest
+    environment: prod        # owner approval required before this job starts
+    steps:
+      # THE TEMPLATE GUARD: the workflow-level env above ships with __PLACEHOLDERS__; nothing runs while
+      # one is left (kit audit finding #13 — a template carrying one project's names deploys the wrong app).
+      - name: The template guard
+        run: |
+          case "$RG$ACR$APP$IMG$OWNER" in
+            *__*) echo "ABORT: deploy.yml still carries __PLACEHOLDERS__ in its env block."; exit 1 ;;
+          esac
+      # Actions pinned to full commit SHAs, not tags: a tag is a mutable pointer the action's own
+      # maintainer can move, and this job can change production. The trailing comment is
+      # the version the SHA was, so a reader (and Dependabot) can see what is being upgraded from.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+
+      # The tag shape is checked BEFORE azure/login, so a typo or a hostile dispatch input costs an
+      # eight-line step and no Azure call at all. `[a-z0-9]{8}` is the commit-sha tag every deploy
+      # has ever written; `-r<YYYYMMDD>` is the freshness job's promoted refresh of one. Anything
+      # else — a moving tag like `latest`, a `--flag`, a digest, another repository's name, a shell
+      # metacharacter — fails here with both the value and the shape it had to match.
+      - name: Check the image_tag shape
+        if: inputs.image_tag != ''
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          set -euo pipefail
+          if ! printf '%s' "$IMAGE_TAG" | grep -Eq '^[a-z0-9]{8}(-r[0-9]{8})?$'; then
+            echo "REFUSED: image_tag '$IMAGE_TAG' is not [a-z0-9]{8} or [a-z0-9]{8}-rYYYYMMDD."
+            echo "Nothing has been deployed and no Azure call was made."
+            exit 1
+          fi
+          echo "image_tag $IMAGE_TAG accepted; this run will SKIP the build and deploy that tag."
+
+      - uses: azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c        # v3.0.2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # No input: build this ref. The deploy itself is the canary, below, for both paths.
+      - name: Cloud build (no log streaming)
+        if: inputs.image_tag == ''
+        run: |
+          set -euo pipefail
+          TAG=${GITHUB_SHA::8}
+          az acr build --registry $ACR --image $IMG:$TAG --build-arg BASE_IMAGE=$BASE_IMAGE --no-logs .
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+          echo "built $IMG:$TAG"
+
+      # An input: deploy bytes that already exist. No build, so nothing can be re-resolved between
+      # the scan and the ship. The tag is verified present in the registry first — an absent tag
+      # would otherwise reach `containerapp update` and fail as a pull error on a new revision.
+      - name: Verify the existing tag is in the registry
+        if: inputs.image_tag != ''
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          set -euo pipefail
+          DIGEST=$(az acr repository show -n $ACR --image $IMG:$IMAGE_TAG --query digest -o tsv)
+          [ -n "$DIGEST" ] || { echo "ABORT: $IMG:$IMAGE_TAG is not in $ACR."; exit 1; }
+          echo "TAG=$IMAGE_TAG" >> "$GITHUB_ENV"
+          echo "deploying $IMG:$IMAGE_TAG ($DIGEST) — no build ran"
+
+      # THE CANARY (spec/keeping-current.md B; infra/canary.sh): the new revision starts at 0 % traffic,
+      # the app's own self-test runs inside it, traffic moves only when that passes, the public name is
+      # checked afterwards, and a failure after the switch puts the traffic back by itself. A drill run
+      # must be refused by the lever before any traffic moves and then counts as a pass. The checkout is
+      # passed so the served bytes of the portal are compared with this commit's copy.
+      # The routine lane has its own concurrency group (header). If a routine canary is in flight at the
+      # moment the owner clicks, this job waits for it — a few minutes at most — rather than starting a
+      # second canary on the same app. After 20 minutes it stops without deploying.
+      - name: Wait for a routine deploy in flight
+        run: |
+          set -euo pipefail
+          WF="${GITHUB_WORKFLOW_REF%%@*}"; WF="${WF##*/}"    # this workflow's own file name, whatever it is called
+          for i in $(seq 1 60); do
+            N=$(gh run list -R "$GITHUB_REPOSITORY" --workflow "$WF" --status in_progress --limit 20 --json databaseId \
+                  --jq "[.[] | select(.databaseId != $GITHUB_RUN_ID)] | length")
+            [ "$N" = "0" ] && { echo "no other deploy run is in flight"; exit 0; }
+            echo "another deploy run is in flight — waiting ($i/60)"; sleep 20
+          done
+          echo "ABORT: another deploy run was still in flight after 20 minutes; nothing was deployed."; exit 1
+
+      - name: Canary deploy (self-test inside the new revision before any traffic; automatic rollback)
+        id: canary
+        run: |
+          set -euo pipefail
+          mkdir -p "$CANARY_OUT"
+          bash infra/canary.sh deploy prod "$TAG" "$DRILL" "$GITHUB_WORKSPACE"
+
+      # Prune where images are created, so retention needs no schedule and no new rights: this job's
+      # identity can already prune (it just shipped). The script reads each repository's LIVE
+      # deployed image before it deletes anything, so the image THIS run just shipped is protected by
+      # the same rule that protects every other rostered repository's running image.
+      #
+      # continue-on-error: a prod deploy that succeeded must not be reported as failed because a
+      # cleanup afterwards did not. The step still goes red, and the job summary carries the outcome
+      # in words — the deploy is already live at this point and is unaffected either way.
+      - name: Prune the prod registry
+        if: always() && steps.canary.conclusion == 'success'
+        continue-on-error: true
+        run: |
+          set +e
+          RETENTION_APPLY=1 bash infra/registry-retention.sh prod
+          rc=$?
+          set -e
+          if [ $rc -eq 0 ]; then
+            echo "Registry retention: OK — every repository verified by a re-read of the registry." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Registry retention: FAILED (exit $rc). The deploy above SUCCEEDED and is unaffected; run \`bash infra/registry-retention.sh prod\` by hand and read the ABORT lines." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit $rc
+
+      - name: Write the summary
+        if: always()
+        run: |
+          set -uo pipefail
+          {
+            echo "## deploy — ${DRILL:+drill }${TAG:-(no tag: refused before the build)}"
+            echo
+            echo "- outcome: **${{ steps.canary.outcome }}** (drill=$DRILL)"
+            [ -f "$CANARY_OUT/canary-summary.txt" ] && { echo; echo '```'; cat "$CANARY_OUT/canary-summary.txt"; echo '```'; }
+            [ -f "$CANARY_OUT/verdict.txt" ] && { echo; echo "self-test verdict:"; echo '```'; cat "$CANARY_OUT/verdict.txt"; echo '```'; }
+            [ -f "$CANARY_OUT/selftest.txt" ] && { echo; echo "self-test transcript (tail):"; echo '```'; tail -n 25 "$CANARY_OUT/selftest.txt"; echo '```'; }
+            true    # the tests above are the block's last commands; an absent file is not a failure of the summary
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the canary's working files
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a   # v7.0.1
+        with:
+          name: canary-${{ github.run_id }}
+          path: ${{ github.workspace }}/.canary/
+          retention-days: 30
+          if-no-files-found: warn
+          include-hidden-files: true
+
+      # The fixed destination for a failed deploy (spec/keeping-current.md B6): one issue, assigned to the
+      # owner, with the verdict and the exact command to run by hand. An open `deploy: RED` issue will
+      # close the routine lane (Phase C) until a person closes it.
+      - name: Open the deploy issue
+        if: failure() && steps.canary.conclusion == 'failure'
+        run: |
+          set -uo pipefail
+          gh label create deploy --color B60205 --description "prod deploy failed or rolled back" 2>/dev/null || true
+          DATE=$(date -u +%Y-%m-%d)
+          PREV=$(cat "$CANARY_OUT/prev.txt" 2>/dev/null || echo "?"); NEW=$(cat "$CANARY_OUT/new.txt" 2>/dev/null || echo "?")
+          {
+            echo "The canary for \`$IMG:$TAG\` (drill=$DRILL) did not pass. Prod stayed on, or was put back on, \`$PREV\`; the new revision \`$NEW\` was refused traffic and deactivated."
+            echo
+            echo "**Verdict:**"; echo '```'; cat "$CANARY_OUT/verdict.txt" 2>/dev/null || echo "(no verdict was written)"; echo '```'
+            echo "**Self-test transcript (tail):**"; echo '```'; tail -n 25 "$CANARY_OUT/selftest.txt" 2>/dev/null || echo "(no transcript)"; echo '```'
+            echo "**If the rollback itself did not verify, run by hand:**"
+            echo '```'; echo "bash infra/canary.sh rollback prod $PREV"; echo '```'
+            echo "Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          } > "$CANARY_OUT/issue.md"
+          gh issue create --title "deploy: RED $DATE — $IMG:$TAG" --body-file "$CANARY_OUT/issue.md" --label deploy --assignee "$OWNER"
+
+  # ------------------------------------------------------------------------------------------------
+  # THE ROUTINE LANE (spec/keeping-current.md B/C). No GitHub environment, so no click — and so its own
+  # narrow identity (header). It never builds (a tag is given), never prunes (no delete right; the daily job
+  # prunes), and refuses everything it cannot prove: the kill switch, the tag's shape, an open `deploy`
+  # issue, another deploy in flight, a commit other than the one prod runs, a tag not in the registry.
+  # Each check is its own step, in that order, so the run's page says which one said no.
+  # ------------------------------------------------------------------------------------------------
+  routine:
+    if: inputs.lane == 'routine'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write        # OIDC, the routine identity
+      issues: write          # the `deploy: RED` issue on a failed canary
+      actions: write         # `gh run list`, and the hand-off dispatch when the switch is off
+      contents: read
+    steps:
+      # THE TEMPLATE GUARD: the workflow-level env above ships with __PLACEHOLDERS__; nothing runs while
+      # one is left (kit audit finding #13 — a template carrying one project's names deploys the wrong app).
+      - name: The template guard
+        run: |
+          case "$RG$ACR$APP$IMG$OWNER" in
+            *__*) echo "ABORT: deploy.yml still carries __PLACEHOLDERS__ in its env block."; exit 1 ;;
+          esac
+      # Every `gh` call before the checkout names the repository: with no git tree on the runner, `gh`
+      # cannot infer it (check 1: "failed to run git: fatal: not a git repository").
+      - name: The kill switch
+        id: switch
+        env:
+          ROUTINE_LANE: ${{ vars.ROUTINE_LANE }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+          REASON: ${{ inputs.reason }}
+        run: |
+          set -euo pipefail
+          WF="${GITHUB_WORKFLOW_REF%%@*}"; WF="${WF##*/}"    # this workflow's own file name, whatever it is called
+          if [ "${ROUTINE_LANE:-}" = "on" ] && [ "$ROUTINE_LANE_ENABLED" = "true" ]; then
+            echo "lane_on=1" >> "$GITHUB_OUTPUT"; echo "the routine lane is on"; exit 0
+          fi
+          echo "lane_on=0" >> "$GITHUB_OUTPUT"
+          MSG="The routine lane is OFF (variable ROUTINE_LANE='${ROUTINE_LANE:-unset}', file flag ROUTINE_LANE_ENABLED='$ROUTINE_LANE_ENABLED'): handed to the gated lane — the owner's click — as a new deploy run."
+          echo "$MSG" | tee -a "$GITHUB_STEP_SUMMARY"
+          gh workflow run "$WF" -R "$GITHUB_REPOSITORY" --ref main -f lane=gated -f image_tag="$IMAGE_TAG" -f reason="(routine lane off) $REASON"
+
+      - name: Check the image_tag shape
+        if: steps.switch.outputs.lane_on == '1'
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          set -euo pipefail
+          if ! printf '%s' "$IMAGE_TAG" | grep -Eq '^[a-z0-9]{8}-r[0-9]{8}$'; then
+            echo "REFUSED: the routine lane takes only a freshness promotion tag, [a-z0-9]{8}-rYYYYMMDD, not '$IMAGE_TAG'. Nothing was deployed and no Azure call was made." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "TAG=$IMAGE_TAG" >> "$GITHUB_ENV"
+          echo "promotion tag $IMAGE_TAG accepted"
+
+      # An open `deploy` issue closes the lane until a person closes it (B6). A failed `gh` call fails
+      # this step, which is the safe direction: the lane opens only on a positive answer.
+      - name: The lane is closed while a deploy issue is open
+        if: steps.switch.outputs.lane_on == '1'
+        run: |
+          set -euo pipefail
+          OPEN=$(gh issue list -R "$GITHUB_REPOSITORY" --state open --label deploy --json number --jq 'map(.number | tostring) | join(",")')
+          if [ -n "$OPEN" ]; then
+            echo "REFUSED: deploy issue #$OPEN is open — the routine lane stays closed until a person closes it. Nothing was deployed." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "no deploy issue is open"
+
+      - name: No other deploy may be in flight
+        if: steps.switch.outputs.lane_on == '1'
+        run: |
+          set -euo pipefail
+          WF="${GITHUB_WORKFLOW_REF%%@*}"; WF="${WF##*/}"    # this workflow's own file name, whatever it is called
+          N=$(gh run list -R "$GITHUB_REPOSITORY" --workflow "$WF" --status in_progress --limit 20 --json databaseId \
+                --jq "[.[] | select(.databaseId != $GITHUB_RUN_ID)] | length")
+          if [ "$N" != "0" ]; then
+            echo "REFUSED: another deploy run is in progress; the daily job will propose this again tomorrow if it still applies. Nothing was deployed." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "no other deploy run is in flight"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+        if: steps.switch.outputs.lane_on == '1'
+
+      - uses: azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c        # v3.0.2
+        if: steps.switch.outputs.lane_on == '1'
+        with:
+          client-id: ${{ vars.AZURE_ROUTINE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # The claim, re-checked here and never taken from the caller. Two admissible claims, both read from
+      # the truth rather than the dispatch: (1) the tag's commit is THE COMMIT PROD RUNS, read live from
+      # the app — a scanned rebuild; (2) Phase D: the tag's commit is ahead of the deployed commit by
+      # commits GitHub itself records as Dependabot's and verified — every one of them (the rule that
+      # keeps the lanes apart, infra/freshness/range_rule.py, fed GitHub's own compare answer). Anything
+      # else is the judgement lane's business, whoever dispatched this. And the tag must be in the registry.
+      - name: The tag must be a rebuild of the commit prod runs, or a Dependabot-only descendant of it, and be in the registry
+        if: steps.switch.outputs.lane_on == '1'
+        run: |
+          set -euo pipefail
+          mkdir -p "$CANARY_OUT"
+          LIVE=$(az containerapp show -n $APP -g $RG --query "properties.template.containers[0].image" -o tsv | tr -d '\r')
+          LIVE_SHA8="${LIVE##*:}"; LIVE_SHA8="${LIVE_SHA8%%-*}"
+          TAG_SHA8="${TAG%%-*}"
+          if [ "$TAG_SHA8" = "$LIVE_SHA8" ]; then
+            CLAIM="a rebuild of the deployed commit $LIVE_SHA8"
+          else
+            if ! gh api -R "$GITHUB_REPOSITORY" "repos/$GITHUB_REPOSITORY/compare/$LIVE_SHA8...$TAG_SHA8" > "$CANARY_OUT/compare.json" 2> "$CANARY_OUT/compare.err"; then
+              echo "REFUSED: $TAG is not a rebuild of the commit prod runs ($LIVE_SHA8) and GitHub could not compare $LIVE_SHA8...$TAG_SHA8 ($(head -c 200 "$CANARY_OUT/compare.err")). Nothing was deployed." | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 1
+            fi
+            if ! COMPARE="$CANARY_OUT/compare.json" OUT="$CANARY_OUT" python3 -m infra.freshness range; then
+              WHY=$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1],encoding="utf-8"))["reason"])' "$CANARY_OUT/range.json")
+              echo "REFUSED: $TAG is not a rebuild of the commit prod runs ($LIVE_SHA8) and not a Dependabot-only descendant of it: $WHY. Nothing was deployed." | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 1
+            fi
+            CLAIM="a Dependabot-only descendant of the deployed commit $LIVE_SHA8 ($(python3 -c 'import json,sys;print(json.load(open(sys.argv[1],encoding="utf-8"))["reason"])' "$CANARY_OUT/range.json"))"
+          fi
+          DIGEST=$(az acr repository show -n $ACR --image $IMG:$TAG --query digest -o tsv | tr -d '\r')
+          [ -n "$DIGEST" ] || { echo "REFUSED: $IMG:$TAG is not in $ACR. Nothing was deployed." | tee -a "$GITHUB_STEP_SUMMARY"; exit 1; }
+          echo "routine: $IMG:$TAG ($DIGEST) is $CLAIM — canary next" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # The same canary as the gated lane. No checkout path is passed, so the served-bytes check is
+      # skipped — the bytes of a rebuild are the deployed bytes; the self-test and the version inside
+      # the new revision carry the weight (spec/keeping-current.md B4).
+      - name: Canary deploy (self-test inside the new revision before any traffic; automatic rollback)
+        id: canary
+        if: steps.switch.outputs.lane_on == '1'
+        run: |
+          set -euo pipefail
+          mkdir -p "$CANARY_OUT"
+          bash infra/canary.sh deploy prod "$TAG" 0
+
+      - name: Write the summary
+        if: always() && steps.switch.outputs.lane_on == '1' && env.TAG != ''
+        run: |
+          set -uo pipefail
+          {
+            echo "## routine deploy — $TAG (no click: a scanned rebuild of the commit prod runs)"
+            echo
+            echo "- canary: **${{ steps.canary.outcome }}**"
+            [ -f "$CANARY_OUT/canary-summary.txt" ] && { echo; echo '```'; cat "$CANARY_OUT/canary-summary.txt"; echo '```'; }
+            [ -f "$CANARY_OUT/verdict.txt" ] && { echo; echo "self-test verdict:"; echo '```'; cat "$CANARY_OUT/verdict.txt"; echo '```'; }
+            [ -f "$CANARY_OUT/selftest.txt" ] && { echo; echo "self-test transcript (tail):"; echo '```'; tail -n 25 "$CANARY_OUT/selftest.txt"; echo '```'; }
+            true    # the tests above are the block's last commands; an absent file is not a failure of the summary
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the canary's working files
+        if: always() && steps.canary.conclusion != 'skipped'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a   # v7.0.1
+        with:
+          name: canary-routine-${{ github.run_id }}
+          path: ${{ github.workspace }}/.canary/
+          retention-days: 30
+          if-no-files-found: warn
+          include-hidden-files: true
+
+      - name: Open the deploy issue
+        if: failure() && steps.canary.conclusion == 'failure'
+        run: |
+          set -uo pipefail
+          gh label create deploy --color B60205 --description "prod deploy failed or rolled back" 2>/dev/null || true
+          DATE=$(date -u +%Y-%m-%d)
+          PREV=$(cat "$CANARY_OUT/prev.txt" 2>/dev/null || echo "?"); NEW=$(cat "$CANARY_OUT/new.txt" 2>/dev/null || echo "?")
+          {
+            echo "The ROUTINE canary for \`$IMG:$TAG\` (a scanned rebuild of the commit prod runs, no click) did not pass. Prod stayed on, or was put back on, \`$PREV\`; the new revision \`$NEW\` was refused traffic and deactivated. **The routine lane stays closed until this issue is closed.**"
+            echo
+            echo "**Verdict:**"; echo '```'; cat "$CANARY_OUT/verdict.txt" 2>/dev/null || echo "(no verdict was written)"; echo '```'
+            echo "**Self-test transcript (tail):**"; echo '```'; tail -n 25 "$CANARY_OUT/selftest.txt" 2>/dev/null || echo "(no transcript)"; echo '```'
+            echo "**If the rollback itself did not verify, run by hand:**"
+            echo '```'; echo "bash infra/canary.sh rollback prod $PREV"; echo '```'
+            echo "Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          } > "$CANARY_OUT/issue.md"
+          gh issue create --title "deploy: RED $DATE — routine $IMG:$TAG" --body-file "$CANARY_OUT/issue.md" --label deploy --assignee "$OWNER"

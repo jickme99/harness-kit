@@ -1,0 +1,21 @@
+# TEMPLATE — copy to `.github/CODEOWNERS` and replace __OWNER_GITHUB_LOGIN__.
+# The files that change how the system works need the owner's review; everything
+# else needs the required `tests` check (branch protection: "require review from
+# code owners", required approvals 0, required check `tests`). That is what lets
+# a Dependabot update touching only the manifest and the lock files merge on
+# green tests alone, while a change to any path below still waits for the owner.
+# Add the project's own trust-boundary files (auth, gates, the served app) beside
+# these. When contributors get write access, widen this list (or add `*  @owner`
+# back and raise the approvals to 1). Spec: spec/keeping-current.md.
+
+# The constitution and the agent entry points — changing these changes how every
+# AI behaves here.
+/HARNESS.md             @__OWNER_GITHUB_LOGIN__
+/AGENTS.md              @__OWNER_GITHUB_LOGIN__
+/CLAUDE.md              @__OWNER_GITHUB_LOGIN__
+
+# Infrastructure, deploys, CI identity, and the two lanes' workflows.
+/infra/                 @__OWNER_GITHUB_LOGIN__
+/.github/               @__OWNER_GITHUB_LOGIN__
+/Dockerfile             @__OWNER_GITHUB_LOGIN__
+/Dockerfile.*           @__OWNER_GITHUB_LOGIN__

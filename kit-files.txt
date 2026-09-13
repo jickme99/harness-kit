@@ -1,10 +1,10 @@
-# harness-kit 2026.09.6 — the kit's membership. THIS LIST IS A DECISION, NOT A GLOB:
+# harness-kit 2026.09.7 — the kit's membership. THIS LIST IS A DECISION, NOT A GLOB:
 # what belongs to the kit is chosen here, one path per line, so the manifest can never
 # silently adopt whatever happens to be sitting in the directory. kit-manifest.json is
 # the generated fingerprint of exactly these files and is deliberately not listed
 # (it is the output, not a member). inbox/ is an owner drop-box, gitignored, not a
 # member. Regenerate after any change:
-#   python reference/tools/kit_manifest.py generate --list kit-files.txt --root . --version 2026.09.6 --out kit-manifest.json
+#   python reference/tools/kit_manifest.py generate --list kit-files.txt --root . --version 2026.09.7 --out kit-manifest.json
 
 README.md
 START-HERE.md
@@ -15,7 +15,6 @@ TODO.md
 CHANGELOG.md
 kit-files.txt
 .gitignore
-
 spec/operating-model.md
 spec/guards.md
 spec/review.md
@@ -23,7 +22,7 @@ spec/wiki-protocol.md
 spec/firewall.md
 spec/versioning.md
 spec/graduation.md
-
+spec/keeping-current.md
 reference/guards/az_guard.py
 reference/guards/git_scope_guard.py
 reference/guards/merge_green_check.py
@@ -36,6 +35,46 @@ reference/tools/review_stamp.py
 reference/tools/review_rates.py
 reference/ci/docs-gate.yml
 reference/ci/firewall-push.yml
+reference/keeping-current/README.md
+reference/keeping-current/app/__init__.py
+reference/keeping-current/app/selftest.py
+reference/keeping-current/infra/__init__.py
+reference/keeping-current/infra/canary.sh
+reference/keeping-current/infra/canary_rules.py
+reference/keeping-current/infra/freshness/__init__.py
+reference/keeping-current/infra/freshness/__main__.py
+reference/keeping-current/infra/freshness/accepted-cves.txt
+reference/keeping-current/infra/freshness/decide.py
+reference/keeping-current/infra/freshness/findings.py
+reference/keeping-current/infra/freshness/inventory.py
+reference/keeping-current/infra/freshness/range_rule.py
+reference/keeping-current/infra/freshness/summary.py
+reference/keeping-current/infra/refresh_rules.py
+reference/keeping-current/infra/registry-retention.sh
+reference/keeping-current/infra/registry_retention_plan.py
+reference/keeping-current/infra/weekly_note.py
+reference/keeping-current/templates/CODEOWNERS
+reference/keeping-current/templates/dependabot-automerge.yml
+reference/keeping-current/templates/dependabot.yml
+reference/keeping-current/templates/deploy.yml
+reference/keeping-current/templates/freshness.yml
+reference/keeping-current/templates/tests.yml
+reference/keeping-current/templates/weekly-note.yml
+reference/keeping-current/tests/conftest.py
+reference/keeping-current/tests/test_canary_rules.py
+reference/keeping-current/tests/test_dockerfile_policy.py
+reference/keeping-current/tests/test_freshness_cli.py
+reference/keeping-current/tests/test_freshness_decide.py
+reference/keeping-current/tests/test_freshness_findings.py
+reference/keeping-current/tests/test_freshness_inventory.py
+reference/keeping-current/tests/test_freshness_range_rule.py
+reference/keeping-current/tests/test_freshness_summary.py
+reference/keeping-current/tests/test_refresh_rules.py
+reference/keeping-current/tests/test_registry_retention_plan.py
+reference/keeping-current/tests/test_registry_retention_protected.py
+reference/keeping-current/tests/test_selftest_drill.py
+reference/keeping-current/tests/test_template_guards.py
+reference/keeping-current/tests/test_weekly_note.py
 reference/claude/README.md
 reference/claude/settings.json
 reference/claude/role-template.md
@@ -47,11 +86,10 @@ reference/cursor/BUGBOT.md
 reference/cursor/hooks.json
 reference/cursor/bridge.cmd
 reference/cursor/hook_bridge.py
-
 adapters/claude.md
 adapters/cursor.md
 adapters/codex.md
-
+adapters/github-azure.md
 templates/HARNESS.project.md
 templates/CLAUDE.project.md
 templates/AGENTS.project.md
@@ -63,7 +101,6 @@ templates/wiki/HANDOFF.md
 templates/wiki/decisions.md
 templates/wiki/log.md
 templates/wiki/feedback.md
-
 tests/README.md
 tests/guard_registry.py
 tests/test_guard_contracts.py

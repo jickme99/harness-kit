@@ -265,7 +265,7 @@ def poll(project: pathlib.Path, kit: pathlib.Path,
     """Facts for one poll. Raises KitError instead of inventing a version or a skip."""
     stamp_path = project / "kit-manifest.json"
     if not stamp_path.is_file():
-        raise KitError("project has no kit-manifest.json — stamp first (STANDUP.md step 5)")
+        raise KitError("project has no kit-manifest.json — stamp first (STANDUP.md step 6)")
     stamp = _read_json(stamp_path, "project kit-manifest.json")
     local = stamp.get("kit_version")
     if not isinstance(local, str) or not local.strip():

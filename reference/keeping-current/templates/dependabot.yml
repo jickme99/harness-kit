@@ -1,0 +1,66 @@
+# TEMPLATE — copy to `.github/dependabot.yml`. Nothing here is project-specific; the doctrine and the
+# other half of the story are in spec/keeping-current.md.
+#
+# Dependabot VERSION updates — half of the story. The OTHER half is Dependabot ALERTS + SECURITY
+# UPDATES, which is a repository SETTING (Settings -> Code security, or `PUT /repos/{o}/{r}/vulnerability-alerts`
+# and `PUT /repos/{o}/{r}/automated-security-fixes`), NOT this file. Read it back after switching it on:
+# `gh api repos/{o}/{r}/vulnerability-alerts` answers 204 when on and 404 when off. Until it is on, this
+# file opens routine version PRs but no CVE-driven ones.
+#
+# AUTO-MERGE, NARROWLY — or not at all. Until adoption D this file's stance is "NO
+# AUTO-MERGE, of any kind": the suite runs in GitHub as a required check; the image installs from a
+# HASHED LOCK (`pip install --require-hashes`), so a bump is exactly one pinned version and its
+# fingerprints; every production deploy is a canary with automatic rollback (spec/keeping-current.md,
+# "Who clicks"); the canary drills have passed and `ROUTINE_LANE` is exactly `on`. With all four,
+# `templates/dependabot-automerge.yml` (copied at adoption D, not at stand-up) enables GitHub's
+# auto-merge ONLY for a patch or minor update touching nothing but the manifest and the lock files,
+# after `cooldown` has held the release for 7 days; GitHub merges when the required check is green.
+# That workflow itself no-ops while `ROUTINE_LANE` is not `on`. A major, the base-image line,
+# a GitHub Action, or anything touching an owned file gets the label `needs-a-look` and waits for a
+# person. The DEPLOY of a merged update is the daily freshness job's (it builds and scans `main`, and
+# ships through the routine lane only when every commit since the deployed one is a GitHub-verified
+# Dependabot commit — infra/freshness/range_rule.py). Nothing here merges or deploys by itself.
+#
+# A LOCK PR MUST BUILD THE IMAGE (lesson #189): Dependabot bumps ONE pin at a
+# time, and a pin another package fixes exactly (one package pins another's exact version) then no longer resolves; a
+# suite that installs from the manifest's floors cannot see it. `templates/tests.yml` builds the image on
+# any pull request touching the Dockerfile, a lock file or the manifest. Green on a lock change must mean
+# "the image builds from it".
+#
+# If every dependency in pyproject.toml is a `>=` floor and there is no lock file, a pip PR here is a
+# proposal to raise a FLOOR. That is the only lever the repository has against a Python-side CVE:
+# an OS-package CVE is fixed by rebuilding on the current base (which every deploy already does), a
+# Python-package CVE is not. Not on GitHub? Renovate reads the same three manifests on any host; the
+# no-bot fallback is a scheduled job that runs `pip-audit` (or `uv lock --upgrade`) and opens the PR.
+version: 2
+updates:
+  # pyproject.toml — the app's own dependencies and its extras.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    # The cooling-off period: a release is proposed only once it is 7 days old, so a hijacked or broken
+    # release has a week to be noticed upstream before it can reach the routine lane.
+    cooldown:
+      default-days: 7
+
+  # The Dockerfile's base image. If the base is a FLOATING tag (e.g. `python:3.12`) whose digest moves
+  # under it, this ecosystem only speaks up when the tag itself changes (3.12 -> 3.13). Day-to-day OS
+  # patching comes from the package-manager update in the Dockerfile at build time, not from here.
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+
+  # .github/workflows/*.yml — pin actions to commit SHAs, which is exactly the shape Dependabot reads:
+  # it proposes the next SHA and rewrites the trailing version comment with it. No cooldown: GitHub
+  # supports none for this ecosystem, and these updates are judgement-lane to merge anyway (owned files).
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5

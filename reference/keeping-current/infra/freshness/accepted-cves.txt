@@ -1,0 +1,16 @@
+# Accepted CVEs — findings the OWNER has decided not to chase. Record the
+# reasoning on the project's findings log at the same time.
+#
+# One per line, exactly two fields:   CVE-2026-12345 packagename
+# `#` starts a comment. A line that is not `CVE-… <package>` REFUSES the whole run rather than being
+# skipped — a typo here silently widens or narrows what is suppressed, and a suppression list nobody
+# validates is worse than none (infra/freshness/inventory.py::load_accepted).
+#
+# What listing a CVE here does, and what it does not do:
+#   * it moves that finding out of the RED path, so a declined fix stops turning the daily job red;
+#   * it does NOT hide it. The finding is reported in every job summary as "known, accepted", with
+#     its CVE id, its package and its available fix (failure lens F10: never a silent drop).
+# The match is (CVE, package): the same CVE id against a different package is a different finding
+# and stays actionable.
+#
+# EMPTY ON PURPOSE. Adding a line here is an owner's decision.

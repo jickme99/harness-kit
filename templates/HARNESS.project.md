@@ -98,6 +98,7 @@ nothing if it runs, and confirm the refusal.
 | {{CI gates, if any}} | IF-AVAILABLE | {{server-side — list the workflows}} | n/a | — |
 | Wiki append-only + auto-write | REQUIRED | no | partially — probe pack | **yes** |
 | Commit protocol | REQUIRED | no | no | **yes** |
+| Keeping current (freshness, canary, routine lane) | IF-AVAILABLE | {{yes if Question 3 copied the chassis}} | yes — `python -m pytest tests/test_freshness_*.py tests/test_canary_rules.py` | doctrine until the chassis is installed; spec in the kit |
 | {{firewall row, two-repo shape}} | IF-AVAILABLE | {{...}} | {{...}} | **yes** |
 
 ## 4. Pointers, not copies
@@ -107,7 +108,8 @@ nothing if it runs, and confirm the refusal.
 
 - `wiki/{{operating-model page}}` — the agent operating model: one master, disposable
   role-cast agents, worktree isolation, the two owner gates (Merge may be delegated to
-  the master when green; Publish is never delegated).
+  the master when green; Publish is never delegated). Keeping-current (`spec/keeping-current.md`)
+  is how a container project stays current after Merge; it is not a third gate.
 - `wiki/{{review page}}` — the review-lens roster and loop caps.
 - `.claude/agents/*.md` — the role roster; each `fence:` frontmatter block is the
   machine-readable list of paths that role owns.
