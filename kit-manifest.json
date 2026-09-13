@@ -25,7 +25,7 @@
     "reference/cursor/hook_bridge.py": "958c0d421482ac201f8a87f98d1af982e14228ba2631adef3549bc9e9d1bcf3e",
     "reference/cursor/hooks.json": "7edb0cc54312cb92033e74bef38822281c696a148136b1f883ae99ea7d80cf72",
     "reference/cursor/outside-the-lane.mdc": "cd32eb4af4ab629ab364255d62a7acab43040e2d05103db31cc3b33688353ca1",
-    "reference/cursor/project-rules.mdc": "72b0599fbf9ab187b8ed4825841b8aba43a2e5847f4b36e171b27065a7f20126",
+    "reference/cursor/project-rules.mdc": "5a750c86b95e0ad2f90abcbfc52a63b7c4664ed283e37251933567bcdb0d3cb0",
     "reference/guards/az_guard.py": "9bfe605143422f93f3b00d803e92ac831e6b547829362de52f13a00f612e0e9e",
     "reference/guards/git_scope_guard.py": "90fbbf4f421e5338fcf6572cbc3b46546b69ade68d30f52b68ede94161937d06",
     "reference/guards/harness_probes.py": "b74442bf2303a9f350bb23ab48c844f2468569df0579df751087a848b95f6e16",

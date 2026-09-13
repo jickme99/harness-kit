@@ -23,7 +23,7 @@ rule appears to be written out here, it is a summary that has drifted and the so
 | Read this | It governs |
 |---|---|
 | `CLAUDE.md` / the constitution (repo root) | The house rules, and what each kind of change must carry in the same commit. |
-| `wiki/operating-model.md` (or the house path `HARNESS.md` §4 names) | Kinds of work. The master infers them; this lane does not author that page. |
+| `wiki/operating-model.md` (or the house path `HARNESS.md` §4 names) | Kinds of work. The standing master infers and writes them (`AGENTS.md` session start). If this session is the Cursor lane beside a master, do not author that page. |
 | this project's Cursor-lane section (EXAMPLE: a house operating-model page) | This lane: its fences, its branch prefix, its definition of done, and the one-writer rule. **The authority on the two sections below.** The kit skeleton does not ship lane paths on `wiki/operating-model.md`. |
 | the docs-contract manifest (e.g. `.github/docs-contract.yml`) | The manifest behind the docs CI gate: which code paths require which documentation to change in the same pull request. It is data, and readable — when the gate fails, that file names what is missing. |
 | `.claude/agents/*.md` | The roster. Each role file's `fence:` frontmatter is the machine-readable list of paths that role owns — how you find out whether a path you want already has a writer. |
@@ -39,8 +39,11 @@ here which one that is.
   where feedback is immediate, failure is visible, and being wrong is cheap and loud. The
   exact path list lives in this project's Cursor-lane section (and in role `fence:`
   blocks). Do not read it from Kinds of work on `wiki/operating-model.md`.
-- **The brain repo is READ-ONLY from this lane.** Read it freely; never write it. A second
-  writer there makes its log unreliable as a record of what happened.
+- **The brain repo is READ-ONLY from this lane** (a human or worker beside a dispatched
+  master). Read it freely; never write it. A second writer there makes its log unreliable
+  as a record of what happened. **If this conversation is the standing master**, wiki
+  auto-write applies, including filling Kinds of work when the placeholder kind heading
+  is still unfilled.
 - **One writer per path, and the rule is tool-agnostic.** Two writers in one file is the
   same collision whether the second one is an agent or a person with an editor — and worse
   here, because nothing outside this editor can see your uncommitted work.
