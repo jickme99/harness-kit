@@ -21,9 +21,9 @@ cold start does not depend on chat memory.
    body half of a two-repo shape, the brain is a sibling checkout, not this tree.
 
 If any answer is empty, stand-up is incomplete: fill `wiki/HANDOFF.md` before real work.
-If `wiki/operating-model.md` still carries `{{KIND_PLACEHOLDER}}` under Kinds of work,
-filling that page is the first task — before product edits. The STANDUP gate does not
-check this (empty tree). Do not ask the owner to name jobs.
+If a Kinds of work **heading** in `wiki/operating-model.md` is still
+`{{KIND_PLACEHOLDER}}`, filling that page is the first task — before product edits.
+The STANDUP gate does not check this (empty tree). Do not ask the owner to name jobs.
 
 ## Session start
 

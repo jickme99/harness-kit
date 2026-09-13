@@ -56,7 +56,8 @@ Pointers, not a copy of `owns:` lists.
 
 ## Kinds of work
 
-<!-- First product session in this folder: replace {{KIND_PLACEHOLDER}}.
+<!-- First product session in this folder: replace the placeholder kind
+     heading below (the line that starts with ### and is still unfilled).
      Smallest set: exactly one kind — the stated outcome — plus a pointer
      row for keeping-current if Question 3 said yes. A second kind only after
      that ask appears twice in [[log]], unless the owner's words already named

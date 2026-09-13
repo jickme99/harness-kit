@@ -97,7 +97,7 @@ nothing if it runs, and confirm the refusal.
 | Merge only on green checks | REQUIRED | {{...}} | yes (needs `gh` auth) | fallback |
 | {{CI gates, if any}} | IF-AVAILABLE | {{server-side — list the workflows}} | n/a | — |
 | Wiki append-only + auto-write | REQUIRED | no | partially — probe pack | **yes** |
-| Work map inferred and written | REQUIRED | no | partially — `wiki/operating-model.md` exists and Kinds of work is not `{{KIND_PLACEHOLDER}}` | **yes** |
+| Work map inferred and written | REQUIRED | no | partially — `wiki/operating-model.md` exists and no Kinds of work **heading** is `{{KIND_PLACEHOLDER}}` | **yes** |
 | Commit protocol | REQUIRED | no | no | **yes** |
 | Keeping current (freshness, canary, routine lane) | IF-AVAILABLE | {{yes if Question 3 copied the chassis}} | yes — `python -m pytest tests/test_freshness_*.py tests/test_canary_rules.py` | doctrine until the chassis is installed; spec in the kit |
 | {{firewall row, two-repo shape}} | IF-AVAILABLE | {{...}} | {{...}} | **yes** |

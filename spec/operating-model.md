@@ -137,8 +137,8 @@ another harness must achieve.
     named two independent expensive outputs. Infer from the outcome and the tree, not
     from the presence of `.git`. Checking is a different job from writing
     (`spec/review.md`).
-  - **First session.** If Kinds of work still carries `{{KIND_PLACEHOLDER}}`, filling
-    it is the first task — before product edits. The runnable STANDUP gate does **not**
+  - **First session.** If a Kinds of work **heading** is still
+    `{{KIND_PLACEHOLDER}}`, filling it is the first task — before product edits. The runnable STANDUP gate does **not**
     check this (empty tree). Confirm the outcome in the one sentence the template
     comment allows; never name jobs, workers, lanes, checkers, models, or counts of
     those to the owner.

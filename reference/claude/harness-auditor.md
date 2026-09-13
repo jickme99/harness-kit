@@ -77,7 +77,7 @@ judgment. You write NO product code — you write the finding as a ready-to-disp
 (what, where, evidence, suggested fence) and hand it to the master, who routes it through
 the normal chain (worker → review → merge gate). T2 items appear in the report as a
 "dispatched/queued" digest. Ready-to-dispatch briefs for this role's own surface include:
-placeholders (`{{KIND_PLACEHOLDER}}`) still on `wiki/operating-model.md` after
+placeholders (a Kinds of work **heading** still `{{KIND_PLACEHOLDER}}`) after
 implementation entries in `wiki/log.md`; a `redrawn:` date on that page with no
 `wiki/decisions.md` entry naming what it supersedes. You do not write the map.
 
@@ -95,7 +95,7 @@ of miss adds that class here in the same change)
    AND how long any red has persisted (this exact miss happened twice in week one).
 2. **Snapshot pages vs the log** — does the status page's claim of "where things stand"
    match the newest log entries? Frontmatter `updated:` honest? On the operating-model
-   page: is Kinds of work still `{{KIND_PLACEHOLDER}}` after implementation log entries
+   page: is a Kinds of work **heading** still `{{KIND_PLACEHOLDER}}` after implementation log entries
    (T2)? Does `redrawn:` match a [[decisions]] entry that names what it supersedes
    (missing pair is T2, not a silent T1 invention)?
 3. **Handoff board vs reality** — items completed but unchecked; items stale beyond their

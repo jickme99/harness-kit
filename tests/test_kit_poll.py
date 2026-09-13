@@ -11,6 +11,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import pathlib
+import re
 import sys
 
 import pytest
@@ -172,6 +173,18 @@ def test_standup_maps_harness_template_and_guards(poll):
     step5 = standup.split("5. **Keeping current")[1].split("6. **Stamp")[0]
     assert "`reference/keeping-current/templates/dependabot-automerge.yml`" not in step5
     assert "Do not copy `dependabot-automerge.yml`" in step5
+
+
+def test_kind_placeholder_is_only_a_heading():
+    """Session-start tripwires look for a heading. A comment that still names the
+    token would keep a filled map looking unfilled."""
+    path = ROOT / "templates" / "wiki" / "operating-model.md"
+    if not path.is_file():
+        pytest.skip("wiki template is kit-repo-only")
+    text = path.read_text(encoding="utf-8")
+    comments = re.findall(r"<!--.*?-->", text, re.DOTALL)
+    assert all("KIND_PLACEHOLDER" not in c for c in comments)
+    assert re.search(r"^### \{\{KIND_PLACEHOLDER\}\}", text, re.MULTILINE)
 
 
 def test_keeping_current_kit_files_map_or_are_kit_only(poll):

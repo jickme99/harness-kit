@@ -106,7 +106,7 @@ files into this checkout. Do not `cd` this clone into becoming the app.
 3. **Instantiate the wiki skeleton.** `templates/wiki/` → the brain (`wiki/` in the brain
    repo, or `wiki/` in the one-repo shape). That copy includes `operating-model.md`: fill
    **Stated outcome** from their words and the Question 1–3 answers as constraints; leave
-   **Kinds of work** as `{{KIND_PLACEHOLDER}}`. The first session in the **project**
+   **Kinds of work** with the placeholder kind heading (`{{KIND_PLACEHOLDER}}`). The first session in the **project**
    folder fills kinds of work. The runnable gate below does **not** check that
    (the product tree is still empty). Set each page's frontmatter dates; write the
    first `decisions.md` entry — the answers to Questions 1, 2, and 3, dated.
@@ -216,6 +216,6 @@ affected rows of the coverage table to doctrine-only in writing so the record st
 honest, and record the gap in `wiki/decisions.md`.
 
 When the gate passes, tell the human the new folder path. They close this kit clone
-and open that folder. The first session there fills **Kinds of work** if it still
-carries `{{KIND_PLACEHOLDER}}`, confirms the outcome in one sentence (the shape on
+and open that folder. The first session there fills **Kinds of work** if a heading is
+still `{{KIND_PLACEHOLDER}}`, confirms the outcome in one sentence (the shape on
 that page — never jobs), then starts product work. This checkout stays the kit.
