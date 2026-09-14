@@ -16,6 +16,31 @@ does not apply must **consider** it (`spec/versioning.md`).
 
 ---
 
+## 2026.09.8 — 2026-09-13
+
+Work map as operating-model doctrine. The master infers kinds of work; the owner never authors them.
+
+- **Lane:** 3 (new component — wiki snapshot + invariant 11). No guard behavior change.
+- **Applies to:** every stamp — consider. New member
+  `templates/wiki/operating-model.md` → `wiki/operating-model.md`. A project that
+  already keeps an operating-model page under a house name (origin's probe lists
+  `wiki/parallel-sessions.md` as a snapshot) does not restore the template: it adds
+  a **Kinds of work** section to its page and points `HARNESS.md` §4 at its own
+  path. Poll will list the template as missing for such a project; that is
+  expected, not a restore.
+- **What changed:**
+  - `spec/operating-model.md` invariant 11: infer the map, write it, owner confirms
+    the outcome once. Report is the record of a job; the map is the record of a
+    kind; dest files are products; only the master writes the map.
+  - Wiki skeleton ships `operating-model.md`. Session start fills
+    `{{KIND_PLACEHOLDER}}` before product edits. STANDUP gate does not check
+    kinds of work (empty tree).
+  - `HARNESS.md` §4 pointer is a real path; the comment now says the contract is
+    the kit spec and the wiki page is this project's snapshot.
+- **Does not change:** the three REQUIRED guards; `harness_probes.py`
+  `SNAPSHOT_PAGES` (still origin-shaped); no second orchestrator; no catalog of
+  workflows.
+
 ## 2026.09.7 — 2026-09-12
 
 Keeping current. Optional chassis for a project that ships a container.

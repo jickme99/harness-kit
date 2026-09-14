@@ -55,6 +55,14 @@ another harness must achieve.
     fence table. Memory that is not in the repo is tool-local; name it (which product's
     chat) and do not assume the other tool can see it. Fan-out ceiling is machine-local
     (CPU, RAM, API rate); do not hardcode a number.
+11. **The work map is inferred and written; the owner never authors it.** The master
+    decomposes direction into jobs (invariant 1) onto a project wiki snapshot
+    (`wiki/operating-model.md`, or the house path `HARNESS.md` §4 points at), from
+    STANDUP answers and the tree. The owner confirms the *outcome* once, in plain
+    language, and is never asked to name jobs. Decomposition that is not on that page
+    is chat, and does not survive the session. The report is the record of a job
+    (invariant 8); the map is the record of a kind; dest files are products of a job
+    and never a record of it; only the master writes the map.
 
 ## Why (the failures that taught these)
 
@@ -85,6 +93,10 @@ another harness must achieve.
   paste a starting card was friction the spoken invoke already covered; the vendor cannot
   post from one Agent chat into another, so the durable mailbox is a dated Inbox on the
   notebook page, not a cross-chat write.
+- **Unwritten decomposition** left `wiki/{{operating-model page}}` as a pointer with no
+  template after extraction. The kit contract lives in this spec (kit-repo-only); a
+  cold start on the project repo alone cannot read it. The next master then invented a
+  new team or collapsed into one blob. Hence invariant 11 and the snapshot page.
 
 ## Mechanics (how the reference implements it)
 
@@ -117,6 +129,36 @@ another harness must achieve.
 - Fence hits, stop-and-asks and escalations each get one line in an events ledger
   (JSONL), whose reader is run at close-out — it surfaces the slow patterns no single
   session sees. Seam names are the CLASS, not the instance, or recurrences never collide.
+- **Work map** (`wiki/operating-model.md` unless HARNESS §4 points at a house name):
+  - **Page.** Stated outcome, stand-up constraints, roster pointers (not a copy of
+    `owns:`), and Kinds of work. First fill: exactly one kind — the stated outcome —
+    plus a pointer row for keeping-current if Question 3 said yes. A second kind only
+    after that ask appears twice in `wiki/log.md`, unless the owner's words already
+    named two independent expensive outputs. Infer from the outcome and the tree, not
+    from the presence of `.git`. Checking is a different job from writing
+    (`spec/review.md`).
+  - **First session.** If this session is the standing master and a Kinds of work
+    **heading** is still `{{KIND_PLACEHOLDER}}`, filling it is the first task —
+    before product edits. The runnable STANDUP gate does **not** check this
+    (empty tree). Confirm the outcome in the one sentence the template comment
+    allows; never name jobs, workers, lanes, checkers, models, or counts of
+    those to the owner. Workers and the Cursor lane beside a master do not
+    write the map.
+  - **Precedence.** The report is the record of a job; the map is the record of a
+    kind; dest files are products of a job and never a record of it; only the master
+    writes the map. Workers do not author `wiki/operating-model.md`.
+  - **Fence hits.** A fence hit is a roster event (role file, invariant 6). It touches
+    the map only when the fix splits or merges a job; then one `wiki/decisions.md`
+    entry names both files. Otherwise the widening is recorded where it is today.
+  - **Role backing.** Every job on the map names its role file, or says `master
+    brief, fence: <paths>`. Do not invent empty product roles so a wiki-only tree can
+    satisfy the map.
+  - **Shape.** Record `dispatch` or `workshop` per kind (count conversations, not
+    tasks). A kind the owner must steer is a workshop with one deliverable. Parallel
+    jobs are for independent sources with an expensive check. Gate `none` only while
+    the output stays in the brain; a body-repo default branch is Merge; leaving the
+    house is Publish. A `redrawn:` date on the kinds section matches a decisions
+    entry that names what it supersedes.
 
 ## What an implementing agent must achieve on another harness
 
@@ -135,3 +177,6 @@ another harness must achieve.
 - The report and uncertainty contracts are doctrine on every harness: they are prose in
   briefs and role files, testable only by audit. Carry them even where nothing enforces
   them.
+- A durable project page the next master reads before dispatching (`wiki/operating-model.md`
+  or the house path HARNESS points at). The owner never authors it. Kinds of work are
+  inferred and written. Dest files do not replace the report.

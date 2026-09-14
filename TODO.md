@@ -1,5 +1,10 @@
 # TODO — known gaps, honestly
 
+- **`SNAPSHOT_PAGES` is still origin-shaped.** `reference/guards/harness_probes.py`
+  defaults to `wiki/status.md` and `wiki/parallel-sessions.md`. New stamps ship
+  `wiki/operating-model.md` (`2026.09.8`). Do not change that default (it would fail
+  origin). Later: a stamp-time seam writes the project's snapshot list. Twice-skipped
+  maps graduate that seam (`spec/graduation.md`).
 - **Engine HARNESS.md reconciliation pending.** The kit's `templates/HARNESS.project.md`
   was authored from the ORIGIN'S BRAIN-REPO `HARNESS.md` (merged) plus the spec; the
   origin's engine-repo HARNESS.md did not exist on main at extraction time (its 6a PR was
@@ -28,6 +33,11 @@
   GitHub/Azure adapter, portable rules and tests, STANDUP Question 3. Job-kind
   refresh *workflow* still per-project (rules shipped). Second-host adapter not
   written. Weekly note still one repository.
+
+- **RESOLVED 2026-09-13 — work map as operating-model doctrine (`2026.09.8`).**
+  Invariant 11, `templates/wiki/operating-model.md`, session-start tripwire,
+  HARNESS pointer fixed. No twelfth spec page. `SNAPSHOT_PAGES` unchanged
+  (parked above).
 - **RESOLVED 2026-09-01 — bare selector-less merge bypassing the merge-green guard.**
   Found by this kit's contract suite at extraction; fixed upstream the same day (origin
   engine PR #47: every merge occurrence in a call checked, the bare current-branch form

@@ -21,8 +21,13 @@ cold start does not depend on chat memory.
    body half of a two-repo shape, the brain is a sibling checkout, not this tree.
 
 If any answer is empty, stand-up is incomplete: fill `wiki/HANDOFF.md` before real work.
+If this session is the standing master and a Kinds of work **heading** in
+`wiki/operating-model.md` is still `{{KIND_PLACEHOLDER}}`, filling that page is the
+first task — before product edits. The STANDUP gate does not check this (empty tree).
+Do not ask the owner to name jobs. Workers and the Cursor lane beside a master do
+not write that page.
 
 ## Session start
 
 Read in order: this file → `HARNESS.md` → `wiki/HANDOFF.md` → `wiki/status.md` →
-`wiki/feedback.md`.
+`wiki/operating-model.md` → `wiki/feedback.md`.

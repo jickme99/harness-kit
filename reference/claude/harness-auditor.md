@@ -34,11 +34,13 @@ way the work itself is run.
 
 **`python scripts/harness_probes.py` in the private HQ repo, and consume its JSON.** It is
 the audit's instrument panel: main-branch CI conclusion and the age of any red, snapshot
-staleness (the status and operating-model pages' `updated:` against the newest log entry),
-unpushed local branches across BOTH repos and every worktree, checkout drift against origin,
-worktrees whose branch is already merged, the review ledger's counts by type and its last
-date, the lesson ledger's unmarked entries (`lesson_dispositions` — checklist item 14), and
-whether the firewall denylist matches the hash last synced into the Actions secret.
+staleness (`SNAPSHOT_PAGES` in the probe pack — kit default `wiki/status.md` and
+`wiki/parallel-sessions.md`; `wiki/operating-model.md` is checklist item 2 until that
+seam is stamped), unpushed local branches across BOTH repos and every worktree,
+checkout drift against origin, worktrees whose branch is already merged, the review
+ledger's counts by type and its last date, the lesson ledger's unmarked entries
+(`lesson_dispositions` — checklist item 14), and whether the firewall denylist matches
+the hash last synced into the Actions secret.
 
 The split it enforces: **facts to the machine, judgment to you.** Every probe returns data
 plus `ok_to_collect` — a probe that could not run says so as a fact, and a fact nobody could
@@ -55,7 +57,8 @@ instrument that could not be read is not a clean instrument.
 **T1 — fix silently.** Bookkeeping only: changes that make RECORDS match REALITY, never
 changes to reality itself.
 - Refresh snapshot pages from the append-only log (status currency, frontmatter `updated:`
-  dates, index completeness for pages that exist).
+  dates, index completeness for pages that exist). Do **not** fill Kinds of work as T1 —
+  that page is the master's.
 - Check off handoff-board items that are verifiably done (evidence: merged PR, log entry).
 - Pull primary checkouts that have fallen behind their remote (fast-forward only; a
   checkout that cannot fast-forward is a T3 flag, never a forced anything).
@@ -73,7 +76,10 @@ test that needs changing, a check that needs building, a doc that needs a code-o
 judgment. You write NO product code — you write the finding as a ready-to-dispatch brief
 (what, where, evidence, suggested fence) and hand it to the master, who routes it through
 the normal chain (worker → review → merge gate). T2 items appear in the report as a
-"dispatched/queued" digest.
+"dispatched/queued" digest. Ready-to-dispatch briefs for this role's own surface include:
+placeholders (a Kinds of work **heading** still `{{KIND_PLACEHOLDER}}`) after
+implementation entries in `wiki/log.md`; a `redrawn:` date on that page with no
+`wiki/decisions.md` entry naming what it supersedes. You do not write the map.
 
 **T3 — flag to the owner.** Money, gates, policy, promotions, anything judgment-shaped:
 cost anomalies, a gate that was bypassed or should exist, a standing rule that practice
@@ -88,7 +94,10 @@ of miss adds that class here in the same change)
 1. **CI on the default branch** — red needs a reader. Check the latest run's conclusion
    AND how long any red has persisted (this exact miss happened twice in week one).
 2. **Snapshot pages vs the log** — does the status page's claim of "where things stand"
-   match the newest log entries? Frontmatter `updated:` honest?
+   match the newest log entries? Frontmatter `updated:` honest? On the operating-model
+   page: is a Kinds of work **heading** still `{{KIND_PLACEHOLDER}}` after implementation log entries
+   (T2)? Does `redrawn:` match a [[decisions]] entry that names what it supersedes
+   (missing pair is T2, not a silent T1 invention)?
 3. **Handoff board vs reality** — items completed but unchecked; items stale beyond their
    horizon; the board's own currency.
 4. **Worktree/branch litter** — worktrees and branches whose branch is merged (T1 clean);
