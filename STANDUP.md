@@ -8,33 +8,46 @@ stays the kit. They never run stamp, poll, harvest, or pytest — you do. When t
 passes, they close this folder and open the new one.
 
 Written to be executed by an AI agent, with its human answering the questions. Work
-top-to-bottom; do not skip the questions to get to the install steps — three of them change
-what gets installed, and one of them is a compliance matter. The protocol ends in a
-**runnable gate**; a project is not stood up until the gate passes. Do not turn this
-kit checkout into the product.
+top-to-bottom; do not skip the questions to get to the install steps. Ask about
+**today**. A prediction is not an answer. If they do not know, or they do not want
+the quiz, use the defaults and say so in `wiki/decisions.md`: this computer, the
+repository is not shared, no outside reviewer, the product does not send data out
+yet. Two answers change what gets installed: a repository that is public or shared
+**now**, and a container image that **already exists**. The other two are written
+down and copy nothing. Visibility and where-it-runs are provisional — the decision
+records what re-opens them. One answer is a compliance matter (company material
+leaving the house). The protocol ends in a **runnable gate**; a project is not
+stood up until the gate passes. Do not turn this kit checkout into the product.
 
 ## Question 1 — the visibility question (decides the repo shape)
 
-> **"Will any part of this project ever be public, or shared beyond the owner?"**
+> **"Is this repository public today, or shared with anyone besides you?"**
+> A page, app, or report you might publish later is not a yes. Saying yes installs
+> a second repository and the firewall (`spec/firewall.md`).
 
-- **YES → two-repo shape.** A sealed **brain** repo (private forever: strategy, candid
-  plans, post-mortems, the wiki, the firewall denylist) and a publishable **body** repo
-  (the product; assume everything committed there becomes public eventually). Public-safe
-  pages are **promoted deliberately, one page at a time, never bulk-synced** — anything
-  that could never be public lives in the brain and does not leave it. The body repo gets
-  the firewall (`spec/firewall.md`).
-- **NO → one-repo shape.** The brain is a `wiki/` folder inside the body. No firewall CI
-  needed; everything else is identical.
+- **YES, the repo is public or shared now → two-repo shape.** A sealed **brain** repo
+  (private forever: strategy, candid plans, post-mortems, the wiki, the firewall
+  denylist) and a publishable **body** repo (the product; assume everything committed
+  there becomes public eventually). Public-safe pages are **promoted deliberately,
+  one page at a time, never bulk-synced** — anything that could never be public lives
+  in the brain and does not leave it. The body repo gets the firewall.
+- **NO (the default) → one-repo shape.** The brain is a `wiki/` folder inside the
+  body. No firewall CI needed; everything else is identical.
+
+**Provisional.** Record the answer as of today. A later public page, a shared
+checkout, or making the repo public re-opens it: a new `wiki/decisions.md` entry,
+then the two-repo shape if the repository itself would be shared. Do not install
+the firewall because the product might be published later.
 
 Everything else in the kit — master, roles, gates, guards, auditor, docs doctrine — is
 identical across shapes. Shape is a stand-up-time answer, not a fork of the kit.
 
 ## Question 2 — the vendor question (before ANY adapter that sends repo content out)
 
-> **"Does any adapter you plan to enable send repository content to a third party?"**
-> (External PR reviewers — e.g. Cursor's Bugbot — and any hosted review/analysis service
-> qualify: enabling one means the repository's contents are processed by an outside
-> vendor.)
+> **"Are you turning on a tool now that sends this repository to someone else?"**
+> An outside pull-request reviewer (Cursor's Bugbot) or any hosted review service
+> counts. A tool you might turn on later is not a yes. Saying yes does **not**
+> install that tool; it records the decision. The default is no.
 
 - **Personal repos:** the owner's call. Ask, record the answer in `wiki/decisions.md`.
 - **Corporate repos:** requires IT/security approval **BEFORE enablement, not after.**
@@ -42,24 +55,50 @@ identical across shapes. Shape is a stand-up-time answer, not a fork of the kit.
   on, and it fails the same way an information firewall does — quietly, and only visibly
   in hindsight. Do not install such an adapter without a recorded approval.
 
-## Question 3 — the deploy question (decides whether the keeping-current chassis is copied)
+**Provisional.** "Maybe later" stays no until the day it is enabled. Enabling it
+re-opens this decision, and the corporate approval still has to come first.
 
-> **"Does this project ship a container image — an app or a scheduled job — that has to stay current by itself?"**
+## Question 3 — where it runs today (decides whether the keeping-current chassis is copied)
 
-- **YES, an app that serves traffic → copy the chassis including `deploy.yml`**
-  (install step 5). GitHub + Azure Container Apps is the proven method
-  (`adapters/github-azure.md`). Spec: `spec/keeping-current.md`. Record the
-  answer in `wiki/decisions.md`. Fill every placeholder. First two runs of
-  every job are `dry`. Write a plain-language page for the owner: what runs
-  itself, what waits for a click, what to do when something is red.
-- **YES, only a scheduled job → copy the chassis EXCEPT `deploy.yml`.** There
-  is no ingress to split. Job refresh uses `infra/refresh_rules.py`; the
-  workflow stays per-project (not a filled-in template). Same fill-in, dry
-  first, and owner page as above.
-- **NO → skip the chassis.** A wiki, a library, or a brain repo does not get
-  `deploy.yml`. The spec still applies as doctrine where it fits (pin installed
-  bytes, three outcomes, refuse rather than guess). The version-steward
-  (`spec/versioning.md`) remains the weekly reader.
+> **"Where does this run today?"** The default is **on my machine**. Saying there is
+> already a container installs the keeping-current chassis: workflows, a canary, and
+> placeholders that must be filled before anything runs. Those workflows refuse to
+> start while a placeholder remains. A plan to host later is not a yes.
+
+- **A container that serves traffic is already in this project** (a `Dockerfile` or
+  other image definition is in the new folder) → copy the chassis including
+  `deploy.yml` (install step 5). GitHub + Azure Container Apps is the proven method
+  (`adapters/github-azure.md`). Spec: `spec/keeping-current.md`. Record the answer.
+  Fill every placeholder. First two runs of every job are `dry`. Write a
+  plain-language page for the owner: what runs itself, what waits for a click, what
+  to do when something is red.
+- **A container that is only a scheduled job is already in this project** → copy the
+  chassis EXCEPT `deploy.yml`. There is no ingress to split. Job refresh uses
+  `infra/refresh_rules.py`; the workflow stays per-project (not a filled-in
+  template). Same fill-in, dry first, and owner page as above.
+- **On my machine, or not built yet (the default) → skip the chassis.** Do not copy
+  it because a website, a nightly job, or a cloud account might come later. The spec
+  still applies as doctrine where it fits (pin installed bytes, three outcomes,
+  refuse rather than guess). The version-steward (`spec/versioning.md`) remains the
+  weekly reader.
+
+**Provisional.** Record where it runs today, and the sentence that re-opens this:
+an image definition lands in the tree and someone asks to keep that image current.
+The chassis arrives then, by the same poll path as any other kit content — not at
+stand-up, on a guess. Do not add a Dockerfile to make a gate green.
+
+## Question 4 — the product-data question (records a constraint; copies nothing)
+
+> **"Does the thing you are building send information to anyone but you?"**
+> This is not Question 2. Question 2 is a tool that reads the repository. This is
+> the product's own calls: a model vendor, a payment API, a customer's system.
+> The default, until a spec says otherwise, is no.
+
+- Record the answer in `wiki/decisions.md`. Copy no files.
+- **Corporate repos:** company data leaving the organisation needs the same
+  approval-before-the-fact as Question 2. Do not discover it from the first run.
+- **Provisional.** A later spec that adds an outside call re-opens this entry
+  before that call is built.
 
 ## Install steps
 
@@ -105,11 +144,12 @@ files into this checkout. Do not `cd` this clone into becoming the app.
    you are carrying as doctrine instead.
 3. **Instantiate the wiki skeleton.** `templates/wiki/` → the brain (`wiki/` in the brain
    repo, or `wiki/` in the one-repo shape). That copy includes `operating-model.md`: fill
-   **Stated outcome** from their words and the Question 1–3 answers as constraints; leave
+   **Stated outcome** from their words and the Question 1–4 answers as constraints; leave
    **Kinds of work** with the placeholder kind heading (`{{KIND_PLACEHOLDER}}`). The first session in the **project**
    folder fills kinds of work. The runnable gate below does **not** check that
    (the product tree is still empty). Set each page's frontmatter dates; write the
-   first `decisions.md` entry — the answers to Questions 1, 2, and 3, dated.
+   first `decisions.md` entry — the answers to Questions 1–4, dated, each marked
+   as of today, with the sentence that re-opens a provisional one.
 4. **Roles.** Draft the project's product roles from `reference/claude/role-template.md`
    (fences are real paths — start narrow; widening is on the record). The roster is who
    may write which paths; kinds of work live on `wiki/operating-model.md`. Install the two
@@ -117,9 +157,14 @@ files into this checkout. Do not `cd` this clone into becoming the app.
    `.claude/agents/harness-auditor.md` and `reference/claude/version-steward.md` →
    `.claude/agents/version-steward.md`, replacing origin path and instrument names with
    the project's own.
-5. **Keeping current (Question 3 yes only).** Copy the chassis; fill every
-   `__PLACEHOLDER__` and `__OWNER_GITHUB_LOGIN__`. Do not copy these into a project that
-   does not ship a container. The factory clone does not run these jobs against itself.
+5. **Keeping current (only when an image definition is already in the new project).**
+   Question 3's default copies nothing here. A plan to host later is not this step.
+   Copy the chassis only when a `Dockerfile` (or another image definition) is already
+   in the new folder; fill every `__PLACEHOLDER__` and `__OWNER_GITHUB_LOGIN__`.
+   Copying these tests into a project that has no Dockerfile fails the gate
+   (`test_the_runtime_image_removes_pip_and_proves_it`). That failure means the
+   chassis was copied too early: remove it. Do not add an image to turn the test
+   green. The factory clone does not run these jobs against itself.
    - `reference/keeping-current/infra/` → `infra/`
    - `reference/keeping-current/app/` → `app/` (extend `selftest.py` with one
      real probe per service; a config read is not proof)
@@ -205,6 +250,11 @@ Read the probe JSON. Pass/fail is adapter-aware, not "every layer armed":
 Pass = tests green, the probe matches the rules above, and the live probes are refused
 on a harness that has hooks. A doctrine-only adapter has no live hook to fire; do not
 pretend piping JSON at Python is that test (`tests/` already covers the guards).
+
+One red test is not a pass with an asterisk. If the only failure is
+`test_the_runtime_image_removes_pip_and_proves_it` and the new folder has no
+Dockerfile, the chassis was copied on a prediction. Remove it and re-run. Do not
+stub an image, and do not record a red gate as the normal stand-up result.
 
 **What a failing gate means — plainly:** the harness you just stood up does not enforce
 what its documents claim, and every promise in `HARNESS.md`'s mechanical column is

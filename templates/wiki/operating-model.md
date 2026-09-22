@@ -38,11 +38,15 @@ Fill at stand-up. Hedge travels with the claim.}}
 
 ## Constraints from stand-up
 
-- **Visibility:** {{one-repo / two-repo; Publish applies when anything would
-  leave the house}}
-- **Vendor:** {{whether repo content is sent to a third party}}
-- **Container / keeping-current:** {{no chassis / job-kind / app-kind; if
-  yes, that kind of work is specified — point, do not redraw}}
+- **Visibility (today):** {{one-repo / two-repo}}. A later public page re-opens
+  this; it does not install a second repo now. Re-open when: {{the sentence}}
+- **Vendor (adapters, today):** {{no / which tool sends the repo out}}. A tool
+  not turned on yet is no.
+- **Product data:** {{no / what leaves the house}}. Not the adapter question.
+  Re-open when a spec adds an outside call.
+- **Where it runs (today):** {{this machine / container already in the tree}}.
+  Chassis only when an image definition was already here. Re-open when: {{the
+  sentence}}
 
 ## Roster (who may write)
 
@@ -59,9 +63,9 @@ Pointers, not a copy of `owns:` lists.
 <!-- First product session in this folder: replace the placeholder kind
      heading below (the line that starts with ### and is still unfilled).
      Smallest set: exactly one kind — the stated outcome — plus a pointer
-     row for keeping-current if Question 3 said yes. A second kind only after
-     that ask appears twice in [[log]], unless the owner's words already named
-     two independent expensive outputs. Infer from the outcome and the tree,
+     row for keeping-current if an image definition was already in the tree and
+     the chassis was copied. A second kind only after that ask appears twice in
+     [[log]], unless the owner's words already named two independent expensive outputs. Infer from the outcome and the tree,
      not from `.git`. Checking is a different job from writing. -->
 
 `redrawn:` none

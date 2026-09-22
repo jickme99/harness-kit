@@ -26,12 +26,22 @@ They do not run stamp, poll, harvest, or pytest — you do.
 
 1. Read `STANDUP.md` and follow it into a **new** directory (default: a sibling
    of this clone). Never copy product files into *this* tree.
-2. Ask, without kit jargon:
-   - Will any of this ever be public, or shared beyond the owner?
-   - Will any tool send the repo to a third party (for example an external PR
-     reviewer)?
-   - Does this ship a container image (an app or a scheduled job) that has to
-     stay current by itself?
+2. Ask about today, in plain English. A guess about later is not an answer.
+   If they do not want the quiz, use the defaults (this computer, repository
+   not shared, no outside reviewer, the product does not send data out yet)
+   and write that down. The questions:
+   - Is this repository public today, or shared with anyone besides you?
+     A page you might publish later is not a yes. Yes installs a second
+     repository.
+   - Are you turning on a tool now that sends this repository to someone else
+     (for example an outside reviewer)? Later is not a yes. Default: no.
+     This does not install the tool.
+   - Where does this run today? Default: this computer. A deployment stack is
+     copied only when a container file is already in the project. "It will be
+     a website" is not a yes.
+   - Does the thing you are building send information to anyone but you?
+     This is not the reviewer question. Default: no, until a spec says
+     otherwise.
    - What are we building, and what should the new folder be called?
 3. Stamp with `--kit` pointed at **this** clone. Run the gate.
 4. When the gate passes, give them the new path and say: close this folder,

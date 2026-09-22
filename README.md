@@ -69,7 +69,7 @@ Two more promises the kit makes about the projects it stamps:
 | `reference/guards/` | The three guards + the probe pack, copied faithfully from the origin (install-time seams marked). |
 | `reference/tools/` | `kit_manifest.py` (upgrade classifier) · `kit_stamp.py` (the stamp method; fingerprints dests that exist) · `kit_poll.py` (changelog worklist + STANDUP mapping; never copies files) · `kit_harvest.py` (proposal-only offer of customized/extra files) · `review_stamp.py` (config stamper) · `review_rates.py` (catch/escape rollup). |
 | `reference/ci/` | The docs-gate (four fail-closed PR gates) and firewall-on-push workflow patterns, with EXAMPLE markers. |
-| `reference/keeping-current/` | Optional chassis for a project that ships a container: freshness rules, canary, weekly note, GitHub/Azure templates. STANDUP Question 3. Spec: `spec/keeping-current.md`. |
+| `reference/keeping-current/` | Optional chassis when a container image already exists (STANDUP Question 3). Not copied because one might exist later. Freshness rules, canary, weekly note, GitHub/Azure templates. Spec: `spec/keeping-current.md`. |
 | `reference/claude/` | Hook wiring sample, role-file template, and the two function-role patterns (harness-auditor, version-steward). |
 | `reference/cursor/` | The `.mdc` pointer-rule pattern, the outside-the-lane tripwire, `BUGBOT.md`, and verified hooks (`hooks.json`, `bridge.cmd`, `hook_bridge.py`). |
 | `adapters/` | Per-tool install instructions + an honest coverage table each: `claude.md` · `cursor.md` · `codex.md`. Deploy stack: `github-azure.md` (IF-AVAILABLE). |

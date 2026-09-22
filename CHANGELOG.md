@@ -16,6 +16,33 @@ does not apply must **consider** it (`spec/versioning.md`).
 
 ---
 
+## 2026.09.9 — 2026-09-22
+
+Stand-up asks about today. A predicted host no longer installs the chassis.
+
+- **Lane:** 3 (stand-up doctrine — not a new component, not a guard change).
+- **Applies to:** every new stand-up from this clone. `STANDUP.md` and
+  `START-HERE.md` are kit-repo-only. Existing stamps do not install them.
+  `templates/wiki/operating-model.md` is a dest: a filled page is `customized`
+  and an upgrade must leave it alone. Do not regenerate a page the project
+  has already written.
+- **What changed:**
+  - Question 1 asks whether the repository is public or shared **today**. A
+    later published page is not a yes and does not install the firewall.
+  - Question 2 asks whether a tool is being turned on **now**. Later is not a
+    yes. The default is no. Saying yes records the decision and does not
+    install the tool.
+  - Question 3 asks where it runs **today**. The default is this machine.
+    The keeping-current chassis is copied only when an image definition is
+    already in the new project. A plan to host later is not a yes.
+  - Question 4 asks whether the product sends information to anyone but the
+    owner. That is not the reviewer question. It copies nothing.
+  - Each of those four is provisional: the decision records what re-opens it.
+  - The stand-up gate does not treat "no Dockerfile, chassis tests copied"
+    as an expected red. That failure means remove the chassis.
+- **Does not change:** the three REQUIRED guards; the chassis files
+  themselves; `harness_probes.py` seams (still origin-shaped — `TODO.md`).
+
 ## 2026.09.8 — 2026-09-13
 
 Work map as operating-model doctrine. The master infers kinds of work; the owner never authors them.

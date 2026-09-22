@@ -132,7 +132,8 @@ another harness must achieve.
 - **Work map** (`wiki/operating-model.md` unless HARNESS §4 points at a house name):
   - **Page.** Stated outcome, stand-up constraints, roster pointers (not a copy of
     `owns:`), and Kinds of work. First fill: exactly one kind — the stated outcome —
-    plus a pointer row for keeping-current if Question 3 said yes. A second kind only
+    plus a pointer row for keeping-current if an image definition was already
+    in the tree and the chassis was copied. A second kind only
     after that ask appears twice in `wiki/log.md`, unless the owner's words already
     named two independent expensive outputs. Infer from the outcome and the tree, not
     from the presence of `.git`. Checking is a different job from writing

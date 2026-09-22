@@ -6,7 +6,8 @@ not a second kit. Claude / Cursor / Codex adapters still decide how the *agent*
 is wired. This page is how a stamped project that **ships a container** stays
 current.
 
-Install only when STANDUP Question 3 is yes. Fill every `__PLACEHOLDER__` /
+Install only when STANDUP Question 3 is yes: an image definition already exists
+in the project. A plan to host later is not yes. Fill every `__PLACEHOLDER__` /
 `__OWNER_GITHUB_LOGIN__`. First two runs of every job are `dry`. A job-only
 stamp skips `deploy.yml` (no ingress to split). Do not copy
 `dependabot-automerge.yml` until adoption D.
