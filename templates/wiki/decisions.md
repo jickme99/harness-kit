@@ -23,11 +23,17 @@ manufactured a finding.
 
 ---
 
-## [{{YYYY-MM-DD}}] Stand-up: shape and vendor answers (the kit's two questions)
+## [{{YYYY-MM-DD}}] Stand-up: where things stand today
 
-- **Visibility:** {{"never public → one-repo shape" / "may be public → two-repo shape;
-  the brain is {{repo}}, the body is {{repo}}"}}.
-- **Vendor question:** {{which adapters send repo content to third parties, and the
-  recorded approval or the owner's call}}.
+- **Visibility (today):** {{"not shared → one-repo" / "public or shared now →
+  two-repo; the brain is {{repo}}, the body is {{repo}}"}}. A later published
+  page is not two-repo. Re-open when: {{sentence}}.
+- **Vendor (today):** {{no tool sends the repo out / which tool, and the
+  recorded approval or the owner's call}}. Later is not a yes.
+- **Where it runs (today):** {{this machine / image definition already in the
+  tree, app or job}}. Chassis copied only in the second case. Re-open when:
+  {{sentence}}.
+- **Product data:** {{no / what the product sends out}}. Not the vendor
+  question. Re-open when a spec adds an outside call.
 - Stamped from harness-kit {{version}}; `kit-manifest.json` is the stamp. Poll later
   against the kit's `CHANGELOG.md` (`spec/versioning.md`); never self-apply.

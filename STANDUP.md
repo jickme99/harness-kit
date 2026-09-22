@@ -60,10 +60,7 @@ re-opens this decision, and the corporate approval still has to come first.
 
 ## Question 3 — where it runs today (decides whether the keeping-current chassis is copied)
 
-> **"Where does this run today?"** The default is **on my machine**. Saying there is
-> already a container installs the keeping-current chassis: workflows, a canary, and
-> placeholders that must be filled before anything runs. Those workflows refuse to
-> start while a placeholder remains. A plan to host later is not a yes.
+> **"Where does this run today?"** The default is **on my machine**. Words do not install the chassis. An image definition already in the new folder does: workflows, a canary, and placeholders that must be filled before anything runs. Those workflows refuse to start while a placeholder remains. A plan to host later is not a yes, and neither is saying "there is a container" when the folder has no image file.
 
 - **A container that serves traffic is already in this project** (a `Dockerfile` or
   other image definition is in the new folder) → copy the chassis including

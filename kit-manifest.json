@@ -5,7 +5,7 @@
     "CHANGELOG.md": "86b39f0f30a78c39263438c516fb0ad28d17e3b4bfc8e9841a3e91706a016514",
     "CLAUDE.md": "d3cc5f5d8f0d1c772260745810f0b5cc5fe65a668d76af572ce371095c7ed9d6",
     "README.md": "387f6406b99bc1cd3e1106edc37b987163dcc70b83017effc1f4f10e80c3ee3b",
-    "STANDUP.md": "cf9bd6e70ed17334541c10c34a65b8a629ec0de6741a15f8ebb18da979c045a4",
+    "STANDUP.md": "d3b511f840e2f2a68a4de0a153773a8775ba792ecfbd498a5fa34ba0e2529861",
     "START-HERE.md": "14cb6825704b10f2383a3e446dfed9c5792326ca14fa01ff3695bc6344b963a9",
     "TODO.md": "cfb3f69adf8cb665e596199c4a3c6b2363c27bf39338a5441267626f4c3f0b3b",
     "adapters/claude.md": "857a4e66645352fdc941966bb37b8bd5575369b113111d7448f3b01e6b38ce3b",
@@ -90,7 +90,7 @@
     "templates/START-HERE.project.md": "1c57626ca7355d3954775f2396829f5154a6972b7c56b3a5e57a35cae1c9c845",
     "templates/pr-template.md": "59df1bb0e883e05144dcf7478ad94967192e844053215268c3ee84c027d1a51d",
     "templates/wiki/HANDOFF.md": "100ea780d169784fec1e879d4afcf6868bf67a5fa12e26d8760e33756ddc42ed",
-    "templates/wiki/decisions.md": "23ca1f0356e7b4f0f0be798e66d13189b47384c6bc86d21066a61e5303ea3d63",
+    "templates/wiki/decisions.md": "9fc8df67dff3280603ac4a83b865257ff086d146f251c4976cb5eada7c01f9f3",
     "templates/wiki/feedback.md": "356d470c2c386dbae8dd62bc935a388c9abcedd7922e49a1eb46ee7e7046fee6",
     "templates/wiki/index.md": "28a1dd8e3ca0f5d2da2a36bab0131f7dd9e5585229259c45450b5f3fa925abf7",
     "templates/wiki/log.md": "5a3329aeb660406a007d946a4e506fb15dbf174f79631b4ed9d0a6f757bdc355",
@@ -102,7 +102,7 @@
     "tests/test_guard_contracts.py": "083927132b9471fd6248f08e522b2e1d5a763fe3c05a4c72fbed89bbcaaa38e2",
     "tests/test_guard_wiring_probe.py": "f309bcc4bd29291e5681166d4fe672463049d27f74ee5e2424bc2b20a18cb1ff",
     "tests/test_kit_manifest.py": "18d7cd2283f4727eb5d5e4cedf6f982d1ca0de055d222e437fb8c0d646c35c84",
-    "tests/test_kit_poll.py": "f4dd9951617e571fbac5aeabc0796be8224ad777518d3bcf4a43336702994780",
+    "tests/test_kit_poll.py": "c885a88370474837f37c3ce169547d0740b54b60499fbd145dcb162a04f139d7",
     "tests/test_kit_stamp_harvest.py": "85782b5042a5c5a7d8998e344b72670613789ad97fafd9279fc224b24ef92852"
   },
   "kit_version": "2026.09.9"

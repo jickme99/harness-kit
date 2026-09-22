@@ -186,7 +186,8 @@ def test_standup_asks_about_today_and_does_not_install_a_predicted_chassis():
     assert "Where does this run today?" in text
     assert "on my machine" in text
     assert "Does the thing you are building send information to anyone but you?" in text
-    assert "A plan to host later is not a yes." in text
+    assert "A plan to host later is not a yes" in text
+    assert "Words do not install the chassis." in text
     assert "only when an image definition is already in the new project" in text
     assert "Will any part of this project ever be public" not in text
     assert "has to stay current by itself" not in text
