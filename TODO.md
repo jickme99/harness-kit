@@ -111,3 +111,153 @@
   `START-HERE.md`. Those three files are kit-repo-only (not STANDUP dests). The
   product stubs stay `templates/*.project.md`. Codex *enforcement* after stand-up
   is still untested (`adapters/codex.md`).
+
+---
+
+## Consumer #2 findings — `sam-gov-typesafe`, stood up 2026-09-21
+
+One project, stood up from `2026.09.8` and run for a day: harness installed, gate run,
+product built to a first release. Everything below was **observed**, not suspected; each
+entry names what happened. Written generically — the consumer is a Python project on
+Windows using the Claude Code adapter, and entries say so only where it matters.
+
+Nothing here self-applies. This is the gap list, per this file's own job.
+
+### The stand-up asks for predictions, in our vocabulary, before the project exists
+
+**The kit's own author could not answer its three questions correctly.** That is the
+finding; the rest is evidence.
+
+- **Question 3 (container)** was answered *"an app that serves traffic"*. The project
+  turned out to be a nightly local job writing a static page, with a staged progression
+  in which stage 1 has no hosting at all. The chassis was installed and removed inside a
+  day — it had arrived with ~70 unfilled placeholders, a workflow on a daily cron and one
+  on every push, all of which would have begun failing the moment a remote was added.
+- **Question 1 (visibility)** was answered *"never public"*. The project's entire stated
+  outcome is a **published page**. The answer was true of the repository on day one and
+  false of the project, and nothing in the stand-up says which answers are expected to
+  change or what re-opens them.
+- **Question 2 (vendor)** asks whether an *adapter* sends repository content to a third
+  party. It was answered "yes, approved" about a tool that was then never installed.
+  Meanwhile the **product** sends data to an outside model vendor on every run — the
+  premise of the project, and the stated blocker on its final stage. The kit never asks
+  that, and it is the question with real consequences.
+
+So: two of three answers were wrong in a way that caused work, and the third asked about
+the wrong thing. A stranger will do worse than the author did.
+
+**Proposed shape**, not a patch:
+1. **Ask about now, not about later.** "Where does this run today?" with *on my machine*
+   as a first-class answer and the default. Nobody knows their hosting model before they
+   know the thing is worth hosting — see the freeze-rule entry below.
+2. **Say which answers are provisional, and what re-opens them.** Visibility and hosting
+   both change; the stand-up presents all three as settled facts.
+3. **Add the missing question:** *does the product itself send data outside your
+   organisation?* It is a different question from the adapter one, it drives real
+   constraints, and it is the one a reviewer will ask first.
+4. **State each answer's consequence in the question.** "Answering yes installs a
+   deployment chassis with N placeholders you must fill" is the sentence that would have
+   prevented the wrong answer here.
+
+### Guards, probes and the roles that read them
+
+- **The user-level guard layer has no neutral home, and fails silently.** `adapters/*.md`
+  says to wire the same scripts with machine-absolute paths but never says where those
+  scripts should live, and ships no user-layer file. The only copy a reader has is the one
+  inside the project they are standing up — so that is what they point at. Observed: a
+  workstation whose user layer ran all three guards out of an *unrelated* project's
+  checkout. It works until that directory moves, and then it breaks in the **silent**
+  direction the kit already documents (missing interpreter exits 127, non-blocking).
+  Ship a user-layer template, install the guards somewhere project-independent, and have
+  the wiring probe *flag* a user layer whose targets resolve inside a project tree.
+- **A shipped role requires instruments the kit does not ship.** `harness-auditor.md`
+  item 14 mandates reading an event-rollup script and ledger that are not in
+  `kit-files.txt`. Every stamp inherits a checklist item that cannot be completed, which
+  teaches operators to skip checklist items — the exact failure the role exists to catch.
+  Ship the instrument, or mark such items `requires: <instrument> — not shipped` and force
+  a decision at install.
+- **The probe pack ships fabricated defaults, against its own docstring.** It says "never
+  a silent zero, never an inferred value", then defaults the second-repo path to a
+  placeholder directory, the slug to a placeholder string, the snapshot-page list to a
+  page the template set never creates, and the lesson epoch to a date from the origin's
+  calendar. All four needed hand-editing before the pack described the consumer rather
+  than the origin, and nothing would have said so if one had been missed. Default every
+  seam to an unset sentinel and let dependent probes return `ok_to_collect: false`.
+
+### Stamp, upgrade and the gate
+
+- **A container project cannot pass the gate on day one, by construction.** STANDUP says a
+  project is not stood up until the gate passes; answering Question 3 "yes" copies a test
+  that fails unless a container definition already exists; a project being stood up has no
+  product. Observed: `1 failed, 216 passed` on a clean stand-up. The three ways out are
+  all bad — stub a fake image, delete the test, or learn that red is normal. Either make
+  the test's trigger true at stand-up, or state in STANDUP that this row is expected red
+  until the first image and exclude it from the pass condition.
+- **Install-time seam edits are indistinguishable from local drift.** STANDUP *instructs*
+  edits to specific lines in shipped files; the stamper then fingerprints them and
+  `classify` reports `customized` — the category an upgrade must "leave alone or raise as
+  conflicts". Files the kit told you to touch become a private fork forever. Move seams
+  out of shipped sources into generated config, or add a `seamed` classification.
+- **The stamp is not stable where line endings are normalized.** The stamper hashes
+  working-tree bytes, so on Windows a fresh clone of a correctly stamped project can
+  classify the whole set as modified. Observed: conversion warnings on 14 files at the
+  first commit. Hash normalized content — a one-line change that protects people who never
+  configure their version control — and ship a line-ending attributes file besides.
+- **`classify` accepts a manifest that cannot describe the tree.** Pointing it at the
+  *kit's* manifest from inside a stamped project runs happily and reports ~91 files
+  "missing" — the one category the kit says must never be silently restored. Record which
+  mapping a manifest was generated for and refuse a mismatch.
+- **Agent worktrees inside the tree get committed as embedded repositories.** The role
+  template says workers run in an isolated worktree; a harness that creates it *under* the
+  project means the next `git add -A` records a gitlink, with only git's hint as warning.
+  Ship the worktree location in the template `.gitignore` and say in STANDUP that a
+  worker's worktree is a branch, not a directory of the project.
+- **Question 3 conflates "ships a container" with "deploys the way the origin deployed".**
+  Freshness, canary, weekly note, dependency config and a host-specific deployment
+  workflow all travel as one bundle. A project that wants the freshness guarantees but not
+  that hosting model has no honest answer. Split the question, and ship the freshness core
+  independently of any host.
+- **The kit's own templates trip the kit's own guards.** Writing the project constitution
+  through a shell heredoc was refused by the merge-green guard, because the constitution
+  quotes the command it governs. The guard is right; the surprise is avoidable. One line
+  in the adapters: install document templates with a file-writing tool, not by piping text
+  through a shell.
+
+### Patterns this consumer used that the kit may want
+
+- **Apply the freeze rule to infrastructure, not only to enforcement.** `spec/graduation.md`
+  refuses new harness components without evidence from operation — then Question 3 asks,
+  at the moment of least evidence, what the deployment model will be, and installs on the
+  answer. This consumer's owner independently described a three-stage progression (local →
+  personal cloud → company cloud, each entered on evidence) which is invariant 1 restated
+  one level up. Give STANDUP a **stage posture** — where this runs *now*, and what moves it
+  — and let the chassis arrive at the stage that earns it, by the same poll mechanism as
+  any other kit content.
+- **Contract-first with two samples, and then an adversarial one.** A worker built a
+  rendering surface against a committed JSON contract while the data layer was built in
+  parallel; it never saw real data. That worked until a real day produced a `null` the
+  sample never showed. Ship **two** samples — the good day and a sparse one with every
+  nullable field null, every list empty, the "no previous period" case — and make
+  "renders both without raising" a standing rule. Then a **third**, adversarial: real
+  worst-case string lengths. A long real string pushed a page 226px wider than the
+  viewport, and the sample-based checks were clean because the samples' strings were short.
+  The dense sample buys a design; the sparse sample buys honest empty states; the
+  adversarial sample buys the truth.
+- **A renamed contract key needs a reader that spans both vocabularies** in any project
+  that re-renders its own history. Two renames here each re-rendered stored artifacts
+  written under the old names; the fix both times was a reader that accepts old and new,
+  and in one case recomputes the value from a field that never changes.
+- **Record an absent instrument as a finding rather than deleting the checklist item.**
+  Keep the item, rewrite it to say the instrument does not exist here and that its absence
+  is reported until it is built or the rule is retired in writing.
+- **Say in the PR template which gates are mechanical here.** The shipped template's
+  exemption lines read as though a CI gate honours them, which is only true if the optional
+  workflows were installed. In a project without them the template overstates its own
+  enforcement — the dishonesty the coverage tables exist to prevent.
+- **Make the partial gate pass a named, expected outcome.** STANDUP prescribes recording a
+  failing gate honestly, but as an exception in a closing paragraph. With the container
+  contradiction above unfixed, the partial pass is the *normal* result — worth a worked
+  example, and a decisions-template entry.
+- **A mechanical merge gate for a fenced worker is a dozen lines** and worth shipping
+  beside the guards: changed paths must match the fence and never the contract; grep the
+  worker's own files for network requests; full suite green.
