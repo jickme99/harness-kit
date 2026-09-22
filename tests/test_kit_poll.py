@@ -189,7 +189,9 @@ def test_standup_asks_what_the_project_is_and_not_how_it_will_be_hosted():
     assert "Do not ask whether it will be public" in text
     assert "Stand-up copies nothing in this step." in text
     assert "keep that image current" in text
-    assert "Words do not install the chassis." in text
+    assert "kit-manifest.json` is present" in text
+    assert "The project folder is the one the questions named" in text
+    assert "Create the **new** project directory first" not in text
     for retired in (
         "Is this repository public today",
         "Where does this run today?",

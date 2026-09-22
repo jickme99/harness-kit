@@ -5,7 +5,7 @@
     "CHANGELOG.md": "a31896b3457b37b771ef5752a25d45a35b5ec393c10d1e4ef715080a20beab54",
     "CLAUDE.md": "01f68563749ff9a16f6bcdee89b3de9d569794f394794f2b5de62a6dccf81218",
     "README.md": "be5f3a825e68b4aed8a93bd06401ce8f182bd8bf8a7e4dc0092d133ce228c1e3",
-    "STANDUP.md": "7d25834a42ad04ddc13a4df2b971111a938317c42134beda296b0cc3f64b3385",
+    "STANDUP.md": "76b3ee8c3264e21b24ddf888ad520ab667dc53ddd0c9a9c89742b09721608123",
     "START-HERE.md": "ad8f2acb86eb8a4e83b0ebfea2587afa0dd1b06adedc3513f063b5bb42916236",
     "TODO.md": "247b4fe2b7d0774a0358511fced4068a6e943ab815fd89afbd92fd4c64ec2bd1",
     "adapters/claude.md": "da76df672d63e24769c8be7d211faad4a93abf74028f9b82b17530cdcf476835",
@@ -102,7 +102,7 @@
     "tests/test_guard_contracts.py": "083927132b9471fd6248f08e522b2e1d5a763fe3c05a4c72fbed89bbcaaa38e2",
     "tests/test_guard_wiring_probe.py": "f309bcc4bd29291e5681166d4fe672463049d27f74ee5e2424bc2b20a18cb1ff",
     "tests/test_kit_manifest.py": "18d7cd2283f4727eb5d5e4cedf6f982d1ca0de055d222e437fb8c0d646c35c84",
-    "tests/test_kit_poll.py": "bc06c7ca985c0cd7a84f9c44022dc705d3fe43f3356cd56ed1a09b4083b19127",
+    "tests/test_kit_poll.py": "c0a373a2dbd4195e5858d621074a3df0dce338c64b003507acc61c9d07a42a8c",
     "tests/test_kit_stamp_harvest.py": "85782b5042a5c5a7d8998e344b72670613789ad97fafd9279fc224b24ef92852"
   },
   "kit_version": "2026.09.9"

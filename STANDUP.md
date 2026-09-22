@@ -20,9 +20,13 @@ this kit checkout into the product.
 ## The only questions
 
 1. **New folder, or one that already exists?**
-   - **Already has this harness** (`HARNESS.md` or `kit-manifest.json` in that
-     folder): stop. Tell them the path and ask what we are doing. Do not copy
-     again. Do not stand up a second tree.
+   - **Finished stand-up:** `kit-manifest.json` is present. Tell them the path
+     and ask what we are doing. Do not copy again. Do not stand up a second
+     tree. `HARNESS.md` alone is not finished — step 1 writes it before the
+     stamp and the gate.
+   - **Started and not finished:** `HARNESS.md` (or other core files) without
+     `kit-manifest.json`. Resume in **that** folder. Do not create a sibling.
+     Finish the missing steps, then run the gate.
    - **Exists, and has no harness:** install the core into **that** folder. Do
      not create a sibling. Do not copy a piece from the section below.
    - **New:** a sibling of this kit clone. Ask what it is about. That sentence
@@ -74,11 +78,12 @@ Company material leaving the house stops for approval **before** the first send.
 
 ## Install steps
 
-Create the **new** project directory first (default: a sibling of this kit clone).
-Every arrow below is *from this clone* into **that** directory. Do not copy product
+The project folder is the one the questions named: the existing folder, or the
+new sibling. Do not create a second folder when they already named one. Every
+arrow below is *from this clone* into **that** folder. Do not copy product
 files into this checkout. Do not `cd` this clone into becoming the app.
 
-1. **Copy the core files** into the new project directory.
+1. **Copy the core files** into the project folder.
    - `templates/HARNESS.project.md` → the project root as `HARNESS.md`. Fill its
      placeholders: the project's rules, its own coverage table, its pointers.
    - `templates/CLAUDE.project.md` → `CLAUDE.md` (the Claude Code entry point; a pointer
