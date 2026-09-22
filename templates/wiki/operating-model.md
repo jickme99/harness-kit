@@ -36,17 +36,16 @@ new [[decisions]] entry, not a silent rewrite.
 {{One paragraph in the owner's words from STANDUP: what we are building.
 Fill at stand-up. Hedge travels with the claim.}}
 
-## Constraints from stand-up
+## Constraints
 
-- **Visibility (today):** {{one-repo / two-repo}}. A later public page re-opens
-  this; it does not install a second repo now. Re-open when: {{the sentence}}
-- **Vendor (adapters, today):** {{no / which tool sends the repo out}}. A tool
-  not turned on yet is no.
-- **Product data:** {{no / what leaves the house}}. Not the adapter question.
-  Re-open when a spec adds an outside call.
-- **Where it runs (today):** {{this machine / container already in the tree}}.
-  Chassis only when an image definition was already here. Re-open when: {{the
-  sentence}}
+The start is one repo on this computer, nothing sent out. Do not ask the owner
+to choose pieces. When a piece is added, replace the line it changes and name
+the [[decisions]] entry.
+
+- **Shape:** one repo, until the repository itself would be shared or made public
+- **Outbound:** nothing sent out, until a tool would read the repo or the product
+  would send information out
+- **Where it runs:** this computer, until the work is to keep an image current
 
 ## Roster (who may write)
 
@@ -63,8 +62,8 @@ Pointers, not a copy of `owns:` lists.
 <!-- First product session in this folder: replace the placeholder kind
      heading below (the line that starts with ### and is still unfilled).
      Smallest set: exactly one kind — the stated outcome — plus a pointer
-     row for keeping-current if an image definition was already in the tree and
-     the chassis was copied. A second kind only after that ask appears twice in
+     row for keeping-current if the chassis was copied because the work is
+     keeping an image current. A second kind only after that ask appears twice in
      [[log]], unless the owner's words already named two independent expensive outputs. Infer from the outcome and the tree,
      not from `.git`. Checking is a different job from writing. -->
 

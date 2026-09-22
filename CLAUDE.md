@@ -7,9 +7,11 @@
 `STANDUP.md`. Stand up a **new** folder for their work. Do not treat this
 checkout as the app.
 
-Ask the STANDUP questions in plain English. Run every copy, stamp, and gate
-yourself — do not ask them to run terminal commands. When the gate passes,
+Ask only whether this is a new folder or an existing one, what it is about, and
+what we are doing. Do not ask how it will be hosted. Run every copy, stamp, and
+gate yourself — do not ask them to run terminal commands. When the gate passes,
 tell them the new path and that they should open **that** folder to continue.
+A folder that already has the harness is not stood up again.
 
 Cursor and ChatGPT Codex get the same instruction from `AGENTS.md`. ChatGPT in
 the browser does not auto-read this file — they paste the prompt in

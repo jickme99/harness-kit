@@ -50,7 +50,7 @@ not fail a stamp that skipped it.
 | One-writer-per-path fences | REQUIRED | no (frontmatter is machine-readable; the enforcement hook has not met its evidence bar — `spec/graduation.md`) | partially — role frontmatter is parseable | **yes** |
 | Report + uncertainty contracts | REQUIRED | no | no | **yes** |
 | Two-repo firewall promotion discipline | IF-AVAILABLE | no (the CI firewall polices entry to the body repo; promotion itself is a human act) | no | **yes** |
-| Keeping current (container freshness / canary) | IF-AVAILABLE | **yes** when STANDUP Question 3 copied the chassis (`adapters/github-azure.md`) | the rule tests under `reference/keeping-current/tests/` | doctrine until then |
+| Keeping current (container freshness / canary) | IF-AVAILABLE | **yes** when the work asked to keep an image current and the chassis was copied (`adapters/github-azure.md`) | the rule tests under `reference/keeping-current/tests/` | doctrine until then |
 
 Read the last column as the promises you are personally holding even on the proven
 harness.

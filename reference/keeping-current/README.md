@@ -2,8 +2,8 @@
 
 Harvested into harness-kit as the reference implementation of
 `spec/keeping-current.md`. The GitHub + Azure method is `adapters/github-azure.md`.
-Install only when STANDUP Question 3 is yes: an image definition already exists.
-A plan to host later is not yes. This directory is not copied into
+Install when the work is to keep an image that already exists current. Not at
+stand-up. A plan to host later is not that moment. This directory is not copied into
 the kit's own root: the factory does not run a freshness job against itself.
 
 | Path | Project dest (STANDUP arrow) |

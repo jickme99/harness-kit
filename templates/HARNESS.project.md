@@ -99,7 +99,7 @@ nothing if it runs, and confirm the refusal.
 | Wiki append-only + auto-write | REQUIRED | no | partially — probe pack | **yes** |
 | Work map inferred and written | REQUIRED | no | partially — `wiki/operating-model.md` exists and no Kinds of work **heading** is `{{KIND_PLACEHOLDER}}` | **yes** |
 | Commit protocol | REQUIRED | no | no | **yes** |
-| Keeping current (freshness, canary, routine lane) | IF-AVAILABLE | {{yes only if an image definition already existed and the chassis was copied}} | yes — `python -m pytest tests/test_freshness_*.py tests/test_canary_rules.py` | doctrine until the chassis is installed; spec in the kit |
+| Keeping current (freshness, canary, routine lane) | IF-AVAILABLE | {{yes only if the work asked to keep an image current and the chassis was copied}} | yes — `python -m pytest tests/test_freshness_*.py tests/test_canary_rules.py` | doctrine until the chassis is installed; spec in the kit |
 | {{firewall row, two-repo shape}} | IF-AVAILABLE | {{...}} | {{...}} | **yes** |
 
 ## 4. Pointers, not copies

@@ -175,25 +175,34 @@ def test_standup_maps_harness_template_and_guards(poll):
     assert "Do not copy `dependabot-automerge.yml`" in step5
 
 
-def test_standup_asks_about_today_and_does_not_install_a_predicted_chassis():
-    """Consumer #2 answered a prediction and installed a chassis that left the
-    same day. The questions ask about today; the default copies no chassis."""
+def test_standup_asks_what_the_project_is_and_not_how_it_will_be_hosted():
+    """Consumer #2 answered a hosting quiz before the project existed and
+    installed a chassis that left the same day. Stand-up asks about the work.
+    Pieces are copied when the work needs them."""
     standup_path = ROOT / "STANDUP.md"
     if not standup_path.is_file():
         pytest.skip("STANDUP.md is kit-repo-only; stamps do not install it")
     text = standup_path.read_text(encoding="utf-8")
-    assert "Is this repository public today" in text
-    assert "Where does this run today?" in text
-    assert "on my machine" in text
-    assert "Does the thing you are building send information to anyone but you?" in text
-    assert "A plan to host later is not a yes" in text
+    assert "New folder, or one that already exists?" in text
+    assert "What is it about?" in text
+    assert "What are we doing?" in text
+    assert "Do not ask whether it will be public" in text
+    assert "Stand-up copies nothing in this step." in text
+    assert "keep that image current" in text
     assert "Words do not install the chassis." in text
-    assert "only when an image definition is already in the new project" in text
-    assert "Will any part of this project ever be public" not in text
-    assert "has to stay current by itself" not in text
+    for retired in (
+        "Is this repository public today",
+        "Where does this run today?",
+        "Will any part of this project ever be public",
+        "has to stay current by itself",
+        "Does the thing you are building send information to anyone but you?",
+    ):
+        assert retired not in text
     door = (ROOT / "START-HERE.md").read_text(encoding="utf-8")
-    assert "Where does this run today?" in door
-    assert "send information to anyone but you?" in door
+    assert "What is it about?" in door
+    assert "What are we doing?" in door
+    assert "Where does this run today?" not in door
+    assert "send information to anyone but you?" not in door
 
 
 def test_kind_placeholder_is_only_a_heading():

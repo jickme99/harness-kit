@@ -18,26 +18,24 @@ does not apply must **consider** it (`spec/versioning.md`).
 
 ## 2026.09.9 — 2026-09-22
 
-Stand-up asks about today. A predicted host no longer installs the chassis.
+Stand-up asks what the project is, not how it will be hosted.
 
 - **Lane:** 3 (stand-up doctrine — not a new component, not a guard change).
-- **Applies to:** every new stand-up from this clone. `STANDUP.md` and
-  `START-HERE.md` are kit-repo-only. Existing stamps do not install them.
-  `templates/wiki/operating-model.md` is a dest: a filled page is `customized`
-  and an upgrade must leave it alone. Do not regenerate a page the project
-  has already written.
+- **Applies to:** every new stand-up from this clone. `STANDUP.md`,
+  `START-HERE.md`, `CLAUDE.md`, and `AGENTS.md` are kit-repo-only. Existing
+  stamps do not install them. `templates/wiki/operating-model.md` and
+  `templates/wiki/decisions.md` are dests: a filled page is `customized` and
+  an upgrade must leave it alone.
 - **What changed:**
-  - Question 1 asks whether the repository is public or shared **today**. A
-    later published page is not a yes and does not install the firewall.
-  - Question 2 asks whether a tool is being turned on **now**. Later is not a
-    yes. The default is no. Saying yes records the decision and does not
-    install the tool.
-  - Question 3 asks where it runs **today**. The default is this machine.
-    The keeping-current chassis is copied only when an image definition is
-    already in the new project. A plan to host later is not a yes.
-  - Question 4 asks whether the product sends information to anyone but the
-    owner. That is not the reviewer question. It copies nothing.
-  - Each of those four is provisional: the decision records what re-opens it.
+  - The only questions are: new folder or an existing one, what it is about,
+    and what we are doing. A folder that already has the harness is not stood
+    up again.
+  - Stand-up always installs one repo on this computer: guards, wiki, stamp.
+    Nothing else. That default is written down without asking.
+  - The keeping-current chassis, the two-repo firewall, and any outbound tool
+    or product call are copied when the work needs them. The owner is not
+    asked to choose them up front. Company material stops for approval before
+    the first send.
   - The stand-up gate does not treat "no Dockerfile, chassis tests copied"
     as an expected red. That failure means remove the chassis.
 - **Does not change:** the three REQUIRED guards; the chassis files

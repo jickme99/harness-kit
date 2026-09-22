@@ -23,17 +23,12 @@ manufactured a finding.
 
 ---
 
-## [{{YYYY-MM-DD}}] Stand-up: where things stand today
+## [{{YYYY-MM-DD}}] Stand-up
 
-- **Visibility (today):** {{"not shared → one-repo" / "public or shared now →
-  two-repo; the brain is {{repo}}, the body is {{repo}}"}}. A later published
-  page is not two-repo. Re-open when: {{sentence}}.
-- **Vendor (today):** {{no tool sends the repo out / which tool, and the
-  recorded approval or the owner's call}}. Later is not a yes.
-- **Where it runs (today):** {{this machine / image definition already in the
-  tree, app or job}}. Chassis copied only in the second case. Re-open when:
-  {{sentence}}.
-- **Product data:** {{no / what the product sends out}}. Not the vendor
-  question. Re-open when a spec adds an outside call.
+- This computer. One repository. Nothing sent out. Not asked — this is the start.
+- **What it is about:** {{their sentence}}
 - Stamped from harness-kit {{version}}; `kit-manifest.json` is the stamp. Poll later
   against the kit's `CHANGELOG.md` (`spec/versioning.md`); never self-apply.
+- Pieces (a second repo, keeping an image current, anything sent out) are added
+  when the work needs them. Each addition is a new entry. Do not ask the owner
+  to choose them up front.

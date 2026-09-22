@@ -112,17 +112,18 @@
   product stubs stay `templates/*.project.md`. Codex *enforcement* after stand-up
   is still untested (`adapters/codex.md`).
 
-- **RESOLVED 2026-09-22 — stand-up asks about today (`2026.09.9`).** Consumer #2
+- **RESOLVED 2026-09-22 — stand-up does not quiz (`2026.09.9`).** Consumer #2
   (`sam-gov-typesafe`, stood up 2026-09-21 from `2026.09.8`) answered the three
-  questions as predictions. Question 3 "an app that serves traffic" installed
-  the chassis and removed it the same day; stage 1 had no hosting. Question 1
-  "never public" was true of the repo that day and false of a project whose
-  outcome is a published page. Question 2 was answered about a review tool that
-  was never installed, while the product sends data to an outside model vendor
-  on every run — which the kit did not ask. `STANDUP.md` now asks about today,
-  defaults to this computer, adds the product-data question, and copies the
-  chassis only when an image definition is already in the tree. Findings from
-  the same day that are still open are below. PR #12 is that record.
+  hosting questions as predictions. "An app that serves traffic" installed the
+  chassis and removed it the same day. "Never public" was true of the empty
+  repo and false of a project whose outcome is a published page. The reviewer
+  answer was about a tool that was never installed, while the product sends
+  data to an outside model vendor — which showed up in the work, not in the
+  quiz. `STANDUP.md` now asks only whether the folder already exists, what the
+  project is about, and what we are doing. One repo on this computer is the
+  start, written down without asking. The chassis, the two-repo firewall, and
+  anything sent out are copied when the work needs them. Findings from the
+  same day that are still open are below. PR #12 is that record.
 
 ## Consumer #2 — still open (`sam-gov-typesafe`, 2026-09-21)
 

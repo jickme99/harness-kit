@@ -21,31 +21,24 @@ a real cold start (`adapters/codex.md`). That does not change this front door.
 
 ## If someone just opened this repo to start work
 
-You (the agent) stand up their project. They answer questions in plain English.
-They do not run stamp, poll, harvest, or pytest — you do.
+You (the agent) stand up their project, or send them to the folder they already
+have. They answer in plain English. They do not run stamp, poll, harvest, or
+pytest — you do.
 
-1. Read `STANDUP.md` and follow it into a **new** directory (default: a sibling
-   of this clone). Never copy product files into *this* tree.
-2. Ask about today, in plain English. A guess about later is not an answer.
-   If they do not want the quiz, use the defaults (this computer, repository
-   not shared, no outside reviewer, the product does not send data out yet)
-   and write that down. The questions:
-   - Is this repository public today, or shared with anyone besides you?
-     A page you might publish later is not a yes. Yes installs a second
-     repository.
-   - Are you turning on a tool now that sends this repository to someone else
-     (for example an outside reviewer)? Later is not a yes. Default: no.
-     This does not install the tool.
-   - Where does this run today? Default: this computer. A deployment stack is
-     copied only when a container file is already in the project. "It will be
-     a website" is not a yes.
-   - Does the thing you are building send information to anyone but you?
-     This is not the reviewer question. Default: no, until a spec says
-     otherwise.
-   - What are we building, and what should the new folder be called?
-3. Stamp with `--kit` pointed at **this** clone. Run the gate.
-4. When the gate passes, give them the new path and say: close this folder,
-   open that one, continue there.
+1. Read `STANDUP.md`. Never copy product files into *this* tree.
+2. Ask only:
+   - Is this a new folder, or one that already exists?
+   - What is it about?
+   - What are we doing?
+   Do not ask how it will be hosted, whether it will be public, or whether
+   anything will be sent out. A folder that already has the harness is not
+   stood up again: tell them to open it.
+3. For a new folder, or an existing folder with no harness: copy the core only
+   (guards, wiki, stamp). Stamp with `--kit` pointed at **this** clone. Run
+   the gate.
+4. When the gate passes, give them the path and say: close this folder, open
+   that one, continue there. Pieces beyond the core are copied later, when the
+   work needs them (`STANDUP.md`).
 
 ## Paste this if the tool did not read the folder
 
@@ -53,11 +46,12 @@ Use this in ChatGPT in the browser, or in any agent that did not load
 `CLAUDE.md` / `AGENTS.md`:
 
 > This folder is harness-kit, not my project. Read START-HERE.md and STANDUP.md.
-> Stand up a new project for me in a sibling folder. Ask me the STANDUP
-> questions in plain English, then ask what I am building and what to name the
-> folder. Do every copy, fill-in, stamp, and gate yourself — do not ask me to
-> run terminal commands. When the gate passes, tell me the folder path and that
-> I should open that folder and continue there.
+> Ask only whether this is a new folder or an existing one, what it is about,
+> and what we are doing. Do not ask me how it will be hosted. If the folder
+> already has the harness, tell me to open that folder. Otherwise stand up the
+> core in the right folder. Do every copy, fill-in, stamp, and gate yourself —
+> do not ask me to run terminal commands. When the gate passes, tell me the
+> folder path and that I should open that folder and continue there.
 
 ## Kit version
 

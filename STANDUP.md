@@ -7,95 +7,70 @@ the prompt in `START-HERE.md`. You stand up a **separate** project folder. This 
 stays the kit. They never run stamp, poll, harvest, or pytest — you do. When the gate
 passes, they close this folder and open the new one.
 
-Written to be executed by an AI agent, with its human answering the questions. Work
-top-to-bottom; do not skip the questions to get to the install steps. Ask about
-**today**. A prediction is not an answer. If they do not know, or they do not want
-the quiz, use the defaults and say so in `wiki/decisions.md`: this computer, the
-repository is not shared, no outside reviewer, the product does not send data out
-yet. Two answers change what gets installed: a repository that is public or shared
-**now**, and a container image that **already exists**. The other two are written
-down and copy nothing. Visibility and where-it-runs are provisional — the decision
-records what re-opens them. One answer is a compliance matter (company material
-leaving the house). The protocol ends in a **runnable gate**; a project is not
-stood up until the gate passes. Do not turn this kit checkout into the product.
+Written to be executed by an AI agent. The human answers three things, in plain
+English: whether the folder already exists, what the project is about, and what
+we are doing. Do not ask whether it will be public, whether a tool will read the
+repository, where it will be hosted, or whether the product will send data out.
+They do not know yet, and they should not have to. The pieces for those moments
+are later in this file. You bring a piece when the work needs it, in one
+sentence: what is about to happen, and what you are adding. The protocol ends in
+a **runnable gate**; a project is not stood up until the gate passes. Do not turn
+this kit checkout into the product.
 
-## Question 1 — the visibility question (decides the repo shape)
+## The only questions
 
-> **"Is this repository public today, or shared with anyone besides you?"**
-> A page, app, or report you might publish later is not a yes. Saying yes installs
-> a second repository and the firewall (`spec/firewall.md`).
+1. **New folder, or one that already exists?**
+   - **Already has this harness** (`HARNESS.md` or `kit-manifest.json` in that
+     folder): stop. Tell them the path and ask what we are doing. Do not copy
+     again. Do not stand up a second tree.
+   - **Exists, and has no harness:** install the core into **that** folder. Do
+     not create a sibling. Do not copy a piece from the section below.
+   - **New:** a sibling of this kit clone. Ask what it is about. That sentence
+     is the outcome and the folder name.
+2. **What is it about?** One sentence, in their words. Ask only if a new folder
+   does not already have that sentence. Do not invent the product past what they
+   said.
+3. **What are we doing?** An existing folder: today's task. A new folder: the
+   same sentence as what it is about, until the work itself splits into more.
 
-- **YES, the repo is public or shared now → two-repo shape.** A sealed **brain** repo
-  (private forever: strategy, candid plans, post-mortems, the wiki, the firewall
-  denylist) and a publishable **body** repo (the product; assume everything committed
-  there becomes public eventually). Public-safe pages are **promoted deliberately,
-  one page at a time, never bulk-synced** — anything that could never be public lives
-  in the brain and does not leave it. The body repo gets the firewall.
-- **NO (the default) → one-repo shape.** The brain is a `wiki/` folder inside the
-  body. No firewall CI needed; everything else is identical.
+## What stand-up always installs
 
-**Provisional.** Record the answer as of today. A later public page, a shared
-checkout, or making the repo public re-opens it: a new `wiki/decisions.md` entry,
-then the two-repo shape if the repository itself would be shared. Do not install
-the firewall because the product might be published later.
+One repository on this computer. Nothing is sent out. Guards, the wiki, and the
+stamp. The brain is a `wiki/` folder inside the project. Record that in
+`wiki/decisions.md` without asking — it is the start, not a prediction. Master,
+roles, gates, guards, auditor, and docs doctrine are the same whatever gets
+added later.
 
-Everything else in the kit — master, roles, gates, guards, auditor, docs doctrine — is
-identical across shapes. Shape is a stand-up-time answer, not a fork of the kit.
+## Pieces, when the work needs them
 
-## Question 2 — the vendor question (before ANY adapter that sends repo content out)
+Do not copy these at stand-up. Do not ask the owner to choose them. When the
+work reaches one, write a new `wiki/decisions.md` entry and copy the piece.
+Company material leaving the house stops for approval **before** the first send.
 
-> **"Are you turning on a tool now that sends this repository to someone else?"**
-> An outside pull-request reviewer (Cursor's Bugbot) or any hosted review service
-> counts. A tool you might turn on later is not a yes. Saying yes does **not**
-> install that tool; it records the decision. The default is no.
-
-- **Personal repos:** the owner's call. Ask, record the answer in `wiki/decisions.md`.
-- **Corporate repos:** requires IT/security approval **BEFORE enablement, not after.**
-  This is company IP crossing an organisational boundary through a tool someone switched
-  on, and it fails the same way an information firewall does — quietly, and only visibly
-  in hindsight. Do not install such an adapter without a recorded approval.
-
-**Provisional.** "Maybe later" stays no until the day it is enabled. Enabling it
-re-opens this decision, and the corporate approval still has to come first.
-
-## Question 3 — where it runs today (decides whether the keeping-current chassis is copied)
-
-> **"Where does this run today?"** The default is **on my machine**. Words do not install the chassis. An image definition already in the new folder does: workflows, a canary, and placeholders that must be filled before anything runs. Those workflows refuse to start while a placeholder remains. A plan to host later is not a yes, and neither is saying "there is a container" when the folder has no image file.
-
-- **A container that serves traffic is already in this project** (a `Dockerfile` or
-  other image definition is in the new folder) → copy the chassis including
-  `deploy.yml` (install step 5). GitHub + Azure Container Apps is the proven method
-  (`adapters/github-azure.md`). Spec: `spec/keeping-current.md`. Record the answer.
+- **Keep an image current.** An image definition is already in the tree **and**
+  the work is to keep that image current — they said so, or a deploy is about
+  to be added. Then copy install step 5. An app that serves traffic includes
+  `deploy.yml`. A scheduled job skips `deploy.yml`. GitHub + Azure Container
+  Apps is the proven method (`adapters/github-azure.md`, `spec/keeping-current.md`).
   Fill every placeholder. First two runs of every job are `dry`. Write a
-  plain-language page for the owner: what runs itself, what waits for a click, what
-  to do when something is red.
-- **A container that is only a scheduled job is already in this project** → copy the
-  chassis EXCEPT `deploy.yml`. There is no ingress to split. Job refresh uses
-  `infra/refresh_rules.py`; the workflow stays per-project (not a filled-in
-  template). Same fill-in, dry first, and owner page as above.
-- **On my machine, or not built yet (the default) → skip the chassis.** Do not copy
-  it because a website, a nightly job, or a cloud account might come later. The spec
-  still applies as doctrine where it fits (pin installed bytes, three outcomes,
-  refuse rather than guess). The version-steward (`spec/versioning.md`) remains the
-  weekly reader.
-
-**Provisional.** Record where it runs today, and the sentence that re-opens this:
-an image definition lands in the tree and someone asks to keep that image current.
-The chassis arrives then, by the same poll path as any other kit content — not at
-stand-up, on a guess. Do not add a Dockerfile to make a gate green.
-
-## Question 4 — the product-data question (records a constraint; copies nothing)
-
-> **"Does the thing you are building send information to anyone but you?"**
-> This is not Question 2. Question 2 is a tool that reads the repository. This is
-> the product's own calls: a model vendor, a payment API, a customer's system.
-> The default, until a spec says otherwise, is no.
-
-- Record the answer in `wiki/decisions.md`. Copy no files.
-- **Corporate repos:** company data leaving the organisation needs the same
-  approval-before-the-fact as Question 2. Do not discover it from the first run.
-- **Provisional.** A later spec that adds an outside call re-opens this entry
-  before that call is built.
+  plain-language page: what runs itself, what waits for a click, what to do
+  when something is red. A plan to host later is not this. A container file
+  with no such work is not this. Words do not install the chassis. Do not add
+  an image file to turn a test green.
+- **Share or publish the repository.** Before the first push that would make
+  the repo public or shared beyond the owner: two repositories. A sealed
+  **brain** (private forever: strategy, candid plans, post-mortems, the wiki,
+  the firewall denylist) and a publishable **body** (assume everything
+  committed there becomes public). Public-safe pages are promoted one page at
+  a time, never bulk-synced. The body gets the firewall (`spec/firewall.md`,
+  install step 7). Look at what is already committed before anything leaves.
+  A page the product might publish later is not this: the repo can stay
+  private while Publish still gates that page.
+- **Something would be sent out.** A tool would read the repository (an outside
+  reviewer, or any hosted review service), or the product would send
+  information to anyone but the owner. Write the decision before the first
+  send. On a company repo, approval comes before enablement. Do not discover
+  either one from the first run.
 
 ## Install steps
 
@@ -141,12 +116,14 @@ files into this checkout. Do not `cd` this clone into becoming the app.
    you are carrying as doctrine instead.
 3. **Instantiate the wiki skeleton.** `templates/wiki/` → the brain (`wiki/` in the brain
    repo, or `wiki/` in the one-repo shape). That copy includes `operating-model.md`: fill
-   **Stated outcome** from their words and the Question 1–4 answers as constraints; leave
+   **Stated outcome** from what the project is about. Leave the constraint lines
+   as the stand-up default (one repo, this computer, nothing sent out); a piece
+   added later replaces the line it changes. Leave
    **Kinds of work** with the placeholder kind heading (`{{KIND_PLACEHOLDER}}`). The first session in the **project**
    folder fills kinds of work. The runnable gate below does **not** check that
    (the product tree is still empty). Set each page's frontmatter dates; write the
-   first `decisions.md` entry — the answers to Questions 1–4, dated, each marked
-   as of today, with the sentence that re-opens a provisional one.
+   first `decisions.md` entry — the stand-up default, dated, plus what the
+   project is about. Do not record answers they were not asked.
 4. **Roles.** Draft the project's product roles from `reference/claude/role-template.md`
    (fences are real paths — start narrow; widening is on the record). The roster is who
    may write which paths; kinds of work live on `wiki/operating-model.md`. Install the two
@@ -154,11 +131,11 @@ files into this checkout. Do not `cd` this clone into becoming the app.
    `.claude/agents/harness-auditor.md` and `reference/claude/version-steward.md` →
    `.claude/agents/version-steward.md`, replacing origin path and instrument names with
    the project's own.
-5. **Keeping current (only when an image definition is already in the new project).**
-   Question 3's default copies nothing here. A plan to host later is not this step.
-   Copy the chassis only when a `Dockerfile` (or another image definition) is already
-   in the new folder; fill every `__PLACEHOLDER__` and `__OWNER_GITHUB_LOGIN__`.
-   Copying these tests into a project that has no Dockerfile fails the gate
+5. **Keeping current (not at stand-up).** Stand-up copies nothing in this step.
+   Copy the arrows below later, when an image definition is already in the tree
+   and the work is to keep that image current. A plan to host later is not this
+   step. Fill every `__PLACEHOLDER__` and `__OWNER_GITHUB_LOGIN__`. Copying
+   these tests into a project that has no Dockerfile fails the gate
    (`test_the_runtime_image_removes_pip_and_proves_it`). That failure means the
    chassis was copied too early: remove it. Do not add an image to turn the test
    green. The factory clone does not run these jobs against itself.
@@ -201,9 +178,10 @@ files into this checkout. Do not `cd` this clone into becoming the app.
    (`spec/versioning.md`). To offer local customizations back to the kit:
    `python scripts/kit_harvest.py --project . --kit <harness-kit clone>`
    (proposal-only; never copies into the kit). Never self-apply.
-7. **(Two-repo shape only) Arm the firewall** per `spec/firewall.md`: author the scanner
-   in the body repo, seed the denylist in the brain repo from your own hard constraints,
-   sync the secret, record the hash.
+7. **(When the repository would be shared or made public) Arm the firewall** per
+   `spec/firewall.md`: author the scanner in the body repo, seed the denylist in
+   the brain repo from your own hard constraints, sync the secret, record the
+   hash. Not at stand-up.
 
 ## Adoption D (keeping-current, after drills — not stand-up)
 
@@ -249,9 +227,10 @@ on a harness that has hooks. A doctrine-only adapter has no live hook to fire; d
 pretend piping JSON at Python is that test (`tests/` already covers the guards).
 
 One red test is not a pass with an asterisk. If the only failure is
-`test_the_runtime_image_removes_pip_and_proves_it` and the new folder has no
-Dockerfile, the chassis was copied on a prediction. Remove it and re-run. Do not
-stub an image, and do not record a red gate as the normal stand-up result.
+`test_the_runtime_image_removes_pip_and_proves_it` and the folder has no
+Dockerfile, the chassis was copied before the work asked to keep an image
+current. Remove it and re-run. Do not stub an image, and do not record a red
+gate as the normal stand-up result.
 
 **What a failing gate means — plainly:** the harness you just stood up does not enforce
 what its documents claim, and every promise in `HARNESS.md`'s mechanical column is
