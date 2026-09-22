@@ -23,11 +23,12 @@ manufactured a finding.
 
 ---
 
-## [{{YYYY-MM-DD}}] Stand-up: shape and vendor answers (the kit's two questions)
+## [{{YYYY-MM-DD}}] Stand-up
 
-- **Visibility:** {{"never public → one-repo shape" / "may be public → two-repo shape;
-  the brain is {{repo}}, the body is {{repo}}"}}.
-- **Vendor question:** {{which adapters send repo content to third parties, and the
-  recorded approval or the owner's call}}.
+- This computer. One repository. Nothing sent out. Not asked — this is the start.
+- **What it is about:** {{their sentence}}
 - Stamped from harness-kit {{version}}; `kit-manifest.json` is the stamp. Poll later
   against the kit's `CHANGELOG.md` (`spec/versioning.md`); never self-apply.
+- Pieces (a second repo, keeping an image current, anything sent out) are added
+  when the work needs them. Each addition is a new entry. Do not ask the owner
+  to choose them up front.

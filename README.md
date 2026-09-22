@@ -69,12 +69,12 @@ Two more promises the kit makes about the projects it stamps:
 | `reference/guards/` | The three guards + the probe pack, copied faithfully from the origin (install-time seams marked). |
 | `reference/tools/` | `kit_manifest.py` (upgrade classifier) · `kit_stamp.py` (the stamp method; fingerprints dests that exist) · `kit_poll.py` (changelog worklist + STANDUP mapping; never copies files) · `kit_harvest.py` (proposal-only offer of customized/extra files) · `review_stamp.py` (config stamper) · `review_rates.py` (catch/escape rollup). |
 | `reference/ci/` | The docs-gate (four fail-closed PR gates) and firewall-on-push workflow patterns, with EXAMPLE markers. |
-| `reference/keeping-current/` | Optional chassis for a project that ships a container: freshness rules, canary, weekly note, GitHub/Azure templates. STANDUP Question 3. Spec: `spec/keeping-current.md`. |
+| `reference/keeping-current/` | Optional chassis, copied when the work is to keep an image that already exists current. Not at stand-up, and not because one might exist later. Freshness rules, canary, weekly note, GitHub/Azure templates. Spec: `spec/keeping-current.md`. |
 | `reference/claude/` | Hook wiring sample, role-file template, and the two function-role patterns (harness-auditor, version-steward). |
 | `reference/cursor/` | The `.mdc` pointer-rule pattern, the outside-the-lane tripwire, `BUGBOT.md`, and verified hooks (`hooks.json`, `bridge.cmd`, `hook_bridge.py`). |
 | `adapters/` | Per-tool install instructions + an honest coverage table each: `claude.md` · `cursor.md` · `codex.md`. Deploy stack: `github-azure.md` (IF-AVAILABLE). |
 | `templates/` | What gets installed into a project: `HARNESS.project.md`, the `CLAUDE.project.md` / `AGENTS.project.md` / `START-HERE.project.md` pointer stubs, the wiki skeleton (including `HANDOFF.md` and `operating-model.md`), the PR template. |
-| `tests/` | The portable guard contract tests (stdlib + pytest). Run `python -m pytest tests/ reference/keeping-current/tests/` in this repo. Guard tests copy into every stamp; keeping-current tests copy only when Question 3 is yes. |
+| `tests/` | The portable guard contract tests (stdlib + pytest). Run `python -m pytest tests/ reference/keeping-current/tests/` in this repo. Guard tests copy into every stamp; keeping-current tests copy only when that chassis is installed. |
 | `kit-files.txt` / `kit-manifest.json` | The kit's membership (a decision, not a glob) and its checksummed fingerprint (`kit_version`). |
 | `CHANGELOG.md` | The poll surface: what changed after a given `kit_version`, who it applies to, lane. |
 | `TODO.md` | Known gaps, honestly. Not a release log. |

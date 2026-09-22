@@ -6,8 +6,10 @@ actions that build it. Each layer has its own fix path; none of them fixes the o
 This page is the contract. The GitHub + Azure Container Apps method is
 `adapters/github-azure.md`. The tested rule modules are `reference/keeping-current/`.
 
-Stand-up installs the chassis only when the project ships a container or a scheduled
-job image (`STANDUP.md` Question 3). A wiki, a library, or a brain repo honors the
+Stand-up does not install the chassis. Copy it later, when an image definition
+is already in the project and the work is to keep that image current
+(`STANDUP.md`). A plan to host later is not that moment. A container file with
+no such work is not that moment. A wiki, a library, or a brain repo honors the
 invariants as doctrine and does not receive `deploy.yml`. A job-only stamp copies
 the chassis except `deploy.yml` (no ingress to split; the job refresh workflow stays
 per-project). This clone is the factory; the daily job lives in the stamped project.

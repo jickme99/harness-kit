@@ -111,3 +111,74 @@
   `START-HERE.md`. Those three files are kit-repo-only (not STANDUP dests). The
   product stubs stay `templates/*.project.md`. Codex *enforcement* after stand-up
   is still untested (`adapters/codex.md`).
+
+- **RESOLVED 2026-09-22 — stand-up does not quiz (`2026.09.9`).** Consumer #2
+  (`sam-gov-typesafe`, stood up 2026-09-21 from `2026.09.8`) answered the three
+  hosting questions as predictions. "An app that serves traffic" installed the
+  chassis and removed it the same day. "Never public" was true of the empty
+  repo and false of a project whose outcome is a published page. The reviewer
+  answer was about a tool that was never installed, while the product sends
+  data to an outside model vendor — which showed up in the work, not in the
+  quiz. `STANDUP.md` now asks only whether the folder already exists, what the
+  project is about, and what we are doing. One repo on this computer is the
+  start, written down without asking. The chassis, the two-repo firewall, and
+  anything sent out are copied when the work needs them. Findings from the
+  same day that are still open are below. PR #12 is that record.
+
+## Consumer #2 — still open (`sam-gov-typesafe`, 2026-09-21)
+
+Observed. Not suspected. Nothing here self-applies.
+
+- **The user-level guard layer has no neutral home, and fails silently.**
+  `adapters/claude.md` says to wire machine-absolute paths and never says where
+  the scripts live, and ships no user-layer file. Observed: a workstation whose
+  user layer ran all three guards out of an unrelated project's checkout. It
+  breaks in the silent direction (missing interpreter exits 127, non-blocking)
+  when that directory moves. Ship a user-layer template and a probe that flags
+  a user-layer target inside a project tree.
+- **A shipped role requires an instrument the kit does not ship.**
+  `reference/claude/harness-auditor.md` item 14 mandates `scripts/event_rollup.py`
+  and `events/ledger.jsonl`, which are not kit dests. Every stamp inherits a
+  checklist line that cannot be completed. Mark it `not shipped` and report the
+  absence, or ship the instrument. Do not delete the line.
+- **The probe pack still ships origin defaults.** `TODO.md` already parks
+  `SNAPSHOT_PAGES` (`wiki/parallel-sessions.md`). The same class: second-repo
+  path `D:\example\engine-repo`, slug `your-account/your-engine-repo`, lesson
+  epoch `2026-08-28`. All four describe the origin until hand-edited. Default
+  unset seams to `ok_to_collect: false`. Do not change the origin's live
+  defaults in a way that fails origin.
+- **Install-time seam edits classify as `customized`.** STANDUP tells the
+  agent to edit marked lines in shipped files; the stamp then treats those
+  edits as local drift an upgrade must not touch. A `seamed` bucket, or seams
+  outside the fingerprinted bytes. Not this release.
+- **`classify` accepts a manifest that does not describe the tree.** Pointing
+  it at the kit's manifest from inside a stamped project reports the kit-only
+  paths as `missing` — the bucket that must never be silently restored. Refuse
+  when the manifest does not match this tree.
+- **A worker worktree created inside the project can be committed as a gitlink.**
+  The kit does not copy a project `.gitignore`. Say that a worktree is a
+  branch, and ignore the in-tree worktree directory.
+- **Question 3 still bundles freshness with the origin's GitHub/Azure host.**
+  A project that wants freshness without that host has no honest answer. Do
+  not split the bundle until a second project wants freshness without that
+  host. Second-host adapter remains unwritten (see the resolved `2026.09.7`
+  note above).
+- **NOT A BUG — line endings.** Consumer #2 saw git conversion warnings and
+  inferred that `classify` would mark a Windows checkout customized. `digest`
+  already normalises CRLF to LF before hashing (`kit_manifest.py`, with a
+  contract in `tests/test_kit_manifest.py`). A `.gitattributes` would silence
+  the warnings. It is not a stamp fix.
+- **The merge-green guard still matches the command as text.** Already parked
+  above (quote-aware parse). Consumer #2 hit it while writing a constitution
+  that quotes `gh pr merge`. Interim, already true in spirit: write templates
+  with a file tool, not a shell heredoc. The guard fix is still the real one.
+- **The PR template talks as if CI gates are installed.** Exemption lines are
+  honoured only when the optional workflows exist. A project that skipped them
+  should say so in the template it copies, or the template should say the
+  lines do nothing until those workflows are present.
+- **Patterns from one project, not kit law yet.** Contract samples in three
+  shapes (dense, sparse, adversarial) and a reader that accepts a renamed key
+  both came from one rendering surface. One incident is an anecdote
+  (`spec/graduation.md`). A mechanical fence-and-network gate is not a dozen
+  lines and "never the contract" is that project's fence. Recorded here so the
+  second hit is recognisable.

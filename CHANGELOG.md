@@ -16,6 +16,31 @@ does not apply must **consider** it (`spec/versioning.md`).
 
 ---
 
+## 2026.09.9 — 2026-09-22
+
+Stand-up asks what the project is, not how it will be hosted.
+
+- **Lane:** 3 (stand-up doctrine — not a new component, not a guard change).
+- **Applies to:** every new stand-up from this clone. `STANDUP.md`,
+  `START-HERE.md`, `CLAUDE.md`, and `AGENTS.md` are kit-repo-only. Existing
+  stamps do not install them. `templates/wiki/operating-model.md` and
+  `templates/wiki/decisions.md` are dests: a filled page is `customized` and
+  an upgrade must leave it alone.
+- **What changed:**
+  - The only questions are: new folder or an existing one, what it is about,
+    and what we are doing. A folder that already has the harness is not stood
+    up again.
+  - Stand-up always installs one repo on this computer: guards, wiki, stamp.
+    Nothing else. That default is written down without asking.
+  - The keeping-current chassis, the two-repo firewall, and any outbound tool
+    or product call are copied when the work needs them. The owner is not
+    asked to choose them up front. Company material stops for approval before
+    the first send.
+  - The stand-up gate does not treat "no Dockerfile, chassis tests copied"
+    as an expected red. That failure means remove the chassis.
+- **Does not change:** the three REQUIRED guards; the chassis files
+  themselves; `harness_probes.py` seams (still origin-shaped — `TODO.md`).
+
 ## 2026.09.8 — 2026-09-13
 
 Work map as operating-model doctrine. The master infers kinds of work; the owner never authors them.

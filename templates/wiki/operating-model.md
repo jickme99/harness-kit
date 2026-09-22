@@ -36,13 +36,16 @@ new [[decisions]] entry, not a silent rewrite.
 {{One paragraph in the owner's words from STANDUP: what we are building.
 Fill at stand-up. Hedge travels with the claim.}}
 
-## Constraints from stand-up
+## Constraints
 
-- **Visibility:** {{one-repo / two-repo; Publish applies when anything would
-  leave the house}}
-- **Vendor:** {{whether repo content is sent to a third party}}
-- **Container / keeping-current:** {{no chassis / job-kind / app-kind; if
-  yes, that kind of work is specified — point, do not redraw}}
+The start is one repo on this computer, nothing sent out. Do not ask the owner
+to choose pieces. When a piece is added, replace the line it changes and name
+the [[decisions]] entry.
+
+- **Shape:** one repo, until the repository itself would be shared or made public
+- **Outbound:** nothing sent out, until a tool would read the repo or the product
+  would send information out
+- **Where it runs:** this computer, until the work is to keep an image current
 
 ## Roster (who may write)
 
@@ -59,9 +62,9 @@ Pointers, not a copy of `owns:` lists.
 <!-- First product session in this folder: replace the placeholder kind
      heading below (the line that starts with ### and is still unfilled).
      Smallest set: exactly one kind — the stated outcome — plus a pointer
-     row for keeping-current if Question 3 said yes. A second kind only after
-     that ask appears twice in [[log]], unless the owner's words already named
-     two independent expensive outputs. Infer from the outcome and the tree,
+     row for keeping-current if the chassis was copied because the work is
+     keeping an image current. A second kind only after that ask appears twice in
+     [[log]], unless the owner's words already named two independent expensive outputs. Infer from the outcome and the tree,
      not from `.git`. Checking is a different job from writing. -->
 
 `redrawn:` none
